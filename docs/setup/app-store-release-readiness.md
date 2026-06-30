@@ -75,3 +75,7 @@ The first practical target is not public launch. It should be:
 2. iOS TestFlight build for selected testers.
 3. Closed beta with OTP/SMS, Omise test/live readiness, location tracking, and admin support checks.
 4. Public App Store / Play Store submission after legal, payment, support, and QA gates pass.
+
+## Operator Roadmap
+
+Use `docs/setup/launch-operator-roadmap.md` as the step-by-step launch guide.
