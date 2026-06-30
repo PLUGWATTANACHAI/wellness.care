@@ -7,6 +7,13 @@
     "dev": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
+    "build:dev:android": "npx eas-cli@latest build --platform android --profile development",
+    "build:preview:android": "npx eas-cli@latest build --platform android --profile preview",
+    "build:preview:ios": "npx eas-cli@latest build --platform ios --profile preview",
+    "build:production:android": "npx eas-cli@latest build --platform android --profile production",
+    "build:production:ios": "npx eas-cli@latest build --platform ios --profile production",
+    "submit:production:android": "npx eas-cli@latest submit --platform android --profile production",
+    "submit:production:ios": "npx eas-cli@latest submit --platform ios --profile production",
     "lint": "echo \"mobile lint pending\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "echo \"mobile tests pending\""
@@ -25,4 +32,3 @@
     "typescript": "^5.6.0"
   }
 }
-

@@ -59,6 +59,8 @@ const requiredPaths = [
   "docs/setup/software-update-policy.md",
   "docs/setup/render-staging-api.md",
   "docs/setup/omise-opn-test-setup.md",
+  "docs/setup/app-store-release-readiness.md",
+  "apps/mobile/eas.json",
   "render.yaml",
   "CHANGELOG.md",
   ".env.example",

@@ -25,6 +25,7 @@ The command fails if production-critical settings are missing or unsafe.
 - Location retention job scheduled.
 - Admin/support operating process defined.
 - iOS and Android builds tested on real devices.
+- App download readiness prepared for TestFlight, App Store, and Google Play.
 
 ## Current Production Status
 
@@ -43,6 +44,7 @@ Not yet production:
 - Real OTP/social login.
 - Cloud API deployment.
 - Production observability and incident process.
+- Store listing assets, privacy labels/data safety answers, screenshots, and support contacts.
 
 ## Target Path
 
@@ -54,4 +56,9 @@ Not yet production:
 6. Cloud deployment.
 7. Mobile production builds.
 8. QA and security review.
-9. Store submission.
+9. Internal tester distribution through APK/TestFlight.
+10. Store submission.
+
+See also:
+
+- `docs/setup/app-store-release-readiness.md`
