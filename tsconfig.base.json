@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@wellnest/types": ["packages/types/src/index.ts"],
+      "@wellnest/validators": ["packages/validators/src/index.ts"],
+      "@wellnest/config": ["packages/config/src/index.ts"]
+    }
+  }
+}

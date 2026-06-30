@@ -1,0 +1,76 @@
+import fs from "node:fs";
+
+const requiredPaths = [
+  "apps/mobile/App.tsx",
+  "apps/admin/src/main.tsx",
+  "apps/api/src/server.ts",
+  "apps/api/src/core/auth/guards.ts",
+  "apps/api/src/core/env.ts",
+  "apps/api/src/core/db/client.ts",
+  "apps/api/src/core/db/config.ts",
+  "apps/api/src/modules/auth/repository.ts",
+  "apps/api/src/modules/bookings/repository.ts",
+  "apps/api/src/modules/admin/repository.ts",
+  "apps/api/src/modules/location/repository.ts",
+  "apps/api/src/modules/maps/repository.ts",
+  "apps/api/src/modules/notifications/repository.ts",
+  "apps/api/src/modules/payments/repository.ts",
+  "apps/api/src/modules/payments/provider.ts",
+  "apps/api/src/modules/profiles/repository.ts",
+  "apps/api/src/modules/privacy/repository.ts",
+  "apps/api/src/modules/services/repository.ts",
+  "apps/api/src/modules/sms/provider.ts",
+  "scripts/db-check.mjs",
+  "scripts/db-config.mjs",
+  "scripts/cleanup-expired-bookings.mjs",
+  "scripts/db-migrate.mjs",
+  "scripts/db-seed.mjs",
+  "scripts/reset-demo-data.mjs",
+  "scripts/audit-secrets.mjs",
+  "scripts/project-status.mjs",
+  "scripts/prepush-check.mjs",
+  "scripts/production-readiness-check.mjs",
+  "scripts/staging-readiness-check.mjs",
+  "scripts/dependency-report.mjs",
+  "packages/types/src/index.ts",
+  "infra/database/migrations/001_initial_schema.sql",
+  "infra/database/migrations/002_auth_sessions.sql",
+  "infra/database/migrations/003_notifications.sql",
+  "infra/database/migrations/004_maps_address_foundation.sql",
+  "infra/database/migrations/005_booking_slot_holds.sql",
+  "infra/database/migrations/006_provider_skills_working_hours.sql",
+  "infra/database/migrations/007_provider_leave_windows.sql",
+  "infra/database/migrations/008_provider_assignment_policy.sql",
+  "infra/database/migrations/009_provider_offer_fallback_queue.sql",
+  "infra/database/migrations/010_booking_communication_events.sql",
+  "infra/database/migrations/011_booking_support_cases.sql",
+  "infra/database/migrations/012_auth_otp_challenges.sql",
+  "infra/database/migrations/013_payment_webhook_event_details.sql",
+  "infra/database/seeds/001_demo_seed.sql",
+  "docs/architecture/sprint-1-foundation.md",
+  "docs/architecture/api-contract-sprint-1.md",
+  "docs/architecture/sprint-1c-database.md",
+  "docs/setup/git-secret-safety.md",
+  "docs/setup/primary-machine-transfer-checklist.md",
+  "docs/setup/solo-local-workflow.md",
+  "docs/setup/private-git-repository.md",
+  "docs/setup/pre-push-checklist.md",
+  "docs/setup/cloud-postgres-selection.md",
+  "docs/setup/software-update-policy.md",
+  "docs/setup/render-staging-api.md",
+  "docs/setup/omise-opn-test-setup.md",
+  "render.yaml",
+  "CHANGELOG.md",
+  ".env.example",
+  "README.md",
+];
+
+const missing = requiredPaths.filter((path) => !fs.existsSync(path));
+
+if (missing.length > 0) {
+  console.error("Missing required Sprint 1C files:");
+  for (const path of missing) console.error(`- ${path}`);
+  process.exit(1);
+}
+
+console.log("Wellnest Sprint 1C structure OK");

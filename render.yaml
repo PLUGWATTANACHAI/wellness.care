@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: wellnest-api-staging
+    runtime: node
+    plan: starter
+    autoDeploy: false
+    buildCommand: corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile && pnpm build:api
+    startCommand: corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm start:api
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: staging
+      - key: WELLNEST_ENABLE_DEMO_AUTH
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: OTP_SECRET
+        generateValue: true
+      - key: SMS_PROVIDER
+        value: console
+      - key: PAYMENT_PROVIDER
+        value: omise
+      - key: PAYMENT_SECRET_KEY
+        sync: false
+      - key: PAYMENT_WEBHOOK_SECRET
+        sync: false
+      - key: PAYMENT_WEBHOOK_URL
+        value: https://wellnest-api-staging.onrender.com/webhooks/payment
+      - key: OMISE_SECRET_KEY
+        sync: false
+      - key: OMISE_WEBHOOK_SECRET
+        sync: false
+      - key: OMISE_PAYMENT_METHOD
+        value: promptpay
+      - key: OMISE_API_BASE_URL
+        value: https://api.omise.co
+      - key: LOCATION_RETENTION_HOURS
+        value: "72"
+      - key: ADMIN_LOCATION_ACCESS_MINUTES
+        value: "15"

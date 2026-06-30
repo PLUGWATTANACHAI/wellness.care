@@ -1,0 +1,41 @@
+{
+  "name": "wellnest-app",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Wellnest real app monorepo scaffold",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @wellnest/mobile --filter @wellnest/admin --filter @wellnest/api dev",
+    "dev:mobile": "pnpm --filter @wellnest/mobile dev",
+    "dev:admin": "pnpm --filter @wellnest/admin dev",
+    "dev:api": "pnpm --filter @wellnest/api dev",
+    "build:api": "pnpm --filter @wellnest/api build",
+    "start:api": "pnpm --filter @wellnest/api start",
+    "check:structure": "node scripts/check-structure.mjs",
+    "status": "node scripts/project-status.mjs",
+    "prepush": "node scripts/prepush-check.mjs",
+    "production:check": "node scripts/production-readiness-check.mjs",
+    "staging:check": "node scripts/staging-readiness-check.mjs",
+    "deps:report": "node scripts/dependency-report.mjs",
+    "db:check": "node scripts/db-check.mjs",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:seed": "node scripts/db-seed.mjs",
+    "demo:reset": "node scripts/reset-demo-data.mjs",
+    "bookings:cleanup-expired": "node scripts/cleanup-expired-bookings.mjs",
+    "check:secrets": "node scripts/audit-secrets.mjs",
+    "lint": "pnpm --recursive lint",
+    "typecheck": "pnpm --recursive typecheck",
+    "test": "pnpm --recursive test"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "dependencies": {
+    "pg": "^8.22.0"
+  }
+}

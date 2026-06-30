@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Wellnest",
+    "slug": "wellnest",
+    "scheme": "wellnest",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.wellnest.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Wellnest uses your location to pin your service address and show provider ETA for active bookings only."
+      }
+    },
+    "android": {
+      "package": "com.wellnest.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    }
+  }
+}
+
