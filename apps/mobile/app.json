@@ -32,6 +32,9 @@
         "projectId": "4906aa38-22b3-4b14-a430-4aba3cd2e0b8"
       }
     },
-    "owner": "plugwattanachai"
+    "owner": "plugwattanachai",
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }
