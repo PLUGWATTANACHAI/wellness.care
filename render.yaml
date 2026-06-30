@@ -2,7 +2,7 @@ services:
   - type: web
     name: wellnest-api-staging
     runtime: node
-    plan: starter
+    plan: free
     autoDeploy: false
     buildCommand: corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm install --frozen-lockfile && pnpm build:api
     startCommand: corepack enable && corepack prepare pnpm@9.0.0 --activate && pnpm start:api

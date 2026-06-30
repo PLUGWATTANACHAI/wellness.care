@@ -30,6 +30,8 @@ render.yaml
 
 Render can read this file and create the `wellnest-api-staging` web service.
 
+The staging blueprint uses Render's free web service plan first to avoid requiring billing details during webhook testing.
+
 ## Required Render Environment Variables
 
 Set these as private environment variables in Render.
