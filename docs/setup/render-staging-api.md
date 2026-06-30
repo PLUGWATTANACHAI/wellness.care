@@ -64,13 +64,18 @@ These are already defined in `render.yaml`:
 APP_ENV=staging
 WELLNEST_ENABLE_DEMO_AUTH=false
 DATABASE_SSL=true
-DATABASE_SSL_REJECT_UNAUTHORIZED=true
+DATABASE_SSL_REJECT_UNAUTHORIZED=false
 PAYMENT_PROVIDER=omise
 OMISE_PAYMENT_METHOD=promptpay
 OMISE_API_BASE_URL=https://api.omise.co
 LOCATION_RETENTION_HOURS=72
 ADMIN_LOCATION_ACCESS_MINUTES=15
 ```
+
+Render staging uses the Supabase pooled connection URL. Keep TLS enabled with
+`DATABASE_SSL=true`, but set `DATABASE_SSL_REJECT_UNAUTHORIZED=false` unless a
+trusted CA bundle is explicitly configured for Node/Postgres. Otherwise Render
+can fail the health check with `self-signed certificate in certificate chain`.
 
 ## Deploy Steps
 
