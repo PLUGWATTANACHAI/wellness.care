@@ -22,7 +22,16 @@
     "android": {
       "package": "com.wellnest.app",
       "versionCode": 1,
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
-    }
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4906aa38-22b3-4b14-a430-4aba3cd2e0b8"
+      }
+    },
+    "owner": "plugwattanachai"
   }
 }
