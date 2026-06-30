@@ -32,6 +32,8 @@ Render can read this file and create the `wellnest-api-staging` web service.
 
 The staging blueprint uses Render's free web service plan first to avoid requiring billing details during webhook testing.
 
+The build command intentionally uses Render's available `pnpm` directly. Do not run `corepack enable` on Render because the platform image can expose `/usr/bin/pnpm` on a read-only filesystem.
+
 ## Required Render Environment Variables
 
 Set these as private environment variables in Render.
