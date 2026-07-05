@@ -1,10 +1,10 @@
-const { withSettingsGradle } = require("expo/config-plugins");
+const { withAppBuildGradle, withSettingsGradle } = require("expo/config-plugins");
 
 const LOCAL_RN_CONFIG_COMMAND =
   "['node', 'node_modules/@react-native-community/cli/build/bin.js', 'config']";
 
 function withLocalReactNativeCliAutolinking(config) {
-  return withSettingsGradle(config, (modConfig) => {
+  config = withSettingsGradle(config, (modConfig) => {
     const original = modConfig.modResults.contents;
     let contents = original
       .replace(
@@ -23,6 +23,24 @@ function withLocalReactNativeCliAutolinking(config) {
     }
 
     modConfig.modResults.contents = contents;
+    return modConfig;
+  });
+
+  return withAppBuildGradle(config, (modConfig) => {
+    const original = modConfig.modResults.contents;
+    if (original.includes("implementation project(':expo')")) {
+      return modConfig;
+    }
+
+    const marker = "dependencies {";
+    if (!original.includes(marker)) {
+      throw new Error("Unable to add Expo Android dependency in app/build.gradle");
+    }
+
+    modConfig.modResults.contents = original.replace(
+      marker,
+      `${marker}\n    implementation project(':expo')`,
+    );
     return modConfig;
   });
 }
