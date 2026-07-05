@@ -3,6 +3,7 @@ import fs from "node:fs";
 const requiredPaths = [
   "apps/mobile/App.tsx",
   "apps/mobile/react-native.config.js",
+  "apps/mobile/plugins/with-local-react-native-cli-autolinking.js",
   "apps/admin/src/main.tsx",
   "apps/api/src/server.ts",
   "apps/api/src/core/auth/guards.ts",
