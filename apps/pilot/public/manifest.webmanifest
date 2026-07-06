@@ -1,0 +1,21 @@
+{
+  "name": "Wellnest Pilot",
+  "short_name": "Wellnest",
+  "description": "Small-group pilot web app for Wellnest booking tests.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4faf8",
+  "theme_color": "#0b8f88",
+  "icons": [
+    {
+      "src": "/icons/wellnest-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/wellnest-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,9 +1,22 @@
 import { spawnSync } from "node:child_process";
 
+const typecheckProjects = [
+  "packages/types/tsconfig.json",
+  "packages/config/tsconfig.json",
+  "packages/validators/tsconfig.json",
+  "apps/api/tsconfig.json",
+  "apps/admin/tsconfig.json",
+  "apps/mobile/tsconfig.json",
+];
+
 const checks = [
   { name: "Secret audit", command: process.execPath, args: ["scripts/audit-secrets.mjs"] },
   { name: "Structure check", command: process.execPath, args: ["scripts/check-structure.mjs"] },
-  { name: "Typecheck", command: "pnpm", args: ["typecheck"] },
+  ...typecheckProjects.map((project) => ({
+    name: `Typecheck ${project}`,
+    command: process.execPath,
+    args: ["node_modules/typescript/bin/tsc", "--noEmit", "-p", project],
+  })),
 ];
 
 const failed = [];
@@ -38,4 +51,3 @@ if (failed.length > 0) {
 
 console.log("");
 console.log("Ready to push to private Git repository.");
-

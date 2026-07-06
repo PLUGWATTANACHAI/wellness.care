@@ -8,6 +8,8 @@
     "dev:mobile": "pnpm --filter @wellnest/mobile dev",
     "dev:admin": "pnpm --filter @wellnest/admin dev",
     "dev:api": "pnpm --filter @wellnest/api dev",
+    "dev:pilot": "pnpm --filter @wellnest/pilot dev",
+    "build:pilot": "pnpm --filter @wellnest/pilot build",
     "build:api": "pnpm --filter @wellnest/api build",
     "start:api": "pnpm --filter @wellnest/api start",
     "check:structure": "node scripts/check-structure.mjs",

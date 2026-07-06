@@ -5,6 +5,7 @@ Wellnest is a condo-focused wellness service marketplace with three product surf
 - Customer mobile app
 - Provider mobile app
 - Admin web dashboard
+- Small-group pilot PWA for no-store-fee testing
 
 Build decision:
 
@@ -37,6 +38,7 @@ wellnest-app/
     mobile/   Expo / React Native app for customer and provider roles
     admin/    Admin web dashboard
     api/      Backend API
+    pilot/    Small-group web/PWA pilot for Android and iPhone testers
   packages/
     types/       Shared TypeScript types
     validators/  Shared validation helpers
@@ -57,6 +59,8 @@ This is a scaffold. After dependencies are installed, expected commands are:
 pnpm install
 pnpm status
 pnpm dev
+pnpm dev:pilot
+pnpm build:pilot
 pnpm lint
 pnpm typecheck
 pnpm test

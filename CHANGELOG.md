@@ -54,6 +54,8 @@
 - Sprint 4E payment webhook verification with HMAC signatures, idempotent event storage, and verified payment confirmation
 - Sprint 4F Omise / Opn test payment provider foundation with PromptPay charge creation and Omise webhook signature support
 - Sprint 4H staging HTTPS API deployment foundation with Render blueprint and staging readiness gate
+- Small-group pilot web/PWA app for no-store-fee Android APK + iPhone browser testing
+- Pilot tester plan, instructions, feedback form, and invitation message template
 
 ### Notes
 

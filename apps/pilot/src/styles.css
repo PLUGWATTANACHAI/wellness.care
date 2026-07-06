@@ -1,0 +1,531 @@
+:root {
+  color: #18302d;
+  background: #f4faf8;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.shell {
+  width: min(1160px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 18px 0 28px;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+}
+
+.topBar p,
+.promoBand p,
+.sectionHeader span,
+.providerRow span,
+.historyRow span,
+.muted {
+  color: #60736f;
+}
+
+.topBar p,
+.topBar h1,
+.promoBand p,
+.promoBand strong,
+.sectionHeader h2,
+.sidePanel h2 {
+  margin: 0;
+}
+
+.topBar h1 {
+  font-size: 34px;
+  letter-spacing: 0;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid #d7e7e3;
+  border-radius: 8px;
+  background: #fff;
+  color: #0b8f88;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.promoBand {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: 18px;
+  align-items: center;
+  min-height: 178px;
+  padding: 22px;
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, rgba(9, 131, 131, 0.95), rgba(21, 155, 121, 0.9)),
+    url("https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1400&q=70");
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+}
+
+.promoBand span {
+  color: #f3d17c;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.promoBand strong {
+  display: block;
+  margin-top: 6px;
+  font-size: clamp(26px, 4vw, 46px);
+  letter-spacing: 0;
+}
+
+.promoBand p {
+  max-width: 580px;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.55;
+}
+
+.promoVisual {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: end;
+  height: 126px;
+}
+
+.promoVisual span {
+  display: block;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.promoVisual span:nth-child(1) {
+  height: 82px;
+}
+
+.promoVisual span:nth-child(2) {
+  height: 118px;
+  background: #f3d17c;
+}
+
+.promoVisual span:nth-child(3) {
+  height: 58px;
+}
+
+.progressPanel,
+.mainPanel,
+.sidePanel {
+  border: 1px solid #dfe9e6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.progressPanel {
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8f1ee;
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0b8f88, #f2c15d);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.steps button {
+  min-height: 42px;
+  border: 1px solid #d9e6e2;
+  border-radius: 8px;
+  background: #f8fbfa;
+  color: #536864;
+  font-weight: 900;
+}
+
+.steps .active {
+  border-color: #0b8f88;
+  background: #e3f6f2;
+  color: #0b756f;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.mainPanel,
+.sidePanel {
+  padding: 18px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sectionHeader span {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sectionHeader h2,
+.sidePanel h2 {
+  margin-top: 4px;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.serviceTile {
+  display: grid;
+  min-height: 154px;
+  gap: 10px;
+  align-content: start;
+  border: 1px solid #dce8e5;
+  border-radius: 8px;
+  background: #fff;
+  color: #18302d;
+  padding: 14px;
+  text-align: left;
+}
+
+.serviceTile.selected {
+  border-color: #0b8f88;
+  box-shadow: 0 14px 32px rgba(11, 143, 136, 0.16);
+}
+
+.category {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.teal {
+  background: #0b8f88;
+}
+
+.rose {
+  background: #bf5d6a;
+}
+
+.gold {
+  background: #a66d13;
+}
+
+.serviceTile strong {
+  font-size: 17px;
+}
+
+.serviceTile small,
+.recommendPanel p,
+.feedbackBox p,
+.trackingPanel p {
+  color: #60736f;
+  line-height: 1.5;
+}
+
+.recommendPanel,
+.feedbackBox,
+.trackingPanel,
+.mapPreview {
+  margin-top: 14px;
+  border-radius: 8px;
+  background: #f5faf8;
+  padding: 14px;
+}
+
+.primaryButton {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #0b8f88;
+  color: #fff;
+  font-weight: 950;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.formGrid label {
+  display: grid;
+  gap: 8px;
+  color: #526761;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+input,
+textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #d9e6e2;
+  border-radius: 8px;
+  color: #18302d;
+  padding: 10px 12px;
+}
+
+textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.mapPreview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(11, 143, 136, 0.12) 1px, transparent 1px),
+    linear-gradient(rgba(11, 143, 136, 0.12) 1px, transparent 1px),
+    #eef7f5;
+  background-size: 36px 36px;
+}
+
+.mapPreview span {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  border-radius: 999px;
+  background: #fff;
+  color: #18302d;
+  font-weight: 900;
+  padding: 8px 12px;
+}
+
+.pin {
+  width: 22px;
+  height: 22px;
+  border: 5px solid #bf5d6a;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 18px rgba(191, 93, 106, 0.12);
+}
+
+.summaryList {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.summaryList div,
+.historyRow,
+.providerRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid #eef3f1;
+  padding: 12px 0;
+}
+
+.summaryList span {
+  display: block;
+  color: #60736f;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.paymentChoice {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  border: 1px solid #dfe9e6;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.paymentChoice legend {
+  color: #526761;
+  font-weight: 900;
+}
+
+.paymentChoice label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+}
+
+.paymentChoice input {
+  width: 18px;
+  min-height: 18px;
+}
+
+.trackingPanel {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.routeLine {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.routeLine span {
+  height: 10px;
+  border-radius: 999px;
+  background: #0b8f88;
+}
+
+.routeLine span:nth-child(2) {
+  background: #f2c15d;
+}
+
+.routeLine span:nth-child(3) {
+  background: #bf5d6a;
+}
+
+mark {
+  width: fit-content;
+  border-radius: 999px;
+  background: #fff1c9;
+  color: #835814;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+
+.providerList,
+.historyList {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0 20px;
+}
+
+.providerRow {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #dff2ef;
+  color: #0b756f;
+  font-weight: 950;
+}
+
+.providerMeta {
+  text-align: right;
+}
+
+.providerMeta span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.historyRow {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.historyRow span {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .promoBand,
+  .contentGrid,
+  .serviceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .promoVisual {
+    display: none;
+  }
+
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .formGrid,
+  .trackingPanel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .shell {
+    width: min(100% - 20px, 1160px);
+    padding-top: 10px;
+  }
+
+  .topBar h1 {
+    font-size: 28px;
+  }
+
+  .promoBand,
+  .mainPanel,
+  .sidePanel {
+    padding: 14px;
+  }
+}
