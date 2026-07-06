@@ -72,6 +72,7 @@ const requiredPaths = [
   "docs/pilot/tester-instructions.md",
   "docs/pilot/feedback-form.md",
   "docs/pilot/pilot-message-template.md",
+  "docs/pilot/google-maps-address-search.md",
   "apps/mobile/eas.json",
   "render.yaml",
   "CHANGELOG.md",

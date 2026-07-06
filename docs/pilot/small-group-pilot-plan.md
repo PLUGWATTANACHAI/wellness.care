@@ -14,6 +14,12 @@ Purpose: test Wellnest with a small trusted group before paying for Google Play 
 
 https://wellnest-pilot.onrender.com/
 
+## Address Search Status
+
+- Google Maps Search button is available now without an API key.
+- In-app Google Places autocomplete is prepared but needs `VITE_GOOGLE_MAPS_API_KEY`.
+- Setup details: `docs/pilot/google-maps-address-search.md`.
+
 ## Current Android APK
 
 APK link:

@@ -283,6 +283,15 @@ button {
   padding: 14px;
 }
 
+.mapSearchPanel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #d9e6e2;
+  border-radius: 8px;
+  background: #f8fbfa;
+  padding: 12px;
+}
+
 .primaryButton {
   width: 100%;
   min-height: 48px;
@@ -292,6 +301,38 @@ button {
   background: #0b8f88;
   color: #fff;
   font-weight: 950;
+}
+
+.secondaryButton {
+  min-height: 42px;
+  border: 1px solid #cde0dc;
+  border-radius: 8px;
+  background: #fff;
+  color: #0b756f;
+  font-weight: 950;
+}
+
+.mapActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.autocompleteHost {
+  min-height: 42px;
+}
+
+.googlePlaceAutocomplete {
+  width: 100%;
+}
+
+.mapNotice,
+.mapStatus {
+  margin: 0;
+  color: #60736f;
+  font-size: 13px;
+  line-height: 1.45;
+  text-transform: none;
 }
 
 .formGrid {
@@ -342,15 +383,20 @@ textarea {
   background-size: 36px 36px;
 }
 
-.mapPreview span {
+.mapPreview a {
   position: absolute;
   right: 14px;
   bottom: 14px;
+  max-width: calc(100% - 28px);
+  overflow: hidden;
   border-radius: 999px;
   background: #fff;
   color: #18302d;
   font-weight: 900;
   padding: 8px 12px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pin {
@@ -508,6 +554,7 @@ mark {
   }
 
   .formGrid,
+  .mapActions,
   .trackingPanel {
     grid-template-columns: 1fr;
   }

@@ -1,5 +1,8 @@
 import "./styles.css";
 
+const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+let googleMapsLoadPromise;
+
 const services = [
   {
     id: "massage",
@@ -37,12 +40,26 @@ const state = {
   date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
   time: "19:30",
   address: "The Line Sathorn, Tower A",
+  addressQuery: "The Line Sathorn",
+  placeName: "The Line Sathorn",
+  placeId: "",
+  placeLocation: "",
+  mapStatus: googleMapsApiKey ? "พร้อมค้นหาสถานที่จาก Google Places" : "ใช้ปุ่มค้นหา Google Maps ได้ทันที",
   note: "แจ้งนิติบุคคลก่อนขึ้นอาคาร",
   payment: "promptpay",
   step: 1,
 };
 
 const savedBookings = JSON.parse(localStorage.getItem("wellnestPilotBookings") || "[]");
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function currency(value) {
   return value.toLocaleString("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 });
@@ -77,7 +94,114 @@ function setStep(step) {
 
 function updateField(key, value) {
   state[key] = value;
+  if (key === "address") {
+    state.addressQuery = value;
+    state.placeName = value;
+    state.placeId = "";
+    state.placeLocation = "";
+  }
   render();
+}
+
+function googleMapsSearchUrl() {
+  const query = state.placeLocation || state.address || state.addressQuery || "condominium Bangkok";
+  const params = new URLSearchParams({ api: "1", query });
+  if (state.placeId) params.set("query_place_id", state.placeId);
+  return `https://www.google.com/maps/search/?${params.toString()}`;
+}
+
+function openGoogleMapsSearch() {
+  window.open(googleMapsSearchUrl(), "_blank", "noopener,noreferrer");
+}
+
+function useCurrentLocation() {
+  if (!navigator.geolocation) {
+    state.mapStatus = "เครื่องนี้ไม่รองรับการใช้ตำแหน่งปัจจุบัน";
+    render();
+    return;
+  }
+
+  state.mapStatus = "กำลังขออนุญาตตำแหน่งจากเครื่อง";
+  render();
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude.toFixed(6);
+      const lng = position.coords.longitude.toFixed(6);
+      state.placeLocation = `${lat},${lng}`;
+      state.address = `ตำแหน่งปัจจุบัน (${lat}, ${lng})`;
+      state.addressQuery = state.address;
+      state.placeName = "ตำแหน่งปัจจุบัน";
+      state.placeId = "";
+      state.mapStatus = "บันทึกพิกัดปัจจุบันแล้ว";
+      render();
+    },
+    () => {
+      state.mapStatus = "ยังไม่ได้รับอนุญาตใช้ตำแหน่ง สามารถพิมพ์ชื่อคอนโดหรือเปิด Google Maps ได้";
+      render();
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+  );
+}
+
+function loadGoogleMapsScript() {
+  if (!googleMapsApiKey) return Promise.reject(new Error("Missing Google Maps API key"));
+  if (window.google?.maps?.importLibrary) return Promise.resolve();
+  if (googleMapsLoadPromise) return googleMapsLoadPromise;
+
+  googleMapsLoadPromise = new Promise((resolve, reject) => {
+    const callbackName = "wellnestGoogleMapsReady";
+    window[callbackName] = () => {
+      delete window[callbackName];
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=weekly&libraries=places&callback=${callbackName}`;
+    script.async = true;
+    script.onerror = () => reject(new Error("Google Maps failed to load"));
+    document.head.appendChild(script);
+  });
+
+  return googleMapsLoadPromise;
+}
+
+async function initPlaceAutocomplete() {
+  const host = document.querySelector("#googlePlaceAutocompleteHost");
+  if (!host || host.dataset.ready === "true") return;
+
+  if (!googleMapsApiKey) {
+    host.innerHTML = '<p class="mapNotice">ยังไม่ได้ตั้ง Google Maps API key สำหรับ autocomplete ในแอพ ใช้ปุ่มเปิด Google Maps ด้านล่างได้ก่อน</p>';
+    host.dataset.ready = "true";
+    return;
+  }
+
+  host.innerHTML = '<p class="mapNotice">กำลังโหลด Google Places</p>';
+  host.dataset.ready = "true";
+
+  try {
+    await loadGoogleMapsScript();
+    const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
+    const placeAutocomplete = new PlaceAutocompleteElement();
+    placeAutocomplete.placeholder = "ค้นหาชื่อคอนโด อาคาร หรือสถานที่";
+    placeAutocomplete.className = "googlePlaceAutocomplete";
+    placeAutocomplete.addEventListener("gmp-select", async ({ placePrediction }) => {
+      const place = placePrediction.toPlace();
+      await place.fetchFields({ fields: ["displayName", "formattedAddress", "location", "id"] });
+      state.placeName = place.displayName || "";
+      state.address = place.formattedAddress || state.placeName || state.address;
+      state.addressQuery = state.address;
+      state.placeId = place.id || "";
+      state.placeLocation = place.location ? `${place.location.lat()},${place.location.lng()}` : "";
+      state.mapStatus = "เลือกสถานที่จาก Google Places แล้ว";
+      render();
+    });
+
+    host.innerHTML = "";
+    host.appendChild(placeAutocomplete);
+  } catch {
+    host.innerHTML = '<p class="mapNotice">โหลด Google Places ไม่สำเร็จ ใช้ปุ่มเปิด Google Maps หรือพิมพ์ที่อยู่เองได้</p>';
+    state.mapStatus = "Google Places ยังไม่พร้อมใช้งาน";
+  }
 }
 
 function serviceButton(service) {
@@ -134,6 +258,10 @@ function bookingHistory() {
 function render() {
   const service = selectedService();
   const progressWidth = `${state.step * 25}%`;
+  const safeAddress = escapeHtml(state.address);
+  const safeMapStatus = escapeHtml(state.mapStatus);
+  const safePlaceName = escapeHtml(state.placeName || state.address);
+  const mapsUrl = googleMapsSearchUrl();
   document.querySelector("#app").innerHTML = `
     <main class="shell">
       <section class="topBar">
@@ -194,12 +322,20 @@ function render() {
             <div class="formGrid">
               <label>วันที่ใช้บริการ<input type="date" data-field="date" value="${state.date}" /></label>
               <label>เวลา<input type="time" data-field="time" value="${state.time}" /></label>
-              <label class="wide">ตำแหน่งจาก Google Maps / ชื่อคอนโด<input data-field="address" value="${state.address}" /></label>
-              <label class="wide">หมายเหตุถึงผู้ให้บริการ<textarea data-field="note">${state.note}</textarea></label>
+              <div class="wide mapSearchPanel">
+                <label>ค้นหาสถานที่ / ชื่อคอนโด<input data-field="address" value="${safeAddress}" placeholder="พิมพ์ชื่อคอนโด อาคาร หรือที่อยู่" /></label>
+                <div id="googlePlaceAutocompleteHost" class="autocompleteHost"></div>
+                <div class="mapActions">
+                  <button type="button" class="secondaryButton" data-action="open-maps">ค้นหาใน Google Maps</button>
+                  <button type="button" class="secondaryButton" data-action="use-current-location">ใช้ตำแหน่งปัจจุบัน</button>
+                </div>
+                <p class="mapStatus">${safeMapStatus}</p>
+              </div>
+              <label class="wide">หมายเหตุถึงผู้ให้บริการ<textarea data-field="note">${escapeHtml(state.note)}</textarea></label>
             </div>
             <div class="mapPreview">
               <div class="pin"></div>
-              <span>${state.address}</span>
+              <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">${safePlaceName}</a>
             </div>
             <button class="primaryButton" data-action="step" data-step="3">ตรวจสอบรายการ</button>
           ` : ""}
@@ -214,7 +350,7 @@ function render() {
             <div class="summaryList">
               <div><span>บริการ</span><strong>${service.name}</strong></div>
               <div><span>วันเวลา</span><strong>${state.date} · ${state.time}</strong></div>
-              <div><span>สถานที่</span><strong>${state.address}</strong></div>
+              <div><span>สถานที่</span><strong>${safeAddress}</strong></div>
               <div><span>ยอดชำระทดลอง</span><strong>${currency(service.price)}</strong></div>
             </div>
             <fieldset class="paymentChoice">
@@ -236,7 +372,7 @@ function render() {
               <div class="routeLine"><span></span><span></span><span></span></div>
               <div>
                 <strong>Provider assigned</strong>
-                <p>กำลังเดินทางไปยัง ${state.address}</p>
+                <p>กำลังเดินทางไปยัง ${safeAddress}</p>
               </div>
               <mark>ETA 18 นาที</mark>
             </div>
@@ -258,6 +394,7 @@ function render() {
   `;
 
   bindEvents();
+  initPlaceAutocomplete();
 }
 
 function bindEvents() {
@@ -270,6 +407,8 @@ function bindEvents() {
   });
 
   document.querySelector("[data-action='save']")?.addEventListener("click", saveBooking);
+  document.querySelector("[data-action='open-maps']")?.addEventListener("click", openGoogleMapsSearch);
+  document.querySelector("[data-action='use-current-location']")?.addEventListener("click", useCurrentLocation);
   document.querySelector("[data-action='reset']")?.addEventListener("click", () => {
     state.step = 1;
     render();
