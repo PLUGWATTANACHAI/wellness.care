@@ -59,10 +59,12 @@ export interface ProviderLocationAcceptedDto {
 export interface PaymentIntentDto {
   id: string;
   bookingId: string;
-  provider: "sandbox";
+  provider: string;
   providerReference: string;
+  paymentMethod: "promptpay" | "card";
   amountTHB: number;
-  status: "requires_confirmation" | "succeeded";
+  status: "requires_confirmation" | "succeeded" | "failed";
+  checkoutUrl?: string;
 }
 
 export interface PriceBreakdownDto {
@@ -413,13 +415,17 @@ export async function getProviderLocation(bookingId: string) {
   return response.json() as Promise<ProviderLocationDto>;
 }
 
-export async function createPaymentIntent(bookingId: string) {
+export async function createPaymentIntent(input: {
+  bookingId: string;
+  method: "promptpay" | "card";
+  cardToken?: string;
+}) {
   const response = await fetch(`${API_BASE_URL}/payments/create-intent`, {
     method: "POST",
     headers: authHeaders("customer", {
       "content-type": "application/json",
     }),
-    body: JSON.stringify({ bookingId }),
+    body: JSON.stringify(input),
   });
 
   if (!response.ok) {

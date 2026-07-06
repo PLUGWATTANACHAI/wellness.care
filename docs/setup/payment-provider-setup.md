@@ -119,7 +119,9 @@ Supported providers:
 - `sandbox` for development
 - `webhook` for production adapter testing
 - `omise` for Omise / Opn PromptPay charge creation and verified webhook callbacks
+- `omise` card charge creation is prepared for tokenized card payments
 
 Next required step:
 
 - add the Omise test keys and test webhook URL, then run the full PromptPay test flow
+- add Omise public-key tokenization / hosted checkout in the customer app before enabling card live payment

@@ -41,8 +41,16 @@ export function registerPaymentRoutes(app: FastifyInstance) {
       return badRequest(reply, request, "PAYMENT_BOOKING_REQUIRED", "bookingId is required");
     }
 
+    if (body.method && body.method !== "promptpay" && body.method !== "card") {
+      return badRequest(reply, request, "PAYMENT_METHOD_INVALID", "method must be promptpay or card");
+    }
+
     try {
-      return await createPaymentIntent(getCurrentUser(request), { bookingId: body.bookingId });
+      return await createPaymentIntent(getCurrentUser(request), {
+        bookingId: body.bookingId,
+        method: body.method,
+        cardToken: body.cardToken,
+      });
     } catch (error) {
       const mapped = mapPaymentError(error);
       return reply.code(mapped.statusCode).send({

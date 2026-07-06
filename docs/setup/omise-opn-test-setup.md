@@ -36,13 +36,19 @@ OMISE_API_BASE_URL=https://api.omise.co
 
 ## How Payment Creation Works
 
-Wellnest creates an Omise PromptPay charge from the API server.
+Wellnest creates an Omise charge from the API server.
+
+Supported methods:
+
+- `promptpay`: creates a PromptPay source and returns a QR / checkout URL when available.
+- `card`: creates a card charge only when the app sends an Omise card token.
 
 The charge includes metadata:
 
 - `payment_id`
 - `booking_id`
 - `customer_id`
+- `payment_method`
 
 This lets the Omise webhook map a completed charge back to the Wellnest payment record.
 
@@ -76,7 +82,7 @@ Add that URL to the Omise test webhook settings.
 ## Test Flow
 
 1. Create a booking in Wellnest.
-2. Create a payment intent.
+2. Create a payment intent with `method: "promptpay"`.
 3. Wellnest creates an Omise PromptPay charge.
 4. In Omise test dashboard, open the charge.
 5. Use Actions to mark the charge Successful or Failed.
@@ -89,3 +95,4 @@ Add that URL to the Omise test webhook settings.
 - Live keys are separate from test keys.
 - Webhook secret is separate for test and live mode.
 - The checkout and refund/cancellation policy must be visible to customers before real payment.
+- Card payment must use Omise tokenization or hosted checkout. Wellnest must never store raw card numbers.

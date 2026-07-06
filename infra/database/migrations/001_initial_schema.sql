@@ -128,6 +128,7 @@ CREATE TABLE payments (
   booking_id TEXT NOT NULL REFERENCES bookings(id),
   provider TEXT NOT NULL,
   provider_reference TEXT,
+  payment_method TEXT NOT NULL DEFAULT 'promptpay',
   amount_thb INTEGER NOT NULL,
   status TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -152,4 +153,3 @@ CREATE TABLE audit_logs (
   metadata_json JSONB NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-

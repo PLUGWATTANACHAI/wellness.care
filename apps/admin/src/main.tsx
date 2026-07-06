@@ -51,6 +51,7 @@ interface AdminPayment {
   amountTHB: number;
   status: string;
   provider: string;
+  paymentMethod: string;
   createdAt: string;
 }
 
@@ -965,7 +966,7 @@ function AdminApp() {
               <span>{payment.customer}</span>
               <mark>{payment.status}</mark>
               <span>฿{payment.amountTHB.toLocaleString("th-TH")}</span>
-              <small>{payment.provider}</small>
+              <small>{payment.provider} · {payment.paymentMethod}</small>
             </div>
           ))}
           {payments.length === 0 ? <p className="muted">No sandbox payments yet.</p> : null}

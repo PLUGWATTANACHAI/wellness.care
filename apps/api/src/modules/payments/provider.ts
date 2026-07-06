@@ -8,12 +8,15 @@ export interface CreateProviderPaymentInput {
   amountTHB: number;
   currency: "THB";
   customerId: string;
+  method: "promptpay" | "card";
+  cardToken?: string;
 }
 
 export interface ProviderPaymentIntent {
   provider: string;
   providerReference: string;
   checkoutUrl?: string;
+  method: "promptpay" | "card";
 }
 
 export interface VerifyPaymentWebhookInput {
@@ -41,6 +44,7 @@ export async function createProviderPaymentIntent(input: CreateProviderPaymentIn
     return {
       provider: "sandbox",
       providerReference: createId("sandboxref"),
+      method: input.method,
     };
   }
 
@@ -152,24 +156,31 @@ async function createWebhookPaymentIntent(input: CreateProviderPaymentInput): Pr
     provider: "webhook",
     providerReference: body?.id ?? body?.paymentId ?? createId("webhookpay"),
     checkoutUrl: body?.checkoutUrl,
+    method: input.method,
   };
 }
 
 async function createOmisePaymentIntent(input: CreateProviderPaymentInput): Promise<ProviderPaymentIntent> {
   const secretKey = process.env.OMISE_SECRET_KEY ?? process.env.PAYMENT_SECRET_KEY;
   const apiBaseUrl = process.env.OMISE_API_BASE_URL ?? "https://api.omise.co";
-  const paymentMethod = process.env.OMISE_PAYMENT_METHOD ?? "promptpay";
+  const paymentMethod = input.method || process.env.OMISE_PAYMENT_METHOD || "promptpay";
 
   if (!secretKey) throw new Error("PAYMENT_PROVIDER_REQUIRED");
-  if (paymentMethod !== "promptpay") throw new Error("PAYMENT_PROVIDER_UNSUPPORTED");
+  if (paymentMethod !== "promptpay" && paymentMethod !== "card") throw new Error("PAYMENT_PROVIDER_UNSUPPORTED");
+  if (paymentMethod === "card" && !input.cardToken) throw new Error("PAYMENT_CARD_TOKEN_REQUIRED");
 
   const params = new URLSearchParams();
   params.set("amount", String(input.amountTHB * 100));
   params.set("currency", "thb");
-  params.set("source[type]", "promptpay");
+  if (paymentMethod === "promptpay") {
+    params.set("source[type]", "promptpay");
+  } else if (input.cardToken) {
+    params.set("card", input.cardToken);
+  }
   params.set("metadata[payment_id]", input.paymentId);
   params.set("metadata[booking_id]", input.bookingId);
   params.set("metadata[customer_id]", input.customerId);
+  params.set("metadata[payment_method]", paymentMethod);
   params.set("description", `Wellnest booking ${input.bookingId}`);
 
   const response = await fetch(`${apiBaseUrl}/charges`, {
@@ -203,6 +214,7 @@ async function createOmisePaymentIntent(input: CreateProviderPaymentInput): Prom
     provider: "omise",
     providerReference: body.id,
     checkoutUrl: body.authorize_uri ?? body.source?.scannable_code?.image?.download_uri,
+    method: paymentMethod,
   };
 }
 

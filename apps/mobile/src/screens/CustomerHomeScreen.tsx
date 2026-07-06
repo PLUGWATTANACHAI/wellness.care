@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   checkProviderAvailability,
   confirmSandboxPayment,
@@ -47,6 +47,7 @@ export function CustomerHomeScreen() {
   const [trackingStatus, setTrackingStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [trackedLocation, setTrackedLocation] = useState<ProviderLocationDto | undefined>();
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "creating" | "ready" | "confirming" | "error">("idle");
+  const [paymentMethod, setPaymentMethod] = useState<"promptpay" | "card">("promptpay");
   const [paymentIntent, setPaymentIntent] = useState<PaymentIntentDto | undefined>();
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdownDto | undefined>();
   const [slotHold, setSlotHold] = useState<BookingSlotHoldDto | undefined>();
@@ -159,9 +160,15 @@ export function CustomerHomeScreen() {
 
     setPaymentStatus("creating");
     try {
-      const payment = await createPaymentIntent(latestBooking.id);
+      const payment = await createPaymentIntent({
+        bookingId: latestBooking.id,
+        method: paymentMethod,
+      });
       setPaymentIntent(payment);
       setPaymentStatus("ready");
+      if (payment.checkoutUrl) {
+        await Linking.openURL(payment.checkoutUrl);
+      }
     } catch {
       setPaymentStatus("error");
     }
@@ -169,6 +176,13 @@ export function CustomerHomeScreen() {
 
   async function handleConfirmPayment() {
     if (!paymentIntent) return;
+
+    if (paymentIntent.provider !== "sandbox") {
+      if (paymentIntent.checkoutUrl) {
+        await Linking.openURL(paymentIntent.checkoutUrl);
+      }
+      return;
+    }
 
     setPaymentStatus("confirming");
     try {
@@ -463,10 +477,44 @@ export function CustomerHomeScreen() {
         </View>
       ) : null}
       <View style={styles.paymentBox}>
-        <Text style={styles.trackingTitle}>Payment sandbox</Text>
+        <Text style={styles.trackingTitle}>Payment</Text>
+        <View style={styles.paymentMethodRow}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setPaymentMethod("promptpay");
+              setPaymentIntent(undefined);
+            }}
+            style={({ pressed }) => [
+              styles.methodChip,
+              paymentMethod === "promptpay" ? styles.methodChipActive : null,
+              pressed ? styles.buttonPressed : null,
+            ]}
+          >
+            <Text style={[styles.methodChipText, paymentMethod === "promptpay" ? styles.methodChipTextActive : null]}>
+              PromptPay / QR
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setPaymentMethod("card");
+              setPaymentIntent(undefined);
+            }}
+            style={({ pressed }) => [
+              styles.methodChip,
+              paymentMethod === "card" ? styles.methodChipActive : null,
+              pressed ? styles.buttonPressed : null,
+            ]}
+          >
+            <Text style={[styles.methodChipText, paymentMethod === "card" ? styles.methodChipTextActive : null]}>
+              Credit card
+            </Text>
+          </Pressable>
+        </View>
         <Text style={styles.row}>
           {paymentIntent
-            ? `฿${paymentIntent.amountTHB.toLocaleString("th-TH")} · ${paymentIntent.status}`
+            ? `฿${paymentIntent.amountTHB.toLocaleString("th-TH")} · ${paymentIntent.paymentMethod} · ${paymentIntent.status}`
             : latestBooking
               ? reviewAccepted
                 ? priceBreakdown && slotHold?.held
@@ -487,7 +535,7 @@ export function CustomerHomeScreen() {
             ]}
           >
             <Text style={styles.buttonSecondaryText}>
-              {paymentStatus === "creating" ? "Creating..." : "Proceed to payment"}
+              {paymentStatus === "creating" ? "Creating..." : paymentMethod === "promptpay" ? "Open PromptPay QR" : "Create card charge"}
             </Text>
           </Pressable>
           <Pressable
@@ -500,10 +548,22 @@ export function CustomerHomeScreen() {
               pressed ? styles.buttonPressed : null,
             ]}
           >
-            <Text style={styles.buttonText}>{paymentStatus === "confirming" ? "Confirming..." : "Pay test"}</Text>
+            <Text style={styles.buttonText}>
+              {paymentStatus === "confirming"
+                ? "Confirming..."
+                : paymentIntent?.provider === "sandbox"
+                  ? "Confirm test payment"
+                  : "Reopen payment"}
+            </Text>
           </Pressable>
         </View>
-        {paymentStatus === "error" ? <Text style={styles.error}>Payment sandbox failed. Please retry.</Text> : null}
+        {paymentMethod === "card" ? (
+          <Text style={styles.note}>
+            Card live payment requires Omise tokenization. Wellnest API is ready for card tokens; the app must not store card numbers.
+          </Text>
+        ) : null}
+        {paymentIntent?.checkoutUrl ? <Text style={styles.note}>Complete payment in the opened Omise checkout/QR page. Booking confirms after webhook.</Text> : null}
+        {paymentStatus === "error" ? <Text style={styles.error}>Payment failed. Please retry.</Text> : null}
       </View>
       <View style={styles.trackingBox}>
         <Text style={styles.trackingTitle}>Provider tracking</Text>
@@ -904,6 +964,29 @@ const styles = StyleSheet.create({
   paymentActions: {
     flexDirection: "row",
     gap: 8,
+  },
+  paymentMethodRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  methodChip: {
+    borderWidth: 1,
+    borderColor: "#d8e7eb",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  methodChipActive: {
+    borderColor: "#0793a4",
+    backgroundColor: "#e8f7f8",
+  },
+  methodChipText: {
+    color: "#52605d",
+    fontWeight: "800",
+  },
+  methodChipTextActive: {
+    color: "#057d8b",
   },
   timelineBox: {
     gap: 8,

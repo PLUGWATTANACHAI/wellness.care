@@ -5,6 +5,8 @@ import { assertSandboxPaymentAllowed, createProviderPaymentIntent, verifyPayment
 
 export interface PaymentIntentInput {
   bookingId: string;
+  method?: "promptpay" | "card";
+  cardToken?: string;
 }
 
 export interface PaymentIntentResult {
@@ -12,6 +14,7 @@ export interface PaymentIntentResult {
   bookingId: string;
   provider: string;
   providerReference: string;
+  paymentMethod: "promptpay" | "card";
   amountTHB: number;
   status: "requires_confirmation" | "succeeded" | "failed";
   checkoutUrl?: string;
@@ -100,6 +103,7 @@ export async function createPaymentIntent(
       bookingId: input.bookingId,
       provider: "sandbox",
       providerReference: "sandbox_ref_dev_001",
+      paymentMethod: normalizePaymentMethod(input.method),
       amountTHB: breakdown.totalTHB,
       status: "requires_confirmation",
     };
@@ -128,6 +132,8 @@ export async function createPaymentIntent(
     amountTHB: breakdown.totalTHB,
     currency: "THB",
     customerId: customer.id,
+    method: normalizePaymentMethod(input.method),
+    cardToken: input.cardToken,
   });
 
   const rows = await query<PaymentIntentResult>(
@@ -137,19 +143,28 @@ export async function createPaymentIntent(
         booking_id,
         provider,
         provider_reference,
+        payment_method,
         amount_thb,
         status
       )
-      VALUES ($1, $2, $3, $4, $5, 'requires_confirmation')
+      VALUES ($1, $2, $3, $4, $5, $6, 'requires_confirmation')
       RETURNING
         id,
         booking_id AS "bookingId",
         provider,
         provider_reference AS "providerReference",
+        payment_method AS "paymentMethod",
         amount_thb AS "amountTHB",
         status
     `,
-    [paymentId, input.bookingId, providerIntent.provider, providerIntent.providerReference, breakdown.totalTHB],
+    [
+      paymentId,
+      input.bookingId,
+      providerIntent.provider,
+      providerIntent.providerReference,
+      providerIntent.method,
+      breakdown.totalTHB,
+    ],
   );
 
   return {
@@ -170,6 +185,7 @@ export async function confirmSandboxPayment(
       bookingId: "book_240618",
       provider: "sandbox",
       providerReference: "sandbox_ref_dev_001",
+      paymentMethod: "promptpay",
       amountTHB: 1405,
       status: "succeeded",
     };
@@ -188,6 +204,7 @@ export async function confirmSandboxPayment(
       bookingId: string;
       provider: string;
       providerReference: string;
+      paymentMethod: "promptpay" | "card";
       amountTHB: number;
       status: "requires_confirmation" | "succeeded" | "failed";
       customerId: string;
@@ -198,6 +215,7 @@ export async function confirmSandboxPayment(
           p.booking_id AS "bookingId",
           p.provider,
           p.provider_reference AS "providerReference",
+          p.payment_method AS "paymentMethod",
           p.amount_thb AS "amountTHB",
           p.status,
           b.customer_id AS "customerId"
@@ -224,6 +242,7 @@ export async function confirmSandboxPayment(
           booking_id AS "bookingId",
           provider,
           provider_reference AS "providerReference",
+          payment_method AS "paymentMethod",
           amount_thb AS "amountTHB",
           status
       `,
@@ -364,6 +383,7 @@ export async function processPaymentWebhook(input: PaymentWebhookInput): Promise
       bookingId: string;
       provider: string;
       providerReference: string;
+      paymentMethod: "promptpay" | "card";
       amountTHB: number;
       status: "requires_confirmation" | "succeeded" | "failed";
       customerId: string;
@@ -374,6 +394,7 @@ export async function processPaymentWebhook(input: PaymentWebhookInput): Promise
           p.booking_id AS "bookingId",
           p.provider,
           p.provider_reference AS "providerReference",
+          p.payment_method AS "paymentMethod",
           p.amount_thb AS "amountTHB",
           p.status,
           b.customer_id AS "customerId"
@@ -450,6 +471,7 @@ export async function processPaymentWebhook(input: PaymentWebhookInput): Promise
           booking_id AS "bookingId",
           provider,
           provider_reference AS "providerReference",
+          payment_method AS "paymentMethod",
           amount_thb AS "amountTHB",
           status
       `,
@@ -543,6 +565,7 @@ export async function listPaymentsForAdmin() {
         amountTHB: 1405,
         status: "succeeded",
         provider: "sandbox",
+        paymentMethod: "promptpay",
         createdAt: new Date().toISOString(),
       },
     ];
@@ -555,6 +578,7 @@ export async function listPaymentsForAdmin() {
     amountTHB: number;
     status: string;
     provider: string;
+    paymentMethod: string;
     createdAt: string;
   }>(
     `
@@ -565,6 +589,7 @@ export async function listPaymentsForAdmin() {
         p.amount_thb AS "amountTHB",
         p.status,
         p.provider,
+        p.payment_method AS "paymentMethod",
         p.created_at AS "createdAt"
       FROM payments p
       JOIN bookings b ON b.id = p.booking_id
@@ -610,6 +635,10 @@ export function mapPaymentError(error: unknown) {
     return { statusCode: 502, code: "PAYMENT_PROVIDER_CREATE_FAILED", message: "Payment provider create intent failed" };
   }
 
+  if (message === "PAYMENT_CARD_TOKEN_REQUIRED") {
+    return { statusCode: 400, code: "PAYMENT_CARD_TOKEN_REQUIRED", message: "Card token is required for card payment" };
+  }
+
   if (message === "PAYMENT_SANDBOX_DISABLED") {
     return { statusCode: 403, code: "PAYMENT_SANDBOX_DISABLED", message: "Sandbox payment is disabled in this environment" };
   }
@@ -651,6 +680,11 @@ export function mapPaymentError(error: unknown) {
   }
 
   return { statusCode: 500, code: "PAYMENT_OPERATION_FAILED", message: "Payment operation failed" };
+}
+
+function normalizePaymentMethod(method: PaymentIntentInput["method"]): "promptpay" | "card" {
+  if (method === "card") return "card";
+  return "promptpay";
 }
 
 async function markWebhookEventProcessed(client: { query: (sql: string, params?: unknown[]) => Promise<unknown> }, eventId: string) {
