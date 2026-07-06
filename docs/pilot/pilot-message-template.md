@@ -16,7 +16,8 @@ Android:
 https://expo.dev/artifacts/eas/XQH2t62AbribkgcyEx1pFbBvzQnkGrEzDh-N9ZQ3P4o.apk
 
 iPhone:
-ใช้ลิงก์เว็บทดลอง Wellnest Pilot ที่พี่ส่งให้ แล้วกด Share > Add to Home Screen
+ใช้ลิงก์เว็บทดลองนี้ แล้วกด Share > Add to Home Screen
+https://wellnest-pilot.onrender.com/
 
 หมายเหตุ:
 รอบนี้เป็น pilot กลุ่มเล็ก ยังไม่ใช่แอพบน Store จริง กรุณาอย่าแชร์ลิงก์ต่อ และยังไม่ต้องใส่ข้อมูลส่วนตัวที่ละเอียดเกินจำเป็นครับ

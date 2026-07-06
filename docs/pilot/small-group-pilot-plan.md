@@ -10,6 +10,10 @@ Purpose: test Wellnest with a small trusted group before paying for Google Play 
 - Admin/operator: use the existing staging/admin flow when needed.
 - Store launch: wait until booking flow, payment behavior, support cases, location consent, and tester feedback are stable.
 
+## Current iPhone / PWA Pilot Link
+
+https://wellnest-pilot.onrender.com/
+
 ## Current Android APK
 
 APK link:
@@ -45,7 +49,9 @@ Expected service:
 - Publish directory: `apps/pilot/dist`
 - Auto deploy: off for safer manual control during pilot
 
-After Render finishes deploying, copy the `onrender.com` URL into the iPhone section of the invitation message.
+Current public link:
+
+https://wellnest-pilot.onrender.com/
 
 Daily checks:
 
