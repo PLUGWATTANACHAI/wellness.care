@@ -45,8 +45,10 @@ const state = {
   placeId: "",
   placeLocation: "",
   mapStatus: googleMapsApiKey ? "พร้อมค้นหาสถานที่จาก Google Places" : "ใช้ปุ่มค้นหา Google Maps ได้ทันที",
+  mapConfirmed: false,
   note: "แจ้งนิติบุคคลก่อนขึ้นอาคาร",
   payment: "promptpay",
+  paymentStatus: "ready",
   step: 1,
 };
 
@@ -78,6 +80,7 @@ function saveBooking() {
     time: state.time,
     address: state.address,
     payment: state.payment,
+    paymentStatus: "sandbox_paid",
     status: "Provider assigned",
     createdAt: new Date().toISOString(),
   };
@@ -99,6 +102,7 @@ function updateField(key, value) {
     state.placeName = value;
     state.placeId = "";
     state.placeLocation = "";
+    state.mapConfirmed = false;
   }
   render();
 }
@@ -111,7 +115,16 @@ function googleMapsSearchUrl() {
 }
 
 function openGoogleMapsSearch() {
+  state.mapConfirmed = false;
+  state.mapStatus = "เปิด Google Maps แล้ว หลังเลือกหรือดูสถานที่เสร็จ ให้กลับมากด “ยืนยันสถานที่นี้” ใน Wellnest";
+  render();
   window.open(googleMapsSearchUrl(), "_blank", "noopener,noreferrer");
+}
+
+function confirmMapLocation() {
+  state.mapConfirmed = true;
+  state.mapStatus = "ยืนยันสถานที่สำหรับ booking นี้แล้ว";
+  render();
 }
 
 function useCurrentLocation() {
@@ -132,6 +145,7 @@ function useCurrentLocation() {
       state.addressQuery = state.address;
       state.placeName = "ตำแหน่งปัจจุบัน";
       state.placeId = "";
+      state.mapConfirmed = true;
       state.mapStatus = "บันทึกพิกัดปัจจุบันแล้ว";
       render();
     },
@@ -192,6 +206,7 @@ async function initPlaceAutocomplete() {
       state.addressQuery = state.address;
       state.placeId = place.id || "";
       state.placeLocation = place.location ? `${place.location.lat()},${place.location.lng()}` : "";
+      state.mapConfirmed = true;
       state.mapStatus = "เลือกสถานที่จาก Google Places แล้ว";
       render();
     });
@@ -232,6 +247,38 @@ function providerCard(provider, index) {
   `;
 }
 
+function paymentCard(service) {
+  const total = service.price;
+  if (state.payment === "promptpay") {
+    return `
+      <div class="paymentPanel">
+        <div class="paymentQr" aria-label="PromptPay sandbox QR preview">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div>
+          <strong>PromptPay Sandbox</strong>
+          <p>ตัวจริงจะสร้าง QR จาก Opn/Omise แล้วรอ webhook ยืนยันการชำระเงินก่อนยืนยัน booking</p>
+          <small>ยอดทดลอง ${currency(total)} · Reference WN-PILOT</small>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="paymentPanel">
+      <div class="cardPreview">
+        <span>•••• 4242</span>
+        <strong>VISA TEST</strong>
+      </div>
+      <div>
+        <strong>Credit / Debit Card Sandbox</strong>
+        <p>ตัวจริงต้องใช้ tokenization/checkout ของ payment provider เพื่อไม่ให้ Wellnest เก็บเลขบัตรเอง</p>
+        <small>ยอดทดลอง ${currency(total)} · ไม่มีการตัดเงินจริงใน pilot</small>
+      </div>
+    </div>
+  `;
+}
+
 function bookingHistory() {
   if (savedBookings.length === 0) {
     return '<p class="muted">ยังไม่มี booking ทดลองในเครื่องนี้</p>';
@@ -262,6 +309,8 @@ function render() {
   const safeMapStatus = escapeHtml(state.mapStatus);
   const safePlaceName = escapeHtml(state.placeName || state.address);
   const mapsUrl = googleMapsSearchUrl();
+  const mapConfirmLabel = state.mapConfirmed ? "สถานที่ยืนยันแล้ว" : "ยืนยันสถานที่นี้";
+  const paymentPrimaryLabel = state.payment === "promptpay" ? "ยืนยันว่าโอน PromptPay แล้ว" : "ยืนยันชำระด้วยบัตรทดลอง";
   document.querySelector("#app").innerHTML = `
     <main class="shell">
       <section class="topBar">
@@ -328,6 +377,7 @@ function render() {
                 <div class="mapActions">
                   <button type="button" class="secondaryButton" data-action="open-maps">ค้นหาใน Google Maps</button>
                   <button type="button" class="secondaryButton" data-action="use-current-location">ใช้ตำแหน่งปัจจุบัน</button>
+                  <button type="button" class="secondaryButton ${state.mapConfirmed ? "confirmed" : ""}" data-action="confirm-map">${mapConfirmLabel}</button>
                 </div>
                 <p class="mapStatus">${safeMapStatus}</p>
               </div>
@@ -351,14 +401,20 @@ function render() {
               <div><span>บริการ</span><strong>${service.name}</strong></div>
               <div><span>วันเวลา</span><strong>${state.date} · ${state.time}</strong></div>
               <div><span>สถานที่</span><strong>${safeAddress}</strong></div>
+              <div><span>สถานะสถานที่</span><strong>${state.mapConfirmed ? "ยืนยันจากลูกค้าแล้ว" : "ยังไม่ได้ยืนยันหลังเปิด Maps"}</strong></div>
               <div><span>ยอดชำระทดลอง</span><strong>${currency(service.price)}</strong></div>
             </div>
             <fieldset class="paymentChoice">
-              <legend>วิธีชำระเงินจำลอง</legend>
-              <label><input type="radio" name="payment" value="promptpay" ${state.payment === "promptpay" ? "checked" : ""} /> PromptPay Sandbox</label>
-              <label><input type="radio" name="payment" value="card" ${state.payment === "card" ? "checked" : ""} /> Card Sandbox</label>
+              <legend>เลือกวิธีชำระเงิน</legend>
+              <label><input type="radio" name="payment" value="promptpay" ${state.payment === "promptpay" ? "checked" : ""} /> PromptPay / QR</label>
+              <label><input type="radio" name="payment" value="card" ${state.payment === "card" ? "checked" : ""} /> บัตรเครดิต / เดบิต</label>
             </fieldset>
-            <button class="primaryButton" data-action="save">ยืนยัน booking</button>
+            ${paymentCard(service)}
+            <div class="paymentNotice">
+              <strong>สถานะ pilot</strong>
+              <p>หน้านี้ยังเป็น sandbox เพื่อทดสอบ flow เท่านั้น เงินจริงจะเปิดใช้หลังบัญชี Opn/Omise live ผ่านและเชื่อม webhook ครบ</p>
+            </div>
+            <button class="primaryButton" data-action="save">${paymentPrimaryLabel}</button>
           ` : ""}
 
           ${state.step === 4 ? `
@@ -408,6 +464,7 @@ function bindEvents() {
 
   document.querySelector("[data-action='save']")?.addEventListener("click", saveBooking);
   document.querySelector("[data-action='open-maps']")?.addEventListener("click", openGoogleMapsSearch);
+  document.querySelector("[data-action='confirm-map']")?.addEventListener("click", confirmMapLocation);
   document.querySelector("[data-action='use-current-location']")?.addEventListener("click", useCurrentLocation);
   document.querySelector("[data-action='reset']")?.addEventListener("click", () => {
     state.step = 1;
