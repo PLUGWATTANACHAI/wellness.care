@@ -6,6 +6,7 @@ Purpose: test Wellnest with a small trusted group before paying for Google Play 
 
 - Android: use the APK link for invited testers.
 - iPhone: use the Wellnest Pilot PWA in Safari or Chrome. This avoids TestFlight for now.
+- Public pilot link: deploy `wellnest-pilot` as a Render Static Site from `render.yaml`.
 - Admin/operator: use the existing staging/admin flow when needed.
 - Store launch: wait until booking flow, payment behavior, support cases, location consent, and tester feedback are stable.
 
@@ -31,6 +32,20 @@ Tester mix:
 ## Pilot Duration
 
 Run for 7 to 14 days.
+
+## Free Public Link Setup
+
+Use Render Static Site for the first public pilot link.
+
+Expected service:
+
+- Name: `wellnest-pilot`
+- Type: Static Site
+- Build command: `pnpm install --frozen-lockfile && pnpm build:pilot`
+- Publish directory: `apps/pilot/dist`
+- Auto deploy: off for safer manual control during pilot
+
+After Render finishes deploying, copy the `onrender.com` URL into the iPhone section of the invitation message.
 
 Daily checks:
 

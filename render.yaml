@@ -1,5 +1,20 @@
 services:
   - type: web
+    name: wellnest-pilot
+    runtime: static
+    plan: free
+    autoDeploy: false
+    buildCommand: pnpm install --frozen-lockfile && pnpm build:pilot
+    staticPublishPath: apps/pilot/dist
+    buildFilter:
+      paths:
+        - apps/pilot/**
+        - docs/pilot/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+
+  - type: web
     name: wellnest-api-staging
     runtime: node
     plan: free
