@@ -1,6 +1,6 @@
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
 
-type DemoLoginRole = "customer" | "provider" | "admin";
+export type DemoLoginRole = "customer" | "provider" | "admin";
 
 const accessTokens: Partial<Record<DemoLoginRole, string>> = {};
 
@@ -88,6 +88,13 @@ export interface LoginResultDto {
     name: string;
     phoneVerified: boolean;
   };
+}
+
+export interface OtpRequestDto {
+  challengeId: string;
+  expiresInSeconds: number;
+  deliveryChannel: "sms";
+  devOtp?: string;
 }
 
 export interface CustomerProfileDto {
@@ -245,6 +252,45 @@ export async function loginDemoRole(role: DemoLoginRole) {
   const result = (await response.json()) as LoginResultDto;
   accessTokens[role] = result.accessToken;
   return result;
+}
+
+export async function requestOtpLogin(input: { phone: string; role: "customer" | "provider" }) {
+  const response = await fetch(`${API_BASE_URL}/auth/otp/request`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to request OTP");
+  }
+
+  return response.json() as Promise<OtpRequestDto>;
+}
+
+export async function verifyOtpLogin(input: { challengeId: string; phone: string; otp: string }) {
+  const response = await fetch(`${API_BASE_URL}/auth/otp/verify`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to verify OTP");
+  }
+
+  const result = (await response.json()) as LoginResultDto;
+  const role = result.user.role === "provider" ? "provider" : "customer";
+  accessTokens[role] = result.accessToken;
+  return result;
+}
+
+export function hasRoleSession(role: DemoLoginRole) {
+  return Boolean(accessTokens[role]);
 }
 
 function authHeaders(role: DemoLoginRole, extraHeaders: Record<string, string> = {}) {

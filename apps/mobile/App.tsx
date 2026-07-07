@@ -1,26 +1,43 @@
 import { useEffect, useState } from "react";
-import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { CustomerHomeScreen } from "./src/screens/CustomerHomeScreen";
 import { ProviderJobScreen } from "./src/screens/ProviderJobScreen";
 import { PrivacyCenterScreen } from "./src/screens/PrivacyCenterScreen";
 import { AccountProfileScreen } from "./src/screens/AccountProfileScreen";
 import { NotificationCenterScreen } from "./src/screens/NotificationCenterScreen";
-import { loginDemoRole, type LoginResultDto } from "./src/services/api";
+import {
+  hasRoleSession,
+  loginDemoRole,
+  requestOtpLogin,
+  verifyOtpLogin,
+  type DemoLoginRole,
+  type LoginResultDto,
+  type OtpRequestDto,
+} from "./src/services/api";
+
+type AppSection = "customer" | "provider" | "account" | "notifications" | "privacy";
 
 export default function App() {
-  const [role, setRole] = useState<"customer" | "provider" | "account" | "notifications" | "privacy">("customer");
+  const [role, setRole] = useState<AppSection>("customer");
   const [session, setSession] = useState<LoginResultDto | undefined>();
-  const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("loading");
+
+  const activeLoginRole = getLoginRole(role);
 
   useEffect(() => {
-    const loginRole = role === "provider" ? "provider" : "customer";
+    const loginRole = getLoginRole(role);
+    if (hasRoleSession(loginRole)) {
+      setSessionStatus("ready");
+      return;
+    }
+
     setSessionStatus("loading");
     loginDemoRole(loginRole)
       .then((result) => {
         setSession(result);
         setSessionStatus("ready");
       })
-      .catch(() => setSessionStatus("error"));
+      .catch(() => setSessionStatus("auth_required"));
   }, [role]);
 
   return (
@@ -30,7 +47,7 @@ export default function App() {
         <View style={styles.header}>
           <Text style={styles.eyebrow}>Expo / React Native MVP</Text>
           <Text style={styles.title}>Wellnest</Text>
-          <Text style={styles.copy}>Signed-in {session?.user.name ?? "demo user"} · {sessionStatus}</Text>
+          <Text style={styles.copy}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
         </View>
         <View style={styles.demoPanel}>
           <Text style={styles.demoTitle}>Demo Run</Text>
@@ -49,13 +66,114 @@ export default function App() {
           <RoleTab active={role === "notifications"} label="Inbox" onPress={() => setRole("notifications")} />
           <RoleTab active={role === "privacy"} label="Privacy" onPress={() => setRole("privacy")} />
         </View>
-        {role === "customer" ? <CustomerHomeScreen /> : null}
-        {role === "provider" ? <ProviderJobScreen /> : null}
-        {role === "account" ? <AccountProfileScreen /> : null}
-        {role === "notifications" ? <NotificationCenterScreen /> : null}
+        {sessionStatus === "auth_required" ? (
+          <TesterLoginCard
+            role={activeLoginRole}
+            onSignedIn={(result) => {
+              setSession(result);
+              setSessionStatus("ready");
+            }}
+          />
+        ) : null}
+        {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreen /> : null}
+        {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreen /> : null}
+        {sessionStatus === "ready" && role === "account" ? <AccountProfileScreen /> : null}
+        {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreen /> : null}
         {role === "privacy" ? <PrivacyCenterScreen /> : null}
+        {sessionStatus === "loading" ? <Text style={styles.loadingText}>Checking secure session...</Text> : null}
+        {sessionStatus === "error" ? <Text style={styles.errorText}>Could not start a secure session. Please retry.</Text> : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; onSignedIn: (result: LoginResultDto) => void }) {
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [challenge, setChallenge] = useState<OtpRequestDto | undefined>();
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "verifying" | "error">("idle");
+
+  async function handleRequestOtp() {
+    if (phone.trim().length < 8) return;
+
+    setStatus("sending");
+    try {
+      const nextChallenge = await requestOtpLogin({ phone: phone.trim(), role });
+      setChallenge(nextChallenge);
+      setOtp(nextChallenge.devOtp ?? "");
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  async function handleVerifyOtp() {
+    if (!challenge || otp.trim().length !== 6) return;
+
+    setStatus("verifying");
+    try {
+      const result = await verifyOtpLogin({
+        challengeId: challenge.challengeId,
+        phone: phone.trim(),
+        otp: otp.trim(),
+      });
+      onSignedIn(result);
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  return (
+    <View style={styles.loginCard}>
+      <Text style={styles.demoTitle}>{role === "provider" ? "Provider tester login" : "Customer tester login"}</Text>
+      <Text style={styles.demoCopy}>Use phone OTP for closed testing. New customer phones will create a customer account after OTP verification.</Text>
+      <TextInput
+        keyboardType="phone-pad"
+        onChangeText={setPhone}
+        placeholder="Phone number"
+        style={styles.loginInput}
+        value={phone}
+      />
+      <Pressable
+        accessibilityRole="button"
+        disabled={status === "sending" || status === "verifying" || phone.trim().length < 8}
+        onPress={handleRequestOtp}
+        style={({ pressed }) => [
+          styles.loginButton,
+          status === "sending" || status === "verifying" || phone.trim().length < 8 ? styles.loginButtonDisabled : null,
+          pressed ? styles.tabPressed : null,
+        ]}
+      >
+        <Text style={styles.loginButtonText}>{status === "sending" ? "Sending..." : "Send OTP"}</Text>
+      </Pressable>
+      {challenge ? (
+        <>
+          <TextInput
+            keyboardType="number-pad"
+            maxLength={6}
+            onChangeText={setOtp}
+            placeholder="6-digit OTP"
+            style={styles.loginInput}
+            value={otp}
+          />
+          <Pressable
+            accessibilityRole="button"
+            disabled={status === "verifying" || otp.trim().length !== 6}
+            onPress={handleVerifyOtp}
+            style={({ pressed }) => [
+              styles.loginButton,
+              status === "verifying" || otp.trim().length !== 6 ? styles.loginButtonDisabled : null,
+              pressed ? styles.tabPressed : null,
+            ]}
+          >
+            <Text style={styles.loginButtonText}>{status === "verifying" ? "Verifying..." : "Verify and continue"}</Text>
+          </Pressable>
+          {challenge.devOtp ? <Text style={styles.loginHint}>Development OTP: {challenge.devOtp}</Text> : null}
+        </>
+      ) : null}
+      {status === "sent" ? <Text style={styles.loginHint}>OTP sent. Please enter the code to continue.</Text> : null}
+      {status === "error" ? <Text style={styles.errorText}>Login failed. Check the phone number or OTP and retry.</Text> : null}
+    </View>
   );
 }
 
@@ -83,7 +201,22 @@ function RoleTab({ active, label, onPress }: { active: boolean; label: string; o
   );
 }
 
-function getDemoHint(role: "customer" | "provider" | "account" | "notifications" | "privacy") {
+function getLoginRole(role: AppSection): "customer" | "provider" {
+  return role === "provider" ? "provider" : "customer";
+}
+
+function getSessionCopy(
+  session: LoginResultDto | undefined,
+  sessionStatus: "loading" | "ready" | "auth_required" | "error",
+  role: DemoLoginRole,
+) {
+  if (sessionStatus === "ready") return `Signed-in ${session?.user.name ?? role} · ready`;
+  if (sessionStatus === "auth_required") return `${role} OTP login required`;
+  if (sessionStatus === "loading") return `Checking ${role} session`;
+  return "Session error";
+}
+
+function getDemoHint(role: AppSection) {
   const hints: Record<typeof role, string> = {
     customer: "Create booking, confirm review, pay sandbox, then send a message or support request.",
     provider: "Accept the latest job, update trip status, send location, and reply to the customer.",
@@ -191,5 +324,53 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: "#0793a4",
+  },
+  loadingText: {
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    color: "#50615d",
+    padding: 12,
+    textAlign: "center",
+  },
+  loginCard: {
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#cfe2df",
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    padding: 14,
+  },
+  loginInput: {
+    borderWidth: 1,
+    borderColor: "#d7e2df",
+    borderRadius: 8,
+    color: "#10231f",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  loginButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    backgroundColor: "#0793a4",
+    paddingVertical: 11,
+  },
+  loginButtonDisabled: {
+    opacity: 0.45,
+  },
+  loginButtonText: {
+    color: "#fff",
+    fontWeight: "800",
+  },
+  loginHint: {
+    color: "#087f5b",
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  errorText: {
+    borderRadius: 8,
+    backgroundColor: "#fff5f3",
+    color: "#b42318",
+    fontWeight: "800",
+    padding: 12,
   },
 });

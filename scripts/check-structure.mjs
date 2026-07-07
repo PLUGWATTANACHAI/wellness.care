@@ -54,6 +54,7 @@ const requiredPaths = [
   "infra/database/migrations/012_auth_otp_challenges.sql",
   "infra/database/migrations/013_payment_webhook_event_details.sql",
   "infra/database/migrations/014_payment_methods.sql",
+  "infra/database/migrations/015_unique_user_phone_role.sql",
   "infra/database/seeds/001_demo_seed.sql",
   "docs/architecture/sprint-1-foundation.md",
   "docs/architecture/api-contract-sprint-1.md",

@@ -87,7 +87,7 @@ export async function requestOtpLogin(input: OtpRequestInput): Promise<OtpReques
   if (!process.env.SMS_PROVIDER && !isDemoAuthAllowed()) throw new Error("SMS_PROVIDER_REQUIRED");
 
   const user = await getUserByPhoneAndRole(input.phone, input.role);
-  if (!user) throw new Error("USER_NOT_FOUND");
+  if (!user && input.role !== "customer") throw new Error("USER_NOT_FOUND");
 
   const otp = createOtpCode();
   const challengeId = createId("otp");
@@ -161,8 +161,7 @@ export async function verifyOtpLogin(input: OtpVerifyInput): Promise<LoginResult
     throw new Error("OTP_CODE_INVALID");
   }
 
-  const user = await getUserByPhoneAndRole(input.phone, challenge.role);
-  if (!user) throw new Error("USER_NOT_FOUND");
+  const user = (await getUserByPhoneAndRole(input.phone, challenge.role)) ?? (await createCustomerFromVerifiedPhone(input.phone, challenge.role));
 
   await query("UPDATE auth_otp_challenges SET consumed_at = now() WHERE id = $1", [challenge.id]);
 
@@ -216,6 +215,41 @@ async function getUserByPhoneAndRole(phone: string, role: "customer" | "provider
       LIMIT 1
     `,
     [normalizePhone(phone), role],
+  );
+
+  return rows[0];
+}
+
+async function createCustomerFromVerifiedPhone(phone: string, role: "customer" | "provider") {
+  if (role !== "customer") throw new Error("USER_NOT_FOUND");
+
+  const userId = createId("usr");
+  const normalizedPhone = normalizePhone(phone);
+  const rows = await query<CurrentUser & { phoneVerified: boolean }>(
+    `
+      WITH new_user AS (
+        INSERT INTO users (id, role, name, phone, phone_verified)
+        VALUES ($1, 'customer', $2, $3, TRUE)
+        RETURNING
+          id,
+          role,
+          name,
+          phone_verified AS "phoneVerified"
+      ),
+      new_profile AS (
+        INSERT INTO customer_profiles (user_id, tier, coins, points)
+        SELECT id, 'Member', 0, 0
+        FROM new_user
+        ON CONFLICT (user_id) DO NOTHING
+      )
+      SELECT
+        id,
+        role,
+        name,
+        "phoneVerified"
+      FROM new_user
+    `,
+    [userId, `Wellnest ${normalizedPhone.slice(-4)}`, normalizedPhone],
   );
 
   return rows[0];
