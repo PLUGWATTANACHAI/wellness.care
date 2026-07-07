@@ -72,9 +72,17 @@ Pass condition:
 
 Goal: login works without demo auth.
 
+Current pilot shortcut:
+
+- Closed tester OTP is enabled for staging with operator-shared code only.
+- This is for small-group testing before paying for SMS traffic.
+- It must be removed before production launch.
+
 พี่ปลั๊กเตรียม:
 
 - SMS provider account or temporary webhook provider
+- shortlist and select the real Thai OTP/SMS provider before paid launch
+- estimated monthly OTP volume and expected login frequency
 - sender name if provider requires it
 - test phone number
 
@@ -85,11 +93,14 @@ Goal: login works without demo auth.
 - request OTP through staging API
 - verify that `devOtp` is not returned
 - verify OTP login creates a session
+- verify that production OTP is generated per user, expires in 5 minutes, and cannot reuse the closed tester code
 
 Pass condition:
 
 - Customer/provider login works with real SMS delivery.
+- Each user receives a unique OTP by SMS.
 - Demo auth remains disabled.
+- `WELLNEST_TESTER_OTP_CODE` is empty or absent.
 
 ## Stage 4 - Google Play Console
 

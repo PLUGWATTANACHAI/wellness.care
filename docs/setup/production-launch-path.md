@@ -16,6 +16,7 @@ The command fails if production-critical settings are missing or unsafe.
 
 - Demo auth disabled in production.
 - Real customer/provider authentication selected and integrated.
+- Real SMS/OTP provider selected and integrated so each user receives a unique OTP; closed tester OTP code removed.
 - Real payment gateway configured and webhook verified.
 - Google Maps production key locked down by app/package/bundle restrictions.
 - API deployed to cloud with HTTPS.
@@ -42,6 +43,7 @@ Not yet production:
 - App Store / Play Store release.
 - Real payment gateway contract, credentials, settlement testing, and provider-specific callback mapping.
 - Real OTP/social login.
+- Real per-user SMS OTP provider, pricing, contract, sender name, and PDPA/DPA review.
 - Cloud API deployment.
 - Production observability and incident process.
 - Store listing assets, privacy labels/data safety answers, screenshots, and support contacts.
@@ -49,7 +51,7 @@ Not yet production:
 ## Target Path
 
 1. Production auth.
-2. SMS provider for OTP.
+2. SMS provider for per-user OTP.
 3. Production payment provider.
 4. Real payment gateway callback mapping and settlement QA.
 5. Production maps and location privacy controls.

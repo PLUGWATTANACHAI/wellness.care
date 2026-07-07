@@ -75,6 +75,9 @@ export default function App() {
             }}
           />
         ) : null}
+        {sessionStatus === "ready" && activeLoginRole === "customer" ? (
+          <PilotSetupCard currentRole={role} onGoAccount={() => setRole("account")} onGoBooking={() => setRole("customer")} />
+        ) : null}
         {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreen /> : null}
         {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreen /> : null}
         {sessionStatus === "ready" && role === "account" ? <AccountProfileScreen /> : null}
@@ -84,6 +87,47 @@ export default function App() {
         {sessionStatus === "error" ? <Text style={styles.errorText}>Could not start a secure session. Please retry.</Text> : null}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function PilotSetupCard({
+  currentRole,
+  onGoAccount,
+  onGoBooking,
+}: {
+  currentRole: AppSection;
+  onGoAccount: () => void;
+  onGoBooking: () => void;
+}) {
+  return (
+    <View style={styles.setupCard}>
+      <Text style={styles.demoTitle}>Pilot setup</Text>
+      <Text style={styles.demoCopy}>For the first booking, save your condo and map address in Account, then return to Customer to check availability and pay.</Text>
+      <View style={styles.setupActions}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onGoAccount}
+          style={({ pressed }) => [
+            styles.setupButton,
+            currentRole === "account" ? styles.setupButtonActive : null,
+            pressed ? styles.tabPressed : null,
+          ]}
+        >
+          <Text style={[styles.setupButtonText, currentRole === "account" ? styles.setupButtonTextActive : null]}>Account first</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onGoBooking}
+          style={({ pressed }) => [
+            styles.setupButton,
+            currentRole === "customer" ? styles.setupButtonActive : null,
+            pressed ? styles.tabPressed : null,
+          ]}
+        >
+          <Text style={[styles.setupButtonText, currentRole === "customer" ? styles.setupButtonTextActive : null]}>Book service</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -342,6 +386,38 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#fff",
     padding: 14,
+  },
+  setupCard: {
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#9bd5d8",
+    borderRadius: 10,
+    backgroundColor: "#f1fbfb",
+    padding: 14,
+  },
+  setupActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  setupButton: {
+    flex: 1,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#cfe2df",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    paddingVertical: 10,
+  },
+  setupButtonActive: {
+    borderColor: "#0793a4",
+    backgroundColor: "#0793a4",
+  },
+  setupButtonText: {
+    color: "#50615d",
+    fontWeight: "800",
+  },
+  setupButtonTextActive: {
+    color: "#fff",
   },
   loginInput: {
     borderWidth: 1,
