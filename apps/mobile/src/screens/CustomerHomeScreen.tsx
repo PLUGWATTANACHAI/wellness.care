@@ -104,6 +104,15 @@ export function CustomerHomeScreen() {
   const customerAddress = customerProfile?.address;
   const canCheckAvailability = Boolean(selectedServiceId && customerAddress?.id && addressConfirmed);
   const canCreateBooking = Boolean(canCheckAvailability && availability?.available);
+  const canCreatePaymentIntent = Boolean(
+    latestBooking &&
+      reviewAccepted &&
+      priceBreakdown &&
+      slotHold?.held &&
+      paymentMethod === "promptpay" &&
+      paymentStatus !== "creating" &&
+      paymentStatus !== "confirming",
+  );
   const trackingBookingId = latestBooking?.id ?? "book_mqn1ex1f_05qxp01u";
 
   function getSelectedScheduledAt() {
@@ -526,16 +535,16 @@ export function CustomerHomeScreen() {
         <View style={styles.paymentActions}>
           <Pressable
             accessibilityRole="button"
-            disabled={!latestBooking || !reviewAccepted || !priceBreakdown || !slotHold?.held || paymentStatus === "creating" || paymentStatus === "confirming"}
+            disabled={!canCreatePaymentIntent}
             onPress={handleCreatePaymentIntent}
             style={({ pressed }) => [
               styles.buttonSecondary,
-              !latestBooking || !reviewAccepted || !priceBreakdown || !slotHold?.held ? styles.buttonDisabled : null,
+              !canCreatePaymentIntent ? styles.buttonDisabled : null,
               pressed ? styles.buttonPressed : null,
             ]}
           >
             <Text style={styles.buttonSecondaryText}>
-              {paymentStatus === "creating" ? "Creating..." : paymentMethod === "promptpay" ? "Open PromptPay QR" : "Create card charge"}
+              {paymentStatus === "creating" ? "Creating..." : paymentMethod === "promptpay" ? "Open PromptPay QR" : "Card tokenization next"}
             </Text>
           </Pressable>
           <Pressable
@@ -559,7 +568,7 @@ export function CustomerHomeScreen() {
         </View>
         {paymentMethod === "card" ? (
           <Text style={styles.note}>
-            Card live payment requires Omise tokenization. Wellnest API is ready for card tokens; the app must not store card numbers.
+            Card live payment is next. The API is ready for Omise card tokens; the app will add secure tokenization before testers use cards.
           </Text>
         ) : null}
         {paymentIntent?.checkoutUrl ? <Text style={styles.note}>Complete payment in the opened Omise checkout/QR page. Booking confirms after webhook.</Text> : null}
