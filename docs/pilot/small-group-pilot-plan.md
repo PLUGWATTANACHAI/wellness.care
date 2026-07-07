@@ -24,7 +24,7 @@ https://wellnest-pilot.onrender.com/
 
 APK link:
 
-https://expo.dev/artifacts/eas/XQH2t62AbribkgcyEx1pFbBvzQnkGrEzDh-N9ZQ3P4o.apk
+https://expo.dev/accounts/plugwattanachai/projects/wellnest/builds/f6cbb3a0-42cb-41c9-8399-80adbbc90007
 
 Note: APK install may show Android security warnings because it is not installed from Google Play. Use only trusted testers.
 

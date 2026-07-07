@@ -13,7 +13,7 @@
 
 Android:
 ใช้ลิงก์ APK นี้
-https://expo.dev/artifacts/eas/XQH2t62AbribkgcyEx1pFbBvzQnkGrEzDh-N9ZQ3P4o.apk
+https://expo.dev/accounts/plugwattanachai/projects/wellnest/builds/f6cbb3a0-42cb-41c9-8399-80adbbc90007
 
 iPhone:
 ใช้ลิงก์เว็บทดลองนี้ แล้วกด Share > Add to Home Screen
