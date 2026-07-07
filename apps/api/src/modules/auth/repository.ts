@@ -17,7 +17,7 @@ export interface OtpRequestInput {
 export interface OtpRequestResult {
   challengeId: string;
   expiresInSeconds: number;
-  deliveryChannel: "sms";
+  deliveryChannel: "sms" | "tester_code";
   devOtp?: string;
 }
 
@@ -84,12 +84,13 @@ export async function loginDemoUser(input: LoginInput): Promise<LoginResult> {
 export async function requestOtpLogin(input: OtpRequestInput): Promise<OtpRequestResult> {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL_REQUIRED");
   if (!isValidPhone(input.phone)) throw new Error("OTP_PHONE_INVALID");
-  if (!process.env.SMS_PROVIDER && !isDemoAuthAllowed()) throw new Error("SMS_PROVIDER_REQUIRED");
+  const testerOtp = getTesterOtpCode();
+  if (!process.env.SMS_PROVIDER && !isDemoAuthAllowed() && !testerOtp) throw new Error("SMS_PROVIDER_REQUIRED");
 
   const user = await getUserByPhoneAndRole(input.phone, input.role);
   if (!user && input.role !== "customer") throw new Error("USER_NOT_FOUND");
 
-  const otp = createOtpCode();
+  const otp = testerOtp ?? createOtpCode();
   const challengeId = createId("otp");
   const expiresAt = new Date(Date.now() + otpExpiresInSeconds * 1000);
 
@@ -107,16 +108,18 @@ export async function requestOtpLogin(input: OtpRequestInput): Promise<OtpReques
     [challengeId, normalizePhone(input.phone), input.role, hashOtp(otp), expiresAt.toISOString()],
   );
 
-  await sendOtpSms({
-    phone: normalizePhone(input.phone),
-    otp,
-    expiresInSeconds: otpExpiresInSeconds,
-  });
+  if (!testerOtp) {
+    await sendOtpSms({
+      phone: normalizePhone(input.phone),
+      otp,
+      expiresInSeconds: otpExpiresInSeconds,
+    });
+  }
 
   return {
     challengeId,
     expiresInSeconds: otpExpiresInSeconds,
-    deliveryChannel: "sms",
+    deliveryChannel: testerOtp ? "tester_code" : "sms",
     ...(isDemoAuthAllowed() ? { devOtp: otp } : {}),
   };
 }
@@ -323,6 +326,15 @@ function createOtpCode() {
   return crypto.randomInt(100000, 1000000).toString();
 }
 
+function getTesterOtpCode() {
+  if (process.env.APP_ENV === "production" || (!process.env.APP_ENV && process.env.NODE_ENV === "production")) return undefined;
+
+  const code = process.env.WELLNEST_TESTER_OTP_CODE;
+  if (!code) return undefined;
+  if (!/^[0-9]{6}$/.test(code)) throw new Error("TESTER_OTP_CODE_INVALID");
+  return code;
+}
+
 function hashOtp(otp: string) {
   return crypto.createHmac("sha256", getOtpSecret()).update(otp).digest("base64url");
 }
@@ -380,6 +392,10 @@ export function mapAuthError(error: unknown) {
 
   if (message === "OTP_SECRET_REQUIRED") {
     return { statusCode: 500, code: "OTP_SECRET_REQUIRED", message: "OTP secret is required" };
+  }
+
+  if (message === "TESTER_OTP_CODE_INVALID") {
+    return { statusCode: 500, code: "TESTER_OTP_CODE_INVALID", message: "Tester OTP code must be 6 digits" };
   }
 
   if (message === "OTP_PHONE_INVALID" || message === "OTP_VERIFY_INVALID") {

@@ -171,7 +171,10 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
           {challenge.devOtp ? <Text style={styles.loginHint}>Development OTP: {challenge.devOtp}</Text> : null}
         </>
       ) : null}
-      {status === "sent" ? <Text style={styles.loginHint}>OTP sent. Please enter the code to continue.</Text> : null}
+      {status === "sent" && challenge?.deliveryChannel === "tester_code" ? (
+        <Text style={styles.loginHint}>Use the closed tester code from the Wellnest operator.</Text>
+      ) : null}
+      {status === "sent" && challenge?.deliveryChannel === "sms" ? <Text style={styles.loginHint}>OTP sent. Please enter the code to continue.</Text> : null}
       {status === "error" ? <Text style={styles.errorText}>Login failed. Check the phone number or OTP and retry.</Text> : null}
     </View>
   );

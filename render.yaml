@@ -40,6 +40,8 @@ services:
         generateValue: true
       - key: SMS_PROVIDER
         value: console
+      - key: WELLNEST_TESTER_OTP_CODE
+        sync: false
       - key: PAYMENT_PROVIDER
         value: omise
       - key: PAYMENT_SECRET_KEY

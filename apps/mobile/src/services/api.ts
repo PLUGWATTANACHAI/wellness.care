@@ -93,7 +93,7 @@ export interface LoginResultDto {
 export interface OtpRequestDto {
   challengeId: string;
   expiresInSeconds: number;
-  deliveryChannel: "sms";
+  deliveryChannel: "sms" | "tester_code";
   devOtp?: string;
 }
 
