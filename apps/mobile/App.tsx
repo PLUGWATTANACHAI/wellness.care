@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Component, type ReactNode, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { CustomerHomeScreen } from "./src/screens/CustomerHomeScreen";
 import { ProviderJobScreen } from "./src/screens/ProviderJobScreen";
@@ -6,8 +6,6 @@ import { PrivacyCenterScreen } from "./src/screens/PrivacyCenterScreen";
 import { AccountProfileScreen } from "./src/screens/AccountProfileScreen";
 import { NotificationCenterScreen } from "./src/screens/NotificationCenterScreen";
 import {
-  hasRoleSession,
-  loginDemoRole,
   requestOtpLogin,
   verifyOtpLogin,
   type DemoLoginRole,
@@ -20,30 +18,15 @@ type AppSection = "customer" | "provider" | "account" | "notifications" | "priva
 export default function App() {
   const [role, setRole] = useState<AppSection>("customer");
   const [session, setSession] = useState<LoginResultDto | undefined>();
-  const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("loading");
+  const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("auth_required");
 
   const activeLoginRole = getLoginRole(role);
 
-  useEffect(() => {
-    const loginRole = getLoginRole(role);
-    if (hasRoleSession(loginRole)) {
-      setSessionStatus("ready");
-      return;
-    }
-
-    setSessionStatus("loading");
-    loginDemoRole(loginRole)
-      .then((result) => {
-        setSession(result);
-        setSessionStatus("ready");
-      })
-      .catch(() => setSessionStatus("auth_required"));
-  }, [role]);
-
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.container}>
+    <AppErrorBoundary>
+      <SafeAreaView style={styles.safe}>
+        <StatusBar barStyle="dark-content" />
+        <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <Text style={styles.eyebrow}>Expo / React Native MVP</Text>
           <Text style={styles.title}>Wellnest</Text>
@@ -85,9 +68,36 @@ export default function App() {
         {role === "privacy" ? <PrivacyCenterScreen /> : null}
         {sessionStatus === "loading" ? <Text style={styles.loadingText}>Checking secure session...</Text> : null}
         {sessionStatus === "error" ? <Text style={styles.errorText}>Could not start a secure session. Please retry.</Text> : null}
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </AppErrorBoundary>
   );
+}
+
+class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <SafeAreaView style={styles.safe}>
+          <StatusBar barStyle="dark-content" />
+          <View style={styles.container}>
+            <View style={styles.loginCard}>
+              <Text style={styles.demoTitle}>Wellnest needs a restart</Text>
+              <Text style={styles.demoCopy}>Please close and reopen the app. If this screen appears again, send this screen to the Wellnest operator.</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 function PilotSetupCard({
