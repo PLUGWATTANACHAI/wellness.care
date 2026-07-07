@@ -1,5 +1,6 @@
 import type { CurrentUser } from "../../core/auth/current-user";
 import { query } from "../../core/db/client";
+import { createId } from "../bookings/repository";
 
 export interface CustomerProfileUpdateInput {
   name?: string;
@@ -133,29 +134,73 @@ export async function updateCustomerAddress(user: CurrentUser, input: CustomerAd
     return getCustomerProfile(user);
   }
 
+  const existingAddress = await query<{ id: string }>(
+    `
+      SELECT id
+      FROM addresses
+      WHERE customer_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+    `,
+    [user.id],
+  );
+
+  if (!existingAddress[0]) {
+    const condoName = normalizeText(input.condoName);
+    const meetingPoint = normalizeText(input.meetingPoint);
+
+    if (!condoName || !meetingPoint) return getCustomerProfile(user);
+
+    await query(
+      `
+        INSERT INTO addresses (
+          id,
+          customer_id,
+          condo_name,
+          meeting_point,
+          note,
+          google_place_id,
+          formatted_address,
+          lat,
+          lng,
+          address_source,
+          place_id_refreshed_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CASE WHEN $6::text IS NULL THEN NULL ELSE now() END)
+      `,
+      [
+        createId("addr"),
+        user.id,
+        condoName,
+        meetingPoint,
+        input.note ?? null,
+        normalizeText(input.googlePlaceId),
+        normalizeText(input.formattedAddress),
+        typeof input.lat === "number" ? input.lat : null,
+        typeof input.lng === "number" ? input.lng : null,
+        input.addressSource ?? (input.googlePlaceId ? "google_places" : "manual"),
+      ],
+    );
+
+    return getCustomerProfile(user);
+  }
+
   await query(
     `
       UPDATE addresses
       SET
-        condo_name = COALESCE($2, condo_name),
-        meeting_point = COALESCE($3, meeting_point),
-        note = COALESCE($4, note),
-        google_place_id = COALESCE($5, google_place_id),
-        formatted_address = COALESCE($6, formatted_address),
-        lat = COALESCE($7, lat),
-        lng = COALESCE($8, lng),
-        address_source = COALESCE($9, address_source),
-        place_id_refreshed_at = CASE WHEN $5 IS NULL THEN place_id_refreshed_at ELSE now() END
-      WHERE id = (
-        SELECT id
-        FROM addresses
-        WHERE customer_id = $1
-        ORDER BY created_at DESC
-        LIMIT 1
-      )
+        condo_name = COALESCE($1, condo_name),
+        meeting_point = COALESCE($2, meeting_point),
+        note = COALESCE($3, note),
+        google_place_id = COALESCE($4, google_place_id),
+        formatted_address = COALESCE($5, formatted_address),
+        lat = COALESCE($6, lat),
+        lng = COALESCE($7, lng),
+        address_source = COALESCE($8, address_source),
+        place_id_refreshed_at = CASE WHEN $4 IS NULL THEN place_id_refreshed_at ELSE now() END
+      WHERE id = $9
     `,
     [
-      user.id,
       normalizeText(input.condoName),
       normalizeText(input.meetingPoint),
       input.note ?? null,
@@ -164,6 +209,7 @@ export async function updateCustomerAddress(user: CurrentUser, input: CustomerAd
       typeof input.lat === "number" ? input.lat : null,
       typeof input.lng === "number" ? input.lng : null,
       input.addressSource ?? (input.googlePlaceId ? "google_places" : null),
+      existingAddress[0].id,
     ],
   );
 
