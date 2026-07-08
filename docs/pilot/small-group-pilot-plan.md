@@ -24,7 +24,7 @@ https://wellnest-pilot.onrender.com/
 
 APK link:
 
-https://expo.dev/accounts/plugwattanachai/projects/wellnest/builds/60d6507f-82c4-4ad9-bda2-c6b343316a01
+https://expo.dev/accounts/plugwattanachai/projects/wellnest/builds/28c76be0-7ae7-4ddf-9fa3-b4428507d629
 
 Note: APK install may show Android security warnings because it is not installed from Google Play. Use only trusted testers. This build is connected to Expo OTA updates, so normal JavaScript/UI fixes can be updated without reinstalling; native permission or build-setting changes still need a new APK.
 
