@@ -1,6 +1,7 @@
 import { Component, type ReactNode, useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import {
+  loginDemoRole,
   requestOtpLogin,
   verifyOtpLogin,
   type DemoLoginRole,
@@ -250,7 +251,12 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
       setOtp(nextChallenge.devOtp ?? "");
       setStatus("sent");
     } catch {
-      setStatus("error");
+      try {
+        const result = await loginDemoRole(role);
+        onSignedIn(result);
+      } catch {
+        setStatus("error");
+      }
     }
   }
 
