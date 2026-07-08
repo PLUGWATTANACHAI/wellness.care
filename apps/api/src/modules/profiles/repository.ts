@@ -57,17 +57,20 @@ export async function getCustomerProfile(user: CurrentUser) {
         cp.tier,
         cp.coins,
         cp.points,
-        json_build_object(
-          'id', a.id,
-          'condoName', a.condo_name,
-          'meetingPoint', a.meeting_point,
-          'note', a.note,
-          'googlePlaceId', a.google_place_id,
-          'formattedAddress', a.formatted_address,
-          'lat', a.lat,
-          'lng', a.lng,
-          'addressSource', a.address_source
-        ) AS address
+        CASE
+          WHEN a.id IS NULL THEN NULL
+          ELSE json_build_object(
+            'id', a.id,
+            'condoName', a.condo_name,
+            'meetingPoint', a.meeting_point,
+            'note', a.note,
+            'googlePlaceId', a.google_place_id,
+            'formattedAddress', a.formatted_address,
+            'lat', a.lat,
+            'lng', a.lng,
+            'addressSource', a.address_source
+          )
+        END AS address
       FROM users u
       JOIN customer_profiles cp ON cp.user_id = u.id
       LEFT JOIN LATERAL (
@@ -147,9 +150,9 @@ export async function updateCustomerAddress(user: CurrentUser, input: CustomerAd
 
   if (!existingAddress[0]) {
     const condoName = normalizeText(input.condoName);
-    const meetingPoint = normalizeText(input.meetingPoint);
+    const meetingPoint = normalizeText(input.meetingPoint) || "Lobby / main entrance";
 
-    if (!condoName || !meetingPoint) return getCustomerProfile(user);
+    if (!condoName) return getCustomerProfile(user);
 
     await query(
       `
