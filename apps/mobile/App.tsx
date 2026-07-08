@@ -8,7 +8,7 @@ import {
   type LoginResultDto,
   type OtpRequestDto,
 } from "./src/services/api";
-import { type CurrentLocationAddress, requestCurrentLocationAddress } from "./src/services/currentLocation";
+import type { CurrentLocationAddress } from "./src/services/currentLocation";
 
 type AppSection = "customer" | "provider" | "account" | "notifications" | "privacy";
 
@@ -27,24 +27,26 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
+    const requestTimer = setTimeout(() => {
+      requestStartupLocation()
+        .then((location) => {
+          if (cancelled) return;
+          if (!location) {
+            setStartupLocationStatus("denied");
+            return;
+          }
 
-    requestCurrentLocationAddress()
-      .then((location) => {
-        if (cancelled) return;
-        if (!location) {
-          setStartupLocationStatus("denied");
-          return;
-        }
-
-        setStartupLocation(location);
-        setStartupLocationStatus("ready");
-      })
-      .catch(() => {
-        if (!cancelled) setStartupLocationStatus("error");
-      });
+          setStartupLocation(location);
+          setStartupLocationStatus("ready");
+        })
+        .catch(() => {
+          if (!cancelled) setStartupLocationStatus("error");
+        });
+    }, 1500);
 
     return () => {
       cancelled = true;
+      clearTimeout(requestTimer);
     };
   }, []);
 
@@ -67,6 +69,22 @@ export default function App() {
       });
   }, [activeLoginRole, sessionStatus, startupLocation, startupLocationSaved]);
 
+  async function handleRetryStartupLocation() {
+    setStartupLocationStatus("checking");
+    try {
+      const location = await requestStartupLocation();
+      if (!location) {
+        setStartupLocationStatus("denied");
+        return;
+      }
+
+      setStartupLocation(location);
+      setStartupLocationStatus("ready");
+    } catch {
+      setStartupLocationStatus("error");
+    }
+  }
+
   return (
     <AppErrorBoundary>
       <SafeAreaView style={styles.safe}>
@@ -77,7 +95,7 @@ export default function App() {
           <Text style={styles.title}>Wellnest</Text>
           <Text style={styles.copy}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
         </View>
-        <StartupLocationStatusCard status={startupLocationStatus} />
+        <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} />
         <View style={styles.demoPanel}>
           <Text style={styles.demoTitle}>Demo Run</Text>
           <View style={styles.demoSteps}>
@@ -120,7 +138,13 @@ export default function App() {
   );
 }
 
-function StartupLocationStatusCard({ status }: { status: "checking" | "ready" | "denied" | "saved" | "error" }) {
+function StartupLocationStatusCard({
+  onRetry,
+  status,
+}: {
+  onRetry: () => void;
+  status: "checking" | "ready" | "denied" | "saved" | "error";
+}) {
   const copy = getStartupLocationCopy(status);
   if (!copy) return null;
 
@@ -128,8 +152,18 @@ function StartupLocationStatusCard({ status }: { status: "checking" | "ready" | 
     <View style={styles.locationCard}>
       <Text style={styles.locationTitle}>{copy.title}</Text>
       <Text style={styles.locationCopy}>{copy.body}</Text>
+      {status === "denied" || status === "error" ? (
+        <Pressable accessibilityRole="button" onPress={onRetry} style={({ pressed }) => [styles.locationRetryButton, pressed ? styles.tabPressed : null]}>
+          <Text style={styles.locationRetryText}>Allow location now</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
+}
+
+async function requestStartupLocation() {
+  const locationService = require("./src/services/currentLocation") as typeof import("./src/services/currentLocation");
+  return locationService.requestCurrentLocationAddress();
 }
 
 function CustomerHomeScreenLazy() {
@@ -452,6 +486,16 @@ const styles = StyleSheet.create({
   locationCopy: {
     color: "#50615d",
     lineHeight: 20,
+  },
+  locationRetryButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    backgroundColor: "#087f5b",
+    paddingVertical: 10,
+  },
+  locationRetryText: {
+    color: "#fff",
+    fontWeight: "800",
   },
   tabs: {
     flexDirection: "row",
