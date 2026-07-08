@@ -168,13 +168,15 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
   const [otp, setOtp] = useState("");
   const [challenge, setChallenge] = useState<OtpRequestDto | undefined>();
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "verifying" | "error">("idle");
+  const trimmedPhone = phone.trim();
+  const looksLikeOtpInPhoneField = !challenge && /^\d{6}$/.test(trimmedPhone);
 
   async function handleRequestOtp() {
-    if (phone.trim().length < 8) return;
+    if (trimmedPhone.length < 8) return;
 
     setStatus("sending");
     try {
-      const nextChallenge = await requestOtpLogin({ phone: phone.trim(), role });
+      const nextChallenge = await requestOtpLogin({ phone: trimmedPhone, role });
       setChallenge(nextChallenge);
       setOtp(nextChallenge.devOtp ?? "");
       setStatus("sent");
@@ -190,7 +192,7 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
     try {
       const result = await verifyOtpLogin({
         challengeId: challenge.challengeId,
-        phone: phone.trim(),
+        phone: trimmedPhone,
         otp: otp.trim(),
       });
       onSignedIn(result);
@@ -202,21 +204,25 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
   return (
     <View style={styles.loginCard}>
       <Text style={styles.demoTitle}>{role === "provider" ? "Provider tester login" : "Customer tester login"}</Text>
-      <Text style={styles.demoCopy}>Use phone OTP for closed testing. New customer phones will create a customer account after OTP verification.</Text>
+      <Text style={styles.demoCopy}>1. Enter a phone number first. 2. Tap Send OTP. 3. Enter tester OTP 048550.</Text>
+      <Text style={styles.inputLabel}>Phone number first</Text>
       <TextInput
         keyboardType="phone-pad"
         onChangeText={setPhone}
-        placeholder="Phone number"
+        placeholder="Example: 0812345678"
         style={styles.loginInput}
         value={phone}
       />
+      {looksLikeOtpInPhoneField ? (
+        <Text style={styles.loginHint}>048550 is the OTP. Enter your phone number here first, then tap Send OTP.</Text>
+      ) : null}
       <Pressable
         accessibilityRole="button"
-        disabled={status === "sending" || status === "verifying" || phone.trim().length < 8}
+        disabled={status === "sending" || status === "verifying" || trimmedPhone.length < 8}
         onPress={handleRequestOtp}
         style={({ pressed }) => [
           styles.loginButton,
-          status === "sending" || status === "verifying" || phone.trim().length < 8 ? styles.loginButtonDisabled : null,
+          status === "sending" || status === "verifying" || trimmedPhone.length < 8 ? styles.loginButtonDisabled : null,
           pressed ? styles.tabPressed : null,
         ]}
       >
@@ -224,11 +230,12 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
       </Pressable>
       {challenge ? (
         <>
+          <Text style={styles.inputLabel}>Tester OTP</Text>
           <TextInput
             keyboardType="number-pad"
             maxLength={6}
             onChangeText={setOtp}
-            placeholder="6-digit OTP"
+            placeholder="048550"
             style={styles.loginInput}
             value={otp}
           />
@@ -458,6 +465,12 @@ const styles = StyleSheet.create({
     color: "#10231f",
     paddingHorizontal: 10,
     paddingVertical: 10,
+  },
+  inputLabel: {
+    color: "#263b38",
+    fontSize: 12,
+    fontWeight: "800",
+    marginBottom: -4,
   },
   loginButton: {
     alignItems: "center",
