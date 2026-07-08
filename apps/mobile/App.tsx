@@ -2,13 +2,11 @@ import { Component, type ReactNode, useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   requestOtpLogin,
-  updateCustomerAddress,
   verifyOtpLogin,
   type DemoLoginRole,
   type LoginResultDto,
   type OtpRequestDto,
 } from "./src/services/api";
-import type { CurrentLocationAddress } from "./src/services/currentLocation";
 
 type AppSection = "customer" | "provider" | "account" | "notifications" | "privacy";
 
@@ -18,26 +16,22 @@ export default function App() {
   const [role, setRole] = useState<AppSection>("customer");
   const [session, setSession] = useState<LoginResultDto | undefined>();
   const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("auth_required");
-  const [startupLocation, setStartupLocation] = useState<CurrentLocationAddress | undefined>();
-  const [startupLocationStatus, setStartupLocationStatus] = useState<"checking" | "ready" | "denied" | "saved" | "error">("checking");
-  const [startupLocationSaved, setStartupLocationSaved] = useState(false);
-  const [customerRefreshKey, setCustomerRefreshKey] = useState(0);
+  const [startupLocationStatus, setStartupLocationStatus] = useState<"checking" | "permission_ready" | "denied" | "error">("checking");
 
   const activeLoginRole = getLoginRole(role);
 
   useEffect(() => {
     let cancelled = false;
     const requestTimer = setTimeout(() => {
-      requestStartupLocation()
-        .then((location) => {
+      requestStartupLocationPermission()
+        .then((permissionGranted) => {
           if (cancelled) return;
-          if (!location) {
+          if (!permissionGranted) {
             setStartupLocationStatus("denied");
             return;
           }
 
-          setStartupLocation(location);
-          setStartupLocationStatus("ready");
+          setStartupLocationStatus("permission_ready");
         })
         .catch(() => {
           if (!cancelled) setStartupLocationStatus("error");
@@ -50,36 +44,16 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (sessionStatus !== "ready" || activeLoginRole !== "customer" || !startupLocation || startupLocationSaved) return;
-
-    setStartupLocationSaved(true);
-    updateCustomerAddress({
-      condoName: "Current location",
-      meetingPoint: "Lobby / main entrance",
-      ...startupLocation,
-    })
-      .then(() => {
-        setStartupLocationStatus("saved");
-        setCustomerRefreshKey((current) => current + 1);
-      })
-      .catch(() => {
-        setStartupLocationSaved(false);
-        setStartupLocationStatus("error");
-      });
-  }, [activeLoginRole, sessionStatus, startupLocation, startupLocationSaved]);
-
   async function handleRetryStartupLocation() {
     setStartupLocationStatus("checking");
     try {
-      const location = await requestStartupLocation();
-      if (!location) {
+      const permissionGranted = await requestStartupLocationPermission();
+      if (!permissionGranted) {
         setStartupLocationStatus("denied");
         return;
       }
 
-      setStartupLocation(location);
-      setStartupLocationStatus("ready");
+      setStartupLocationStatus("permission_ready");
     } catch {
       setStartupLocationStatus("error");
     }
@@ -125,7 +99,7 @@ export default function App() {
         {sessionStatus === "ready" && activeLoginRole === "customer" ? (
           <PilotSetupCard currentRole={role} onGoAccount={() => setRole("account")} onGoBooking={() => setRole("customer")} />
         ) : null}
-        {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy key={customerRefreshKey} /> : null}
+        {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy /> : null}
         {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreenLazy /> : null}
         {sessionStatus === "ready" && role === "account" ? <AccountProfileScreenLazy /> : null}
         {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreenLazy /> : null}
@@ -143,7 +117,7 @@ function StartupLocationStatusCard({
   status,
 }: {
   onRetry: () => void;
-  status: "checking" | "ready" | "denied" | "saved" | "error";
+  status: "checking" | "permission_ready" | "denied" | "error";
 }) {
   const copy = getStartupLocationCopy(status);
   if (!copy) return null;
@@ -161,9 +135,9 @@ function StartupLocationStatusCard({
   );
 }
 
-async function requestStartupLocation() {
+async function requestStartupLocationPermission() {
   const locationService = require("./src/services/currentLocation") as typeof import("./src/services/currentLocation");
-  return locationService.requestCurrentLocationAddress();
+  return locationService.requestLocationPermission();
 }
 
 function CustomerHomeScreenLazy() {
@@ -229,7 +203,7 @@ function PilotSetupCard({
   return (
     <View style={styles.setupCard}>
       <Text style={styles.demoTitle}>Pilot setup</Text>
-      <Text style={styles.demoCopy}>Allow location when the app opens, then continue to booking. You can still edit the address in Account anytime.</Text>
+      <Text style={styles.demoCopy}>Allow location when the app opens, then save a map address in Account before the first booking.</Text>
       <View style={styles.setupActions}>
         <Pressable
           accessibilityRole="button"
@@ -409,23 +383,17 @@ function getDemoHint(role: AppSection) {
   return hints[role];
 }
 
-function getStartupLocationCopy(status: "checking" | "ready" | "denied" | "saved" | "error") {
+function getStartupLocationCopy(status: "checking" | "permission_ready" | "denied" | "error") {
   if (status === "checking") {
     return {
       title: "Location setup",
       body: "Please allow location so Wellnest can prepare your service address.",
     };
   }
-  if (status === "ready") {
+  if (status === "permission_ready") {
     return {
-      title: "Location ready",
-      body: "Your current location is ready and will be saved after customer login.",
-    };
-  }
-  if (status === "saved") {
-    return {
-      title: "Service area confirmed",
-      body: "Your current location is saved for booking. You can change it in Account anytime.",
+      title: "Location permission allowed",
+      body: "Location access is ready. For this test build, save the exact map address in Account before booking.",
     };
   }
   if (status === "denied") {

@@ -8,7 +8,7 @@ import {
   type AddressSuggestionDto,
   type CustomerProfileDto,
 } from "../services/api";
-import { requestCurrentLocationAddress } from "../services/currentLocation";
+import { requestLocationPermission } from "../services/currentLocation";
 
 const demoAddressSuggestion: AddressSuggestionDto = {
   placeId: "demo_google_place_iconsiam_bangkok",
@@ -103,21 +103,15 @@ export function AccountProfileScreen() {
     setAddressSearchHint("กำลังขออนุญาตใช้ตำแหน่งปัจจุบันจากมือถือ...");
 
     try {
-      const currentLocation = await requestCurrentLocationAddress();
-      if (!currentLocation) {
+      const permissionGranted = await requestLocationPermission();
+      if (!permissionGranted) {
         setAddressSearchHint("ยังไม่ได้อนุญาตให้ใช้ตำแหน่ง พี่สามารถเปิดสิทธิ์ Location ใน Settings ของเครื่องได้ค่ะ");
         setStatus("ready");
         return;
       }
 
-      setCondoName((current) => current.trim() || "Current location");
-      setMapQuery(currentLocation.formattedAddress);
-      if (!meetingPoint.trim()) {
-        setMeetingPoint("Lobby / main entrance");
-      }
-      setSelectedMapAddress(currentLocation);
+      setAddressSearchHint("อนุญาต Location แล้ว สำหรับ build ทดสอบนี้ให้ค้นหาและเลือกที่อยู่จากแผนที่ก่อนกด Save profile");
       setAddressSuggestions([]);
-      setAddressSearchHint("ใช้ตำแหน่งปัจจุบันแล้ว ตรวจชื่อคอนโด/จุดนัดพบ แล้วกด Save profile");
       setStatus("ready");
     } catch {
       setAddressSearchHint("ดึงตำแหน่งไม่สำเร็จ ลองเปิด GPS/Wi-Fi แล้วกดอีกครั้ง หรือใช้ที่อยู่ทดสอบก่อนค่ะ");
