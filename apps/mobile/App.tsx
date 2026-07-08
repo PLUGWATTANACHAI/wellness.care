@@ -65,19 +65,35 @@ export default function App() {
       <SafeAreaView style={styles.safe}>
         <StatusBar barStyle="dark-content" />
         <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Expo / React Native MVP</Text>
-          <Text style={styles.title}>Wellnest</Text>
-          <Text style={styles.copy}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
+        <View style={styles.topBar}>
+          <View>
+            <Text style={styles.memberLine}>{session ? "Member · 0 coins · 0 points" : "Condo wellness, on demand"}</Text>
+            <Text style={styles.brandTitle}>Wellnest</Text>
+          </View>
+          <View style={styles.profileBadge}>
+            <Text style={styles.profileBadgeText}>{session?.user.name?.slice(0, 1) || "W"}</Text>
+          </View>
+        </View>
+        <View style={styles.heroCard}>
+          <View style={styles.heroCopy}>
+            <Text style={styles.heroKicker}>Pilot Offer</Text>
+            <Text style={styles.heroTitle}>จองบริการดูแลตัวเองถึงคอนโด</Text>
+            <Text style={styles.heroBody}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
+          </View>
+          <View style={styles.heroVisual}>
+            <View style={[styles.heroBar, styles.heroBarShort]} />
+            <View style={[styles.heroBar, styles.heroBarGold]} />
+            <View style={[styles.heroBar, styles.heroBarTiny]} />
+          </View>
         </View>
         <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} />
         <View style={styles.demoPanel}>
-          <Text style={styles.demoTitle}>Demo Run</Text>
+          <Text style={styles.demoTitle}>Booking flow</Text>
           <View style={styles.demoSteps}>
-            <DemoStep active={role === "customer"} label="1 Book" onPress={() => setRole("customer")} />
-            <DemoStep active={role === "provider"} label="2 Provider" onPress={() => setRole("provider")} />
-            <DemoStep active={role === "notifications"} label="3 Inbox" onPress={() => setRole("notifications")} />
-            <DemoStep active={role === "privacy"} label="4 Privacy" onPress={() => setRole("privacy")} />
+            <DemoStep active={role === "customer"} label="บริการ" onPress={() => setRole("customer")} />
+            <DemoStep active={role === "account"} label="ที่อยู่" onPress={() => setRole("account")} />
+            <DemoStep active={role === "notifications"} label="แจ้งเตือน" onPress={() => setRole("notifications")} />
+            <DemoStep active={role === "privacy"} label="ติดตาม" onPress={() => setRole("privacy")} />
           </View>
           <Text style={styles.demoCopy}>{getDemoHint(role)}</Text>
         </View>
@@ -424,25 +440,88 @@ const styles = StyleSheet.create({
     gap: 14,
     padding: 18,
   },
-  header: {
-    gap: 6,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#0793a4",
+  topBar: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
-  eyebrow: {
-    color: "rgba(255,255,255,0.72)",
+  memberLine: {
+    color: "#60736f",
     fontSize: 12,
-    fontWeight: "700",
-  },
-  title: {
-    color: "#fff",
-    fontSize: 28,
     fontWeight: "800",
   },
-  copy: {
-    color: "rgba(255,255,255,0.82)",
+  brandTitle: {
+    color: "#18302d",
+    fontSize: 34,
+    fontWeight: "900",
+  },
+  profileBadge: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 44,
+    height: 44,
+    borderWidth: 1,
+    borderColor: "#d7e7e3",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+  },
+  profileBadgeText: {
+    color: "#0b8f88",
+    fontSize: 20,
+    fontWeight: "900",
+  },
+  heroCard: {
+    minHeight: 178,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: "#0b8f88",
+    padding: 18,
+  },
+  heroCopy: {
+    flex: 1,
+    gap: 7,
+  },
+  heroKicker: {
+    color: "#f3d17c",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  heroTitle: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "900",
+    lineHeight: 34,
+  },
+  heroBody: {
+    color: "rgba(255,255,255,0.84)",
     lineHeight: 20,
+  },
+  heroVisual: {
+    width: 92,
+    height: 118,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  heroBar: {
+    flex: 1,
+    height: 76,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.72)",
+  },
+  heroBarShort: {
+    height: 64,
+  },
+  heroBarGold: {
+    height: 112,
+    backgroundColor: "#f3d17c",
+  },
+  heroBarTiny: {
+    height: 48,
   },
   locationCard: {
     gap: 4,
