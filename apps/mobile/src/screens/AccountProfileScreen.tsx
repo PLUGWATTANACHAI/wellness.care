@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import * as Location from "expo-location";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   getCustomerProfile,
@@ -97,6 +98,46 @@ export function AccountProfileScreen() {
     }
   }
 
+  async function handleUseCurrentLocation() {
+    setStatus("saving");
+    setAddressSearchHint("กำลังขออนุญาตใช้ตำแหน่งปัจจุบันจากมือถือ...");
+
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== Location.PermissionStatus.GRANTED) {
+        setAddressSearchHint("ยังไม่ได้อนุญาตให้ใช้ตำแหน่ง พี่สามารถเปิดสิทธิ์ Location ใน Settings ของเครื่องได้ค่ะ");
+        setStatus("ready");
+        return;
+      }
+
+      const position = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const lat = Number(position.coords.latitude.toFixed(6));
+      const lng = Number(position.coords.longitude.toFixed(6));
+      const formattedAddress = await getReadableCurrentAddress(lat, lng);
+
+      setCondoName((current) => current.trim() || "Current location");
+      setMapQuery(formattedAddress);
+      if (!meetingPoint.trim()) {
+        setMeetingPoint("Lobby / main entrance");
+      }
+      setSelectedMapAddress({
+        googlePlaceId: `current_location_${lat}_${lng}`,
+        formattedAddress,
+        lat,
+        lng,
+        addressSource: "manual",
+      });
+      setAddressSuggestions([]);
+      setAddressSearchHint("ใช้ตำแหน่งปัจจุบันแล้ว ตรวจชื่อคอนโด/จุดนัดพบ แล้วกด Save profile");
+      setStatus("ready");
+    } catch {
+      setAddressSearchHint("ดึงตำแหน่งไม่สำเร็จ ลองเปิด GPS/Wi-Fi แล้วกดอีกครั้ง หรือใช้ที่อยู่ทดสอบก่อนค่ะ");
+      setStatus("ready");
+    }
+  }
+
   function handleSelectSuggestion(suggestion: AddressSuggestionDto) {
     setCondoName(suggestion.displayName);
     setMapQuery(suggestion.formattedAddress);
@@ -157,6 +198,14 @@ export function AccountProfileScreen() {
         style={({ pressed }) => [styles.secondaryButton, pressed ? styles.buttonPressed : null]}
       >
         <Text style={styles.secondaryButtonText}>Use demo address for testing</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        disabled={status === "loading" || status === "saving"}
+        onPress={handleUseCurrentLocation}
+        style={({ pressed }) => [styles.locationButton, pressed ? styles.buttonPressed : null]}
+      >
+        <Text style={styles.locationButtonText}>Use current location</Text>
       </Pressable>
       {addressSearchHint ? <Text style={styles.mapHint}>{addressSearchHint}</Text> : null}
       {addressSuggestions.map((suggestion) => (
@@ -247,6 +296,17 @@ const styles = StyleSheet.create({
     color: "#087f5b",
     fontWeight: "800",
   },
+  locationButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#edf4ff",
+    paddingVertical: 10,
+  },
+  locationButtonText: {
+    color: "#1d4ed8",
+    fontWeight: "800",
+  },
   mapHint: {
     color: "#50615d",
     fontSize: 12,
@@ -296,3 +356,25 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 });
+
+async function getReadableCurrentAddress(lat: number, lng: number) {
+  try {
+    const [address] = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
+    const parts = [
+      address?.name,
+      address?.street,
+      address?.district,
+      address?.city,
+      address?.region,
+      address?.postalCode,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(", ");
+    }
+  } catch {
+    // Coordinates are still enough for provider matching when reverse geocoding is unavailable.
+  }
+
+  return `Current location (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+}
