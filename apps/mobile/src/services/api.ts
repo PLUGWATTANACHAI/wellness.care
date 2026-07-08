@@ -1,8 +1,23 @@
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://wellnest-api-staging.onrender.com";
+const API_TIMEOUT_MS = 15000;
 
 export type DemoLoginRole = "customer" | "provider" | "admin";
 
 const accessTokens: Partial<Record<DemoLoginRole, string>> = {};
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 export interface ServiceItemDto {
   id: string;
@@ -237,7 +252,7 @@ export type ConsentType =
   | "marketing";
 
 export async function loginDemoRole(role: DemoLoginRole) {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/auth/login`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -255,7 +270,7 @@ export async function loginDemoRole(role: DemoLoginRole) {
 }
 
 export async function requestOtpLogin(input: { phone: string; role: "customer" | "provider" }) {
-  const response = await fetch(`${API_BASE_URL}/auth/otp/request`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/auth/otp/request`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -271,7 +286,7 @@ export async function requestOtpLogin(input: { phone: string; role: "customer" |
 }
 
 export async function verifyOtpLogin(input: { challengeId: string; phone: string; otp: string }) {
-  const response = await fetch(`${API_BASE_URL}/auth/otp/verify`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/auth/otp/verify`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -302,7 +317,7 @@ function authHeaders(role: DemoLoginRole, extraHeaders: Record<string, string> =
 }
 
 export async function getServices() {
-  const response = await fetch(`${API_BASE_URL}/services`);
+  const response = await fetchWithTimeout(`${API_BASE_URL}/services`);
   if (!response.ok) {
     throw new Error("Failed to load services");
   }
@@ -310,7 +325,7 @@ export async function getServices() {
 }
 
 export async function createBooking(input: { serviceId: string; addressId: string; scheduledAt: string }) {
-  const response = await fetch(`${API_BASE_URL}/bookings`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings`, {
     method: "POST",
     headers: authHeaders("customer", {
       "content-type": "application/json",
@@ -327,7 +342,7 @@ export async function createBooking(input: { serviceId: string; addressId: strin
 
 export async function checkProviderAvailability(input: { serviceId: string; addressId: string; scheduledAt: string }) {
   const params = new URLSearchParams(input);
-  const response = await fetch(`${API_BASE_URL}/bookings/availability?${params.toString()}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/availability?${params.toString()}`, {
     headers: authHeaders("customer"),
   });
 
@@ -347,7 +362,7 @@ export async function createDemoBooking(serviceId: string) {
 }
 
 export async function getProviderJobs() {
-  const response = await fetch(`${API_BASE_URL}/provider/jobs`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/provider/jobs`, {
     headers: {
       ...authHeaders("provider"),
     },
@@ -361,7 +376,7 @@ export async function getProviderJobs() {
 }
 
 export async function acceptProviderJob(bookingId: string) {
-  const response = await fetch(`${API_BASE_URL}/provider/jobs/${bookingId}/accept`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/provider/jobs/${bookingId}/accept`, {
     method: "POST",
     headers: authHeaders("provider"),
   });
@@ -374,7 +389,7 @@ export async function acceptProviderJob(bookingId: string) {
 }
 
 export async function rejectProviderJob(bookingId: string) {
-  const response = await fetch(`${API_BASE_URL}/provider/jobs/${bookingId}/reject`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/provider/jobs/${bookingId}/reject`, {
     method: "POST",
     headers: authHeaders("provider"),
   });
@@ -387,7 +402,7 @@ export async function rejectProviderJob(bookingId: string) {
 }
 
 export async function updateProviderJobStatus(bookingId: string, status: "provider_on_the_way" | "arrived_at_lobby") {
-  const response = await fetch(`${API_BASE_URL}/provider/jobs/${bookingId}/status`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/provider/jobs/${bookingId}/status`, {
     method: "POST",
     headers: authHeaders("provider", {
       "content-type": "application/json",
@@ -408,7 +423,7 @@ export async function recordConsent(
   sourceScreen: string,
   role: "customer" | "provider" | "admin" = "customer",
 ) {
-  const response = await fetch(`${API_BASE_URL}/privacy/consents`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/privacy/consents`, {
     method: "POST",
     headers: authHeaders(role, {
       "content-type": "application/json",
@@ -433,7 +448,7 @@ export async function sendProviderLocation(
   bookingId: string,
   input: { lat: number; lng: number; accuracyMeters?: number },
 ) {
-  const response = await fetch(`${API_BASE_URL}/provider/jobs/${bookingId}/location`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/provider/jobs/${bookingId}/location`, {
     method: "POST",
     headers: authHeaders("provider", {
       "content-type": "application/json",
@@ -449,7 +464,7 @@ export async function sendProviderLocation(
 }
 
 export async function getProviderLocation(bookingId: string) {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/provider-location`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/${bookingId}/provider-location`, {
     headers: authHeaders("customer"),
   });
 
@@ -465,7 +480,7 @@ export async function createPaymentIntent(input: {
   method: "promptpay" | "card";
   cardToken?: string;
 }) {
-  const response = await fetch(`${API_BASE_URL}/payments/create-intent`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/payments/create-intent`, {
     method: "POST",
     headers: authHeaders("customer", {
       "content-type": "application/json",
@@ -481,7 +496,7 @@ export async function createPaymentIntent(input: {
 }
 
 export async function getPriceBreakdown(bookingId: string) {
-  const response = await fetch(`${API_BASE_URL}/payments/breakdown?bookingId=${encodeURIComponent(bookingId)}`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/payments/breakdown?bookingId=${encodeURIComponent(bookingId)}`, {
     headers: authHeaders("customer"),
   });
 
@@ -493,7 +508,7 @@ export async function getPriceBreakdown(bookingId: string) {
 }
 
 export async function confirmSandboxPayment(paymentId: string) {
-  const response = await fetch(`${API_BASE_URL}/payments/${paymentId}/confirm-sandbox`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/payments/${paymentId}/confirm-sandbox`, {
     method: "POST",
     headers: authHeaders("customer"),
   });
@@ -506,7 +521,7 @@ export async function confirmSandboxPayment(paymentId: string) {
 }
 
 export async function getCustomerProfile() {
-  const response = await fetch(`${API_BASE_URL}/profile/customer`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/profile/customer`, {
     headers: authHeaders("customer"),
   });
 
@@ -518,7 +533,7 @@ export async function getCustomerProfile() {
 }
 
 export async function updateCustomerProfile(input: { name?: string; phone?: string; email?: string }) {
-  const response = await fetch(`${API_BASE_URL}/profile/customer`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/profile/customer`, {
     method: "PATCH",
     headers: authHeaders("customer", {
       "content-type": "application/json",
@@ -543,7 +558,7 @@ export async function updateCustomerAddress(input: {
   lng?: number;
   addressSource?: "manual" | "google_places" | "google_places_demo";
 }) {
-  const response = await fetch(`${API_BASE_URL}/profile/customer/address`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/profile/customer/address`, {
     method: "PATCH",
     headers: authHeaders("customer", {
       "content-type": "application/json",
@@ -559,7 +574,7 @@ export async function updateCustomerAddress(input: {
 }
 
 export async function searchAddressSuggestions(query: string) {
-  const response = await fetch(`${API_BASE_URL}/maps/address-suggestions?q=${encodeURIComponent(query)}`);
+  const response = await fetchWithTimeout(`${API_BASE_URL}/maps/address-suggestions?q=${encodeURIComponent(query)}`);
 
   if (!response.ok) {
     throw new Error("Failed to search address suggestions");
@@ -569,7 +584,7 @@ export async function searchAddressSuggestions(query: string) {
 }
 
 export async function checkProviderServiceRadius(bookingId: string) {
-  const response = await fetch(`${API_BASE_URL}/provider/jobs/${bookingId}/service-radius`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/provider/jobs/${bookingId}/service-radius`, {
     headers: authHeaders("provider"),
   });
 
@@ -581,7 +596,7 @@ export async function checkProviderServiceRadius(bookingId: string) {
 }
 
 export async function getProviderProfile() {
-  const response = await fetch(`${API_BASE_URL}/profile/provider`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/profile/provider`, {
     headers: authHeaders("provider"),
   });
 
@@ -593,7 +608,7 @@ export async function getProviderProfile() {
 }
 
 export async function updateProviderProfile(input: { onlineStatus?: "online" | "offline" | "busy" }) {
-  const response = await fetch(`${API_BASE_URL}/profile/provider`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/profile/provider`, {
     method: "PATCH",
     headers: authHeaders("provider", {
       "content-type": "application/json",
@@ -609,7 +624,7 @@ export async function updateProviderProfile(input: { onlineStatus?: "online" | "
 }
 
 export async function getNotifications(role: "customer" | "provider" = "customer") {
-  const response = await fetch(`${API_BASE_URL}/notifications`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/notifications`, {
     headers: authHeaders(role),
   });
 
@@ -621,7 +636,7 @@ export async function getNotifications(role: "customer" | "provider" = "customer
 }
 
 export async function markNotificationRead(notificationId: string, role: "customer" | "provider" = "customer") {
-  const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/notifications/${notificationId}/read`, {
     method: "POST",
     headers: authHeaders(role),
   });
@@ -634,7 +649,7 @@ export async function markNotificationRead(notificationId: string, role: "custom
 }
 
 export async function getBookingTimeline(bookingId: string, role: "customer" | "provider" = "customer") {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/timeline`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/${bookingId}/timeline`, {
     headers: authHeaders(role),
   });
 
@@ -646,7 +661,7 @@ export async function getBookingTimeline(bookingId: string, role: "customer" | "
 }
 
 export async function getBookingCommunications(bookingId: string, role: "customer" | "provider" = "customer") {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/communications`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/${bookingId}/communications`, {
     headers: authHeaders(role),
   });
 
@@ -666,7 +681,7 @@ export async function createBookingCommunication(
   },
   role: "customer" | "provider" = "customer",
 ) {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/communications`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/${bookingId}/communications`, {
     method: "POST",
     headers: authHeaders(role, {
       "content-type": "application/json",
@@ -689,7 +704,7 @@ export async function createBookingSupportRequest(
   },
   role: "customer" | "provider" = "customer",
 ) {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/support-requests`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/${bookingId}/support-requests`, {
     method: "POST",
     headers: authHeaders(role, {
       "content-type": "application/json",
@@ -705,7 +720,7 @@ export async function createBookingSupportRequest(
 }
 
 export async function getBookingSupportCases(bookingId: string, role: "customer" | "provider" = "customer") {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/support-cases`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/${bookingId}/support-cases`, {
     headers: authHeaders(role),
   });
 
@@ -717,7 +732,7 @@ export async function getBookingSupportCases(bookingId: string, role: "customer"
 }
 
 export async function getBookingSlotHold(bookingId: string) {
-  const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/slot-hold`, {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/bookings/${bookingId}/slot-hold`, {
     headers: authHeaders("customer"),
   });
 
