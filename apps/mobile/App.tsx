@@ -203,7 +203,7 @@ function PilotSetupCard({
   return (
     <View style={styles.setupCard}>
       <Text style={styles.demoTitle}>Pilot setup</Text>
-      <Text style={styles.demoCopy}>Allow location when the app opens, then save a map address in Account before the first booking.</Text>
+      <Text style={styles.demoCopy}>Allow location when the app opens, then use current location or save a map address in Account before booking.</Text>
       <View style={styles.setupActions}>
         <Pressable
           accessibilityRole="button"
@@ -393,7 +393,7 @@ function getStartupLocationCopy(status: "checking" | "permission_ready" | "denie
   if (status === "permission_ready") {
     return {
       title: "Location permission allowed",
-      body: "Location access is ready. For this test build, save the exact map address in Account before booking.",
+      body: "Location access is ready. Use current location in Account to save your service address before booking.",
     };
   }
   if (status === "denied") {

@@ -429,17 +429,16 @@ export async function recordConsent(
   }>;
 }
 
-export async function sendProviderLocation(bookingId: string) {
+export async function sendProviderLocation(
+  bookingId: string,
+  input: { lat: number; lng: number; accuracyMeters?: number },
+) {
   const response = await fetch(`${API_BASE_URL}/provider/jobs/${bookingId}/location`, {
     method: "POST",
     headers: authHeaders("provider", {
       "content-type": "application/json",
     }),
-    body: JSON.stringify({
-      lat: 13.72145,
-      lng: 100.51318,
-      accuracyMeters: 16,
-    }),
+    body: JSON.stringify(input),
   });
 
   if (!response.ok) {

@@ -21,6 +21,7 @@ import {
   updateProviderProfile,
   updateProviderJobStatus,
 } from "../services/api";
+import { requestCurrentCoordinates } from "../services/currentLocation";
 
 export function ProviderJobScreen() {
   const [jobs, setJobs] = useState<BookingListItemDto[]>([]);
@@ -125,7 +126,13 @@ export function ProviderJobScreen() {
 
     setStatus("saving");
     try {
-      const result = await sendProviderLocation(topJob.id);
+      const currentCoordinates = await requestCurrentCoordinates();
+      if (!currentCoordinates) {
+        setStatus("error");
+        return;
+      }
+
+      const result = await sendProviderLocation(topJob.id, currentCoordinates);
       setLocationResult(result);
       setStatus("ready");
     } catch {
