@@ -111,6 +111,9 @@ export function AccountProfileScreen() {
       }
 
       setCondoName((currentCondoName) => currentCondoName || "Current location");
+      if (!meetingPoint.trim()) {
+        setMeetingPoint("Lobby / main entrance");
+      }
       setMapQuery(currentAddress.formattedAddress);
       setAddressSearchHint("ดึงตำแหน่งปัจจุบันแล้ว ตรวจชื่อคอนโด/จุดนัดพบ แล้วกด Save profile");
       setAddressSuggestions([]);
