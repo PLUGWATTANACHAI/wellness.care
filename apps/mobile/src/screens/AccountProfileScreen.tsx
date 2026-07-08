@@ -9,6 +9,15 @@ import {
   type CustomerProfileDto,
 } from "../services/api";
 
+const demoAddressSuggestion: AddressSuggestionDto = {
+  placeId: "demo_google_place_iconsiam_bangkok",
+  displayName: "ICONSIAM",
+  formattedAddress: "ICONSIAM, Charoen Nakhon Road, Khlong San, Bangkok",
+  lat: 13.72662,
+  lng: 100.51039,
+  source: "demo",
+};
+
 export function AccountProfileScreen() {
   const [profile, setProfile] = useState<CustomerProfileDto | undefined>();
   const [status, setStatus] = useState<"loading" | "ready" | "saving" | "error">("loading");
@@ -19,6 +28,7 @@ export function AccountProfileScreen() {
   const [meetingPoint, setMeetingPoint] = useState("");
   const [note, setNote] = useState("");
   const [mapQuery, setMapQuery] = useState("");
+  const [addressSearchHint, setAddressSearchHint] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestionDto[]>([]);
   const [selectedMapAddress, setSelectedMapAddress] = useState<{
     googlePlaceId?: string;
@@ -69,12 +79,18 @@ export function AccountProfileScreen() {
 
   async function handleSearchAddress() {
     const query = mapQuery.trim() || condoName.trim();
-    if (query.length < 2) return;
+    if (query.length < 2) {
+      setAddressSearchHint("ใส่ชื่อคอนโดหรือสถานที่ก่อน เช่น ICONSIAM หรือกดใช้ที่อยู่ทดสอบได้เลย");
+      return;
+    }
 
     setStatus("saving");
     try {
       const suggestions = await searchAddressSuggestions(query);
       setAddressSuggestions(suggestions);
+      setAddressSearchHint(
+        suggestions.length > 0 ? "เลือกที่อยู่จากรายการด้านล่าง แล้วกด Save profile" : "ยังไม่เจอที่อยู่นี้ ลองพิมพ์ชื่อสถานที่ใหม่หรือใช้ที่อยู่ทดสอบ"
+      );
       setStatus("ready");
     } catch {
       setStatus("error");
@@ -84,6 +100,10 @@ export function AccountProfileScreen() {
   function handleSelectSuggestion(suggestion: AddressSuggestionDto) {
     setCondoName(suggestion.displayName);
     setMapQuery(suggestion.formattedAddress);
+    setAddressSearchHint("เลือกที่อยู่แล้ว ใส่จุดนัดพบถ้ามี แล้วกด Save profile");
+    if (!meetingPoint.trim()) {
+      setMeetingPoint("Lobby / main entrance");
+    }
     setSelectedMapAddress({
       googlePlaceId: suggestion.placeId,
       formattedAddress: suggestion.formattedAddress,
@@ -91,6 +111,11 @@ export function AccountProfileScreen() {
       lng: suggestion.lng,
       addressSource: suggestion.source === "demo" ? "google_places_demo" : "google_places",
     });
+  }
+
+  function handleUseDemoAddress() {
+    handleSelectSuggestion(demoAddressSuggestion);
+    setAddressSuggestions([]);
   }
 
   const mapSummary =
@@ -112,7 +137,7 @@ export function AccountProfileScreen() {
       <View style={styles.mapSearch}>
         <TextInput
           onChangeText={setMapQuery}
-          placeholder="Search address from Google Maps"
+          placeholder="Search condo or place"
           style={[styles.input, styles.mapInput]}
           value={mapQuery}
         />
@@ -122,9 +147,18 @@ export function AccountProfileScreen() {
           onPress={handleSearchAddress}
           style={({ pressed }) => [styles.mapButton, pressed ? styles.buttonPressed : null]}
         >
-          <Text style={styles.mapButtonText}>{status === "saving" ? "..." : "Map"}</Text>
+          <Text style={styles.mapButtonText}>{status === "saving" ? "..." : "Search"}</Text>
         </Pressable>
       </View>
+      <Pressable
+        accessibilityRole="button"
+        disabled={status === "loading" || status === "saving"}
+        onPress={handleUseDemoAddress}
+        style={({ pressed }) => [styles.secondaryButton, pressed ? styles.buttonPressed : null]}
+      >
+        <Text style={styles.secondaryButtonText}>Use demo address for testing</Text>
+      </Pressable>
+      {addressSearchHint ? <Text style={styles.mapHint}>{addressSearchHint}</Text> : null}
       {addressSuggestions.map((suggestion) => (
         <Pressable
           accessibilityRole="button"
@@ -199,6 +233,24 @@ const styles = StyleSheet.create({
   mapButtonText: {
     color: "#fff",
     fontWeight: "800",
+  },
+  secondaryButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#b9ddd6",
+    borderRadius: 8,
+    backgroundColor: "#f6fffc",
+    paddingVertical: 10,
+  },
+  secondaryButtonText: {
+    color: "#087f5b",
+    fontWeight: "800",
+  },
+  mapHint: {
+    color: "#50615d",
+    fontSize: 12,
+    lineHeight: 18,
   },
   suggestion: {
     borderWidth: 1,
