@@ -1,4 +1,5 @@
-import * as Location from "expo-location";
+import Geolocation from "@react-native-community/geolocation";
+import { PermissionsAndroid, Platform } from "react-native";
 
 export interface CurrentLocationAddress {
   googlePlaceId: string;
@@ -15,21 +16,23 @@ export interface CurrentCoordinates {
   accuracyMeters?: number;
 }
 
+interface NativeLocationPosition {
+  coords: {
+    latitude: number;
+    longitude: number;
+    accuracy?: number | null;
+  };
+}
+
 export async function requestCurrentLocationAddress(): Promise<CurrentLocationAddress | undefined> {
   const coordinates = await requestCurrentCoordinates();
   if (!coordinates) {
     return undefined;
   }
 
-  const reverseGeocode = await Location.reverseGeocodeAsync({
-    latitude: coordinates.lat,
-    longitude: coordinates.lng,
-  });
-  const firstAddress = reverseGeocode[0];
-
   return {
     googlePlaceId: `current_location_${coordinates.lat.toFixed(5)}_${coordinates.lng.toFixed(5)}`,
-    formattedAddress: formatReverseGeocodeAddress(firstAddress, coordinates),
+    formattedAddress: formatCurrentCoordinatesAddress(coordinates),
     lat: coordinates.lat,
     lng: coordinates.lng,
     accuracyMeters: coordinates.accuracyMeters,
@@ -43,9 +46,7 @@ export async function requestCurrentCoordinates(): Promise<CurrentCoordinates | 
     return undefined;
   }
 
-  const location = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.Balanced,
-  });
+  const location = await getCurrentPosition();
 
   return {
     lat: location.coords.latitude,
@@ -55,38 +56,49 @@ export async function requestCurrentCoordinates(): Promise<CurrentCoordinates | 
 }
 
 export async function requestLocationPermission() {
-  const currentPermission = await Location.getForegroundPermissionsAsync();
-  if (currentPermission.granted) {
-    return true;
+  if (Platform.OS === "android") {
+    const currentFinePermission = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+    if (currentFinePermission) {
+      return true;
+    }
+
+    const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
+      title: "Allow Wellnest to use your location",
+      message: "Wellnest uses your location to prepare your service address and provider ETA for active bookings.",
+      buttonPositive: "Allow",
+      buttonNegative: "Not now",
+    });
+
+    return result === PermissionsAndroid.RESULTS.GRANTED;
   }
 
-  if (currentPermission.canAskAgain === false) {
-    return false;
-  }
+  return new Promise<boolean>((resolve) => {
+    const geo = Geolocation as typeof Geolocation & {
+      requestAuthorization?: (success?: () => void, error?: () => void) => void;
+    };
 
-  const nextPermission = await Location.requestForegroundPermissionsAsync();
-  return nextPermission.granted;
+    if (!geo.requestAuthorization) {
+      resolve(true);
+      return;
+    }
+
+    geo.requestAuthorization(
+      () => resolve(true),
+      () => resolve(false),
+    );
+  });
 }
 
-function formatReverseGeocodeAddress(
-  address: Location.LocationGeocodedAddress | undefined,
-  coordinates: CurrentCoordinates,
-) {
-  if (!address) {
-    return `Current location (${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)})`;
-  }
+function getCurrentPosition() {
+  return new Promise<NativeLocationPosition>((resolve, reject) => {
+    Geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 10000,
+    });
+  });
+}
 
-  const parts = [
-    address.name,
-    address.street,
-    address.district,
-    address.city,
-    address.region,
-    address.postalCode,
-    address.country,
-  ].filter(Boolean);
-
-  return parts.length > 0
-    ? parts.join(", ")
-    : `Current location (${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)})`;
+function formatCurrentCoordinatesAddress(coordinates: CurrentCoordinates) {
+  return `Current location (${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)})`;
 }

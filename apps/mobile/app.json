@@ -3,7 +3,7 @@
     "name": "Wellnest",
     "slug": "wellnest",
     "scheme": "wellnest",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "updates": {
@@ -15,14 +15,14 @@
     },
     "ios": {
       "bundleIdentifier": "com.wellnest.app",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Wellnest uses your location to pin your service address and show provider ETA for active bookings only."
       }
     },
     "android": {
       "package": "com.wellnest.app",
-      "versionCode": 7,
+      "versionCode": 8,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
@@ -42,12 +42,6 @@
         "expo-secure-store",
         {
           "configureAndroidBackup": false
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "Wellnest uses your location to pin your service address and show provider ETA for active bookings only."
         }
       ],
       "expo-asset"

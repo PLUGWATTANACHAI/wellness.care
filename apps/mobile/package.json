@@ -1,6 +1,6 @@
 {
   "name": "@wellnest/mobile",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "main": "index.ts",
   "scripts": {
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.25.0",
+    "@react-native-community/geolocation": "^3.4.0",
     "@wellnest/types": "workspace:*",
     "expo": "^52.0.0",
     "expo-asset": "~11.0.5",
