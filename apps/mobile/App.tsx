@@ -2,6 +2,7 @@ import { Component, type ReactNode, useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   loginDemoRole,
+  loadStoredLogin,
   requestOtpLogin,
   verifyOtpLogin,
   type DemoLoginRole,
@@ -16,10 +17,34 @@ declare const require: (moduleName: string) => unknown;
 export default function App() {
   const [role, setRole] = useState<AppSection>("customer");
   const [session, setSession] = useState<LoginResultDto | undefined>();
-  const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("auth_required");
+  const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("loading");
   const [startupLocationStatus, setStartupLocationStatus] = useState<"checking" | "permission_ready" | "denied" | "error">("checking");
 
   const activeLoginRole = getLoginRole(role);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSessionStatus("loading");
+    loadStoredLogin(activeLoginRole)
+      .then((storedSession) => {
+        if (cancelled) return;
+        if (storedSession) {
+          setSession(storedSession);
+          setSessionStatus("ready");
+          return;
+        }
+
+        setSession(undefined);
+        setSessionStatus("auth_required");
+      })
+      .catch(() => {
+        if (!cancelled) setSessionStatus("auth_required");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeLoginRole]);
 
   useEffect(() => {
     let cancelled = false;

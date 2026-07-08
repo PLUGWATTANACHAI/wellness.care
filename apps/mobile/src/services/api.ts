@@ -1,9 +1,17 @@
+import * as SecureStore from "expo-secure-store";
+
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://wellnest-api-staging.onrender.com";
 const API_TIMEOUT_MS = 15000;
+const SESSION_STORAGE_PREFIX = "wellnest.session.";
 
 export type DemoLoginRole = "customer" | "provider" | "admin";
 
 const accessTokens: Partial<Record<DemoLoginRole, string>> = {};
+
+interface StoredLoginResult {
+  savedAt: number;
+  result: LoginResultDto;
+}
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
   const controller = new AbortController();
@@ -265,7 +273,7 @@ export async function loginDemoRole(role: DemoLoginRole) {
   }
 
   const result = (await response.json()) as LoginResultDto;
-  accessTokens[role] = result.accessToken;
+  await storeLoginResult(result);
   return result;
 }
 
@@ -299,13 +307,59 @@ export async function verifyOtpLogin(input: { challengeId: string; phone: string
   }
 
   const result = (await response.json()) as LoginResultDto;
-  const role = result.user.role === "provider" ? "provider" : "customer";
-  accessTokens[role] = result.accessToken;
+  await storeLoginResult(result);
   return result;
 }
 
 export function hasRoleSession(role: DemoLoginRole) {
   return Boolean(accessTokens[role]);
+}
+
+export async function loadStoredLogin(role: "customer" | "provider") {
+  const storedSession = await SecureStore.getItemAsync(sessionStorageKey(role));
+  if (!storedSession) return undefined;
+
+  try {
+    const parsed = JSON.parse(storedSession) as StoredLoginResult;
+    const expiresAt = parsed.savedAt + parsed.result.expiresInSeconds * 1000;
+    if (!parsed.result?.accessToken || Date.now() > expiresAt - 60_000) {
+      await SecureStore.deleteItemAsync(sessionStorageKey(role));
+      return undefined;
+    }
+
+    accessTokens[role] = parsed.result.accessToken;
+    return parsed.result;
+  } catch {
+    await SecureStore.deleteItemAsync(sessionStorageKey(role));
+    return undefined;
+  }
+}
+
+export async function clearStoredLogin(role: "customer" | "provider") {
+  delete accessTokens[role];
+  await SecureStore.deleteItemAsync(sessionStorageKey(role));
+}
+
+async function storeLoginResult(result: LoginResultDto) {
+  const role = getLoginResultRole(result);
+  accessTokens[role] = result.accessToken;
+  await SecureStore.setItemAsync(
+    sessionStorageKey(role),
+    JSON.stringify({
+      savedAt: Date.now(),
+      result,
+    } satisfies StoredLoginResult),
+  );
+}
+
+function getLoginResultRole(result: LoginResultDto): DemoLoginRole {
+  if (result.user.role === "provider") return "provider";
+  if (result.user.role === "admin") return "admin";
+  return "customer";
+}
+
+function sessionStorageKey(role: DemoLoginRole) {
+  return `${SESSION_STORAGE_PREFIX}${role}`;
 }
 
 function authHeaders(role: DemoLoginRole, extraHeaders: Record<string, string> = {}) {
