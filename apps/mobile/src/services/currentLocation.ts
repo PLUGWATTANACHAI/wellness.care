@@ -46,7 +46,17 @@ export async function requestCurrentCoordinates(): Promise<CurrentCoordinates | 
     return undefined;
   }
 
-  const location = await getCurrentPosition();
+  const location = await getCurrentPosition({
+    enableHighAccuracy: false,
+    timeout: 6000,
+    maximumAge: 24 * 60 * 60 * 1000,
+  }).catch(() =>
+    getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 5 * 60 * 1000,
+    }),
+  );
 
   return {
     lat: location.coords.latitude,
@@ -89,13 +99,13 @@ export async function requestLocationPermission() {
   });
 }
 
-function getCurrentPosition() {
+function getCurrentPosition(options: {
+  enableHighAccuracy: boolean;
+  timeout: number;
+  maximumAge: number;
+}) {
   return new Promise<NativeLocationPosition>((resolve, reject) => {
-    Geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 10000,
-    });
+    Geolocation.getCurrentPosition(resolve, reject, options);
   });
 }
 
