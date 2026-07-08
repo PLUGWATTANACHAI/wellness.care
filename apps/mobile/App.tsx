@@ -1,12 +1,14 @@
-import { Component, type ReactNode, useState } from "react";
+import { Component, type ReactNode, useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   requestOtpLogin,
+  updateCustomerAddress,
   verifyOtpLogin,
   type DemoLoginRole,
   type LoginResultDto,
   type OtpRequestDto,
 } from "./src/services/api";
+import { type CurrentLocationAddress, requestCurrentLocationAddress } from "./src/services/currentLocation";
 
 type AppSection = "customer" | "provider" | "account" | "notifications" | "privacy";
 
@@ -16,8 +18,54 @@ export default function App() {
   const [role, setRole] = useState<AppSection>("customer");
   const [session, setSession] = useState<LoginResultDto | undefined>();
   const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("auth_required");
+  const [startupLocation, setStartupLocation] = useState<CurrentLocationAddress | undefined>();
+  const [startupLocationStatus, setStartupLocationStatus] = useState<"checking" | "ready" | "denied" | "saved" | "error">("checking");
+  const [startupLocationSaved, setStartupLocationSaved] = useState(false);
+  const [customerRefreshKey, setCustomerRefreshKey] = useState(0);
 
   const activeLoginRole = getLoginRole(role);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    requestCurrentLocationAddress()
+      .then((location) => {
+        if (cancelled) return;
+        if (!location) {
+          setStartupLocationStatus("denied");
+          return;
+        }
+
+        setStartupLocation(location);
+        setStartupLocationStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setStartupLocationStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (sessionStatus !== "ready" || activeLoginRole !== "customer" || !startupLocation || startupLocationSaved) return;
+
+    setStartupLocationSaved(true);
+    updateCustomerAddress({
+      condoName: "Current location",
+      meetingPoint: "Lobby / main entrance",
+      ...startupLocation,
+    })
+      .then(() => {
+        setStartupLocationStatus("saved");
+        setCustomerRefreshKey((current) => current + 1);
+      })
+      .catch(() => {
+        setStartupLocationSaved(false);
+        setStartupLocationStatus("error");
+      });
+  }, [activeLoginRole, sessionStatus, startupLocation, startupLocationSaved]);
 
   return (
     <AppErrorBoundary>
@@ -29,6 +77,7 @@ export default function App() {
           <Text style={styles.title}>Wellnest</Text>
           <Text style={styles.copy}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
         </View>
+        <StartupLocationStatusCard status={startupLocationStatus} />
         <View style={styles.demoPanel}>
           <Text style={styles.demoTitle}>Demo Run</Text>
           <View style={styles.demoSteps}>
@@ -58,7 +107,7 @@ export default function App() {
         {sessionStatus === "ready" && activeLoginRole === "customer" ? (
           <PilotSetupCard currentRole={role} onGoAccount={() => setRole("account")} onGoBooking={() => setRole("customer")} />
         ) : null}
-        {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy /> : null}
+        {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy key={customerRefreshKey} /> : null}
         {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreenLazy /> : null}
         {sessionStatus === "ready" && role === "account" ? <AccountProfileScreenLazy /> : null}
         {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreenLazy /> : null}
@@ -68,6 +117,18 @@ export default function App() {
         </ScrollView>
       </SafeAreaView>
     </AppErrorBoundary>
+  );
+}
+
+function StartupLocationStatusCard({ status }: { status: "checking" | "ready" | "denied" | "saved" | "error" }) {
+  const copy = getStartupLocationCopy(status);
+  if (!copy) return null;
+
+  return (
+    <View style={styles.locationCard}>
+      <Text style={styles.locationTitle}>{copy.title}</Text>
+      <Text style={styles.locationCopy}>{copy.body}</Text>
+    </View>
   );
 }
 
@@ -134,7 +195,7 @@ function PilotSetupCard({
   return (
     <View style={styles.setupCard}>
       <Text style={styles.demoTitle}>Pilot setup</Text>
-      <Text style={styles.demoCopy}>For the first booking, save your condo and map address in Account, then return to Customer to check availability and pay.</Text>
+      <Text style={styles.demoCopy}>Allow location when the app opens, then continue to booking. You can still edit the address in Account anytime.</Text>
       <View style={styles.setupActions}>
         <Pressable
           accessibilityRole="button"
@@ -314,6 +375,38 @@ function getDemoHint(role: AppSection) {
   return hints[role];
 }
 
+function getStartupLocationCopy(status: "checking" | "ready" | "denied" | "saved" | "error") {
+  if (status === "checking") {
+    return {
+      title: "Location setup",
+      body: "Please allow location so Wellnest can prepare your service address.",
+    };
+  }
+  if (status === "ready") {
+    return {
+      title: "Location ready",
+      body: "Your current location is ready and will be saved after customer login.",
+    };
+  }
+  if (status === "saved") {
+    return {
+      title: "Service area confirmed",
+      body: "Your current location is saved for booking. You can change it in Account anytime.",
+    };
+  }
+  if (status === "denied") {
+    return {
+      title: "Location not allowed",
+      body: "You can still browse, but booking needs a service address. Allow location in phone Settings or choose it in Account.",
+    };
+  }
+
+  return {
+    title: "Location unavailable",
+    body: "Please turn on GPS or Wi-Fi, then retry from Account before booking.",
+  };
+}
+
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -341,6 +434,23 @@ const styles = StyleSheet.create({
   },
   copy: {
     color: "rgba(255,255,255,0.82)",
+    lineHeight: 20,
+  },
+  locationCard: {
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#b9ddd6",
+    borderRadius: 10,
+    backgroundColor: "#f6fffc",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  locationTitle: {
+    color: "#087f5b",
+    fontWeight: "800",
+  },
+  locationCopy: {
+    color: "#50615d",
     lineHeight: 20,
   },
   tabs: {
