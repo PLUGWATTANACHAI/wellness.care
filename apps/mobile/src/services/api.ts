@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://wellnest-api-staging.onrender.com";
 
 export type DemoLoginRole = "customer" | "provider" | "admin";
 

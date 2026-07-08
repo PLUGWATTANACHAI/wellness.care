@@ -1,10 +1,5 @@
 import { Component, type ReactNode, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
-import { CustomerHomeScreen } from "./src/screens/CustomerHomeScreen";
-import { ProviderJobScreen } from "./src/screens/ProviderJobScreen";
-import { PrivacyCenterScreen } from "./src/screens/PrivacyCenterScreen";
-import { AccountProfileScreen } from "./src/screens/AccountProfileScreen";
-import { NotificationCenterScreen } from "./src/screens/NotificationCenterScreen";
 import {
   requestOtpLogin,
   verifyOtpLogin,
@@ -14,6 +9,8 @@ import {
 } from "./src/services/api";
 
 type AppSection = "customer" | "provider" | "account" | "notifications" | "privacy";
+
+declare const require: (moduleName: string) => unknown;
 
 export default function App() {
   const [role, setRole] = useState<AppSection>("customer");
@@ -61,17 +58,42 @@ export default function App() {
         {sessionStatus === "ready" && activeLoginRole === "customer" ? (
           <PilotSetupCard currentRole={role} onGoAccount={() => setRole("account")} onGoBooking={() => setRole("customer")} />
         ) : null}
-        {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreen /> : null}
-        {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreen /> : null}
-        {sessionStatus === "ready" && role === "account" ? <AccountProfileScreen /> : null}
-        {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreen /> : null}
-        {role === "privacy" ? <PrivacyCenterScreen /> : null}
+        {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy /> : null}
+        {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreenLazy /> : null}
+        {sessionStatus === "ready" && role === "account" ? <AccountProfileScreenLazy /> : null}
+        {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreenLazy /> : null}
+        {role === "privacy" ? <PrivacyCenterScreenLazy /> : null}
         {sessionStatus === "loading" ? <Text style={styles.loadingText}>Checking secure session...</Text> : null}
         {sessionStatus === "error" ? <Text style={styles.errorText}>Could not start a secure session. Please retry.</Text> : null}
         </ScrollView>
       </SafeAreaView>
     </AppErrorBoundary>
   );
+}
+
+function CustomerHomeScreenLazy() {
+  const { CustomerHomeScreen } = require("./src/screens/CustomerHomeScreen") as typeof import("./src/screens/CustomerHomeScreen");
+  return <CustomerHomeScreen />;
+}
+
+function ProviderJobScreenLazy() {
+  const { ProviderJobScreen } = require("./src/screens/ProviderJobScreen") as typeof import("./src/screens/ProviderJobScreen");
+  return <ProviderJobScreen />;
+}
+
+function AccountProfileScreenLazy() {
+  const { AccountProfileScreen } = require("./src/screens/AccountProfileScreen") as typeof import("./src/screens/AccountProfileScreen");
+  return <AccountProfileScreen />;
+}
+
+function NotificationCenterScreenLazy() {
+  const { NotificationCenterScreen } = require("./src/screens/NotificationCenterScreen") as typeof import("./src/screens/NotificationCenterScreen");
+  return <NotificationCenterScreen />;
+}
+
+function PrivacyCenterScreenLazy() {
+  const { PrivacyCenterScreen } = require("./src/screens/PrivacyCenterScreen") as typeof import("./src/screens/PrivacyCenterScreen");
+  return <PrivacyCenterScreen />;
 }
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
