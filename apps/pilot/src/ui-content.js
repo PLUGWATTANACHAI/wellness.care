@@ -1,0 +1,48 @@
+export const appContent = {
+  preview: {
+    title: "Mobile preview",
+    sizeLabel: "Frame 390 × 844 px",
+  },
+  login: {
+    brand: "Wellnest",
+    title: "บริการดูแลตัวเองถึงคอนโด",
+    subtitle: "ล็อกอินเพื่อดูบริการ โปรโมชั่น และจองผู้ให้บริการใกล้พี่",
+    loginLabel: "อีเมล หรือ เบอร์โทรศัพท์",
+    loginPlaceholder: "plug@example.com หรือ 0812345678",
+    passcodeLabel: "รหัสเข้าใช้งาน",
+    passcodePlaceholder: "ใส่รหัสผ่านหรือ OTP",
+    signInButton: "Sign in",
+    createAccountButton: "Create account",
+    socialDivider: "หรือเข้าสู่ระบบด้วย",
+    note: "รอบ production จะเชื่อม Apple ID, Facebook และ Gmail จริง ส่วนตอนนี้ปุ่ม Sign in และ Create account ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน",
+  },
+  home: {
+    greeting: "พร้อมดูแลพี่วันนี้",
+    brand: "Wellnest",
+    heroLabel: "Today available",
+    heroTitle: "จองบริการที่บ้านได้ในไม่กี่ขั้นตอน",
+    heroSubtitle: "เลือกบริการ เวลา และสถานที่ ระบบจะจับคู่ผู้ให้บริการที่พร้อมใกล้พี่",
+    heroButton: "เริ่มจองบริการ",
+    servicesTitle: "บริการ",
+    viewAllButton: "ดูทั้งหมด",
+    promoTitle: "โปรวันนี้",
+    providerTitle: "ผู้ให้บริการใกล้พี่",
+  },
+};
+
+export const services = [
+  { id: "massage", name: "นวดผ่อนคลาย", desc: "90 นาที · เหมาะหลังเลิกงาน", price: 1290, tag: "Popular" },
+  { id: "aroma", name: "Aroma Recovery", desc: "120 นาที · ผ่อนคลายลึก", price: 1890, tag: "Premium" },
+  { id: "product", name: "Wellness Kit", desc: "สินค้า wellness ส่งถึงคอนโด", price: 690, tag: "Product" },
+  { id: "stretch", name: "Office Stretch", desc: "60 นาที · ลดออฟฟิศซินโดรม", price: 990, tag: "New" },
+];
+
+export const promos = [
+  { title: "First booking", desc: "ลด 120 บาทสำหรับการจองครั้งแรก" },
+  { title: "After work care", desc: "ช่วง 18:00-21:00 มี provider เพิ่ม" },
+];
+
+export const providers = [
+  { name: "Mina", rating: "4.92", eta: "18 นาที", jobs: "318" },
+  { name: "Narin", rating: "4.88", eta: "24 นาที", jobs: "204" },
+];

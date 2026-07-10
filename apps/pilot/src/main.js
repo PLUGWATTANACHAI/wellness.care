@@ -1,21 +1,5 @@
 import "./styles.css";
-
-const services = [
-  { id: "massage", name: "นวดผ่อนคลาย", desc: "90 นาที · เหมาะหลังเลิกงาน", price: 1290, tag: "Popular" },
-  { id: "aroma", name: "Aroma Recovery", desc: "120 นาที · ผ่อนคลายลึก", price: 1890, tag: "Premium" },
-  { id: "product", name: "Wellness Kit", desc: "สินค้า wellness ส่งถึงคอนโด", price: 690, tag: "Product" },
-  { id: "stretch", name: "Office Stretch", desc: "60 นาที · ลดออฟฟิศซินโดรม", price: 990, tag: "New" },
-];
-
-const promos = [
-  { title: "First booking", desc: "ลด 120 บาทสำหรับการจองครั้งแรก" },
-  { title: "After work care", desc: "ช่วง 18:00-21:00 มี provider เพิ่ม" },
-];
-
-const providers = [
-  { name: "Mina", rating: "4.92", eta: "18 นาที", jobs: "318" },
-  { name: "Narin", rating: "4.88", eta: "24 นาที", jobs: "204" },
-];
+import { appContent, promos, providers, services } from "./ui-content.js";
 
 const state = {
   signedIn: false,
@@ -54,24 +38,25 @@ function progressWidth() {
 }
 
 function loginScreen() {
+  const copy = appContent.login;
   return `
     <section class="loginScreen">
       <div class="loginHero">
-        <span>Wellnest</span>
-        <h1>บริการดูแลตัวเองถึงคอนโด</h1>
-        <p>ล็อกอินเพื่อดูบริการ โปรโมชั่น และจองผู้ให้บริการใกล้พี่</p>
+        <span>${copy.brand}</span>
+        <h1>${copy.title}</h1>
+        <p>${copy.subtitle}</p>
       </div>
       <div class="loginCard">
-        <label class="fieldLabel">อีเมล หรือ เบอร์โทรศัพท์
-          <input data-field="loginId" inputmode="email" placeholder="plug@example.com หรือ 0812345678" value="${escapeHtml(state.loginId)}" />
+        <label class="fieldLabel">${copy.loginLabel}
+          <input data-field="loginId" inputmode="email" placeholder="${copy.loginPlaceholder}" value="${escapeHtml(state.loginId)}" />
         </label>
-        <label class="fieldLabel">รหัสเข้าใช้งาน
-          <input data-field="passcode" type="password" placeholder="ใส่รหัสผ่านหรือ OTP" value="${escapeHtml(state.passcode)}" />
+        <label class="fieldLabel">${copy.passcodeLabel}
+          <input data-field="passcode" type="password" placeholder="${copy.passcodePlaceholder}" value="${escapeHtml(state.passcode)}" />
         </label>
-        <button class="primaryButton" data-action="login">Sign in</button>
-        <button class="createAccountButton" data-action="signup">Create account</button>
+        <button class="primaryButton" data-action="login">${copy.signInButton}</button>
+        <button class="createAccountButton" data-action="signup">${copy.createAccountButton}</button>
       </div>
-      <div class="divider"><span>หรือเข้าสู่ระบบด้วย</span></div>
+      <div class="divider"><span>${copy.socialDivider}</span></div>
       <div class="loginOptions" aria-label="Social login options">
         <button class="authLogoButton apple" data-action="future-auth" aria-label="Continue with Apple"><span></span></button>
         <button class="authLogoButton facebook" data-action="future-auth" aria-label="Continue with Facebook"><span>f</span></button>
@@ -79,18 +64,19 @@ function loginScreen() {
           <span class="gmailMark">G</span>
         </button>
       </div>
-      <p class="finePrint">รอบ production จะเชื่อม Apple ID, Facebook และ Gmail จริง ส่วนตอนนี้ปุ่ม Sign in และ Create account ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน</p>
+      <p class="finePrint">${copy.note}</p>
     </section>
   `;
 }
 
 function homeScreen() {
+  const copy = appContent.home;
   return `
     <section class="homeScreen">
       <header class="appHeader">
         <div>
-          <p>พร้อมดูแลพี่วันนี้</p>
-          <h1>Wellnest</h1>
+          <p>${copy.greeting}</p>
+          <h1>${copy.brand}</h1>
         </div>
         <button class="profileButton" data-action="profile" aria-label="Profile">P</button>
       </header>
@@ -102,16 +88,16 @@ function homeScreen() {
       </div>
 
       <article class="heroCard">
-        <span>Today available</span>
-        <h2>จองบริการที่บ้านได้ในไม่กี่ขั้นตอน</h2>
-        <p>เลือกบริการ เวลา และสถานที่ ระบบจะจับคู่ผู้ให้บริการที่พร้อมใกล้พี่</p>
-        <button data-action="start-booking">เริ่มจองบริการ</button>
+        <span>${copy.heroLabel}</span>
+        <h2>${copy.heroTitle}</h2>
+        <p>${copy.heroSubtitle}</p>
+        <button data-action="start-booking">${copy.heroButton}</button>
       </article>
 
       <section class="homeSection">
         <div class="sectionTitle">
-          <h2>บริการ</h2>
-          <button data-action="start-booking">ดูทั้งหมด</button>
+          <h2>${copy.servicesTitle}</h2>
+          <button data-action="start-booking">${copy.viewAllButton}</button>
         </div>
         <div class="serviceScroller">
           ${services.map(serviceCard).join("")}
@@ -120,7 +106,7 @@ function homeScreen() {
 
       <section class="homeSection">
         <div class="sectionTitle">
-          <h2>โปรวันนี้</h2>
+          <h2>${copy.promoTitle}</h2>
         </div>
         <div class="promoList">${promos.map((promo) => `
           <article class="promoCard">
@@ -132,7 +118,7 @@ function homeScreen() {
 
       <section class="homeSection">
         <div class="sectionTitle">
-          <h2>ผู้ให้บริการใกล้พี่</h2>
+          <h2>${copy.providerTitle}</h2>
         </div>
         <div class="providerList">${providers.map(providerCard).join("")}</div>
       </section>
@@ -256,8 +242,8 @@ function render() {
   document.querySelector("#app").innerHTML = `
     <main class="previewShell">
       <div class="previewInfo">
-        <strong>Mobile preview</strong>
-        <span>Frame 390 × 844 px</span>
+        <strong>${appContent.preview.title}</strong>
+        <span>${appContent.preview.sizeLabel}</span>
       </div>
       <div class="phoneFrame" aria-label="Wellnest mobile app preview">
         ${state.signedIn ? (state.screen === "booking" ? bookingScreen() : homeScreen()) : loginScreen()}
