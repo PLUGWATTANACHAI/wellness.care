@@ -27,6 +27,14 @@ Official Apple references checked on 2026-07-10:
 
 Wellnest does not have an App Store or TestFlight release yet.
 
+Current account status as of 2026-07-10:
+
+- Apple Developer Program purchase was completed through Apple Thailand.
+- Order confirmation page showed order number `W1880180783`.
+- Apple Developer Account still shows `wattanachai payungwong (Pending)`.
+- Apple says the purchase may take up to 48 hours to process.
+- Next action after activation: open App Store Connect and create the Wellnest app record.
+
 Apple allows a free Apple developer account to test apps on your own devices with Xcode, but TestFlight and App Store distribution require Apple Developer Program membership. Apple currently lists the Apple Developer Program at `$99 annual membership`.
 
 TestFlight is the correct first iPhone testing path after enrollment:
