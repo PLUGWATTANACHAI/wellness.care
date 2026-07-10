@@ -11,11 +11,11 @@ Apple Developer Program purchase is complete and the Apple Developer Account is 
 3. Use these app identifiers:
    - App name: `Wellnest`
    - Platform: `iOS`
-   - Bundle ID: `com.wellnest.app`
+   - Bundle ID: `com.plugwattanachai.wellnest`
    - SKU: `wellnest-ios-001`
    - Primary language: `Thai` if available, otherwise `English (U.S.)`
    - User access: Full Access
-4. If `com.wellnest.app` is not selectable, create or confirm the iOS bundle identifier in Certificates, Identifiers & Profiles first.
+4. If `com.plugwattanachai.wellnest` is not selectable, create or confirm the iOS bundle identifier in Certificates, Identifiers & Profiles first.
 5. After the app record exists, create the iOS preview build with EAS.
 6. Upload the build to TestFlight.
 7. Add พี่ปลั๊ก as the first internal tester.

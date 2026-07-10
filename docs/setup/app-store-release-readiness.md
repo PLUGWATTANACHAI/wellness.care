@@ -10,7 +10,7 @@ Official Apple references checked on 2026-07-10:
 ## Current Mobile Release Foundation
 
 - Expo / React Native app exists at `apps/mobile`.
-- iOS bundle identifier: `com.wellnest.app`.
+- iOS bundle identifier: `com.plugwattanachai.wellnest`.
 - Android package name: `com.wellnest.app`.
 - EAS build config exists at `apps/mobile/eas.json`.
 - Internal tester builds can be produced before public store release.
@@ -47,7 +47,7 @@ TestFlight is the correct first iPhone testing path after enrollment:
 
 1. Enroll in the Apple Developer Program as individual or organization.
 2. Open App Store Connect and create a new app record for Wellnest.
-3. Confirm bundle identifier: `com.wellnest.app`.
+3. Confirm bundle identifier: `com.plugwattanachai.wellnest`.
 4. Add app name, SKU, category, support URL, privacy policy URL, and contact email.
 5. Prepare iPhone screenshots from the real booking, address, payment, tracking, and profile flows.
 6. Fill App Privacy details for account data, phone number, location, payment, support messages, analytics, and crash logs.
