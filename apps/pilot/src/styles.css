@@ -135,6 +135,7 @@ button {
 
 .authLogoButton,
 .primaryButton,
+.createAccountButton,
 .secondaryButton,
 .heroCard button,
 .sectionTitle button,
@@ -148,20 +149,20 @@ button {
 }
 
 .authLogoButton {
-  min-height: 42px;
+  min-height: 38px;
   display: grid;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 14px;
-  box-shadow: 0 8px 18px rgba(76, 50, 31, 0.07);
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(76, 50, 31, 0.06);
 }
 
 .authLogoButton span {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  font-size: 20px;
+  width: 18px;
+  height: 18px;
+  font-size: 17px;
   line-height: 1;
 }
 
@@ -178,7 +179,7 @@ button {
 
 .authLogoButton.facebook span {
   font-family: Arial, sans-serif;
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 900;
 }
 
@@ -189,53 +190,12 @@ button {
 }
 
 .gmailMark {
-  position: relative;
-  width: 22px;
-  height: 17px;
-  border: 2px solid #b8a38d;
-  border-top: 0;
-  border-radius: 3px;
-  overflow: hidden;
-  background: #fff;
-}
-
-.gmailMark i {
-  position: absolute;
-  display: block;
-  height: 2px;
-  transform-origin: left center;
-}
-
-.gmailMark i:nth-child(1) {
-  width: 13px;
-  left: -1px;
-  top: 1px;
-  background: #d93025;
-  transform: rotate(33deg);
-}
-
-.gmailMark i:nth-child(2) {
-  width: 13px;
-  right: -2px;
-  top: 1px;
-  background: #fbbc04;
-  transform: rotate(147deg);
-}
-
-.gmailMark i:nth-child(3) {
-  width: 2px;
-  height: 15px;
-  left: -2px;
-  top: 1px;
-  background: #34a853;
-}
-
-.gmailMark i:nth-child(4) {
-  width: 2px;
-  height: 15px;
-  right: -2px;
-  top: 1px;
-  background: #4285f4;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #4285f4 0 22%, #34a853 22% 43%, #fbbc04 43% 66%, #ea4335 66% 100%);
+  background-clip: text;
+  color: transparent;
 }
 
 .divider {
@@ -279,6 +239,16 @@ input {
   background: #6d4c2f;
   color: #fff;
   box-shadow: 0 12px 24px rgba(109, 76, 47, 0.22);
+}
+
+.createAccountButton {
+  min-height: 38px;
+  border: 0;
+  background: transparent;
+  color: #6d4c2f;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .secondaryButton {

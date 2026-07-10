@@ -68,17 +68,18 @@ function loginScreen() {
         <label class="fieldLabel">รหัสเข้าใช้งาน
           <input data-field="passcode" type="password" placeholder="ใส่รหัสผ่านหรือ OTP" value="${escapeHtml(state.passcode)}" />
         </label>
-        <button class="primaryButton" data-action="login">Continue</button>
+        <button class="primaryButton" data-action="login">Sign in</button>
+        <button class="createAccountButton" data-action="signup">Create account</button>
       </div>
       <div class="divider"><span>หรือเข้าสู่ระบบด้วย</span></div>
       <div class="loginOptions" aria-label="Social login options">
         <button class="authLogoButton apple" data-action="future-auth" aria-label="Continue with Apple"><span></span></button>
         <button class="authLogoButton facebook" data-action="future-auth" aria-label="Continue with Facebook"><span>f</span></button>
         <button class="authLogoButton gmail" data-action="future-auth" aria-label="Continue with Gmail">
-          <span class="gmailMark"><i></i><i></i><i></i><i></i></span>
+          <span class="gmailMark">G</span>
         </button>
       </div>
-      <p class="finePrint">รอบ production จะเชื่อม Apple ID, Facebook และ Gmail จริง ส่วนตอนนี้ปุ่ม Continue ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน</p>
+      <p class="finePrint">รอบ production จะเชื่อม Apple ID, Facebook และ Gmail จริง ส่วนตอนนี้ปุ่ม Sign in และ Create account ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน</p>
     </section>
   `;
 }
@@ -289,6 +290,11 @@ function bindEvents() {
     });
   });
   document.querySelector("[data-action='login']")?.addEventListener("click", () => {
+    state.signedIn = true;
+    state.screen = "home";
+    render();
+  });
+  document.querySelector("[data-action='signup']")?.addEventListener("click", () => {
     state.signedIn = true;
     state.screen = "home";
     render();
