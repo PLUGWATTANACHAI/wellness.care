@@ -93,7 +93,7 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.topBar}>
           <View>
-            <Text style={styles.memberLine}>{session ? "Good evening" : "Condo wellness, on demand"}</Text>
+            <Text style={styles.memberLine}>{session ? "พร้อมดูแลพี่วันนี้" : "Condo wellness, on demand"}</Text>
             <Text style={styles.brandTitle}>Wellnest</Text>
           </View>
           <View style={styles.profileBadge}>
@@ -116,40 +116,40 @@ export default function App() {
         </View>
         <View style={styles.heroCard}>
           <View style={styles.heroCopy}>
-            <Text style={styles.heroKicker}>Today available</Text>
+            <Text style={styles.heroKicker}>พร้อมให้บริการวันนี้</Text>
             <Text style={styles.heroTitle}>จองบริการดูแลตัวเองถึงคอนโด</Text>
             <Text style={styles.heroBody}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
           </View>
           <View style={styles.heroProviderCard}>
             <Text style={styles.heroProviderAvatar}>WN</Text>
-            <Text style={styles.heroProviderName}>Top provider nearby</Text>
-            <Text style={styles.heroProviderMeta}>4.9 rating · 18 min</Text>
+            <Text style={styles.heroProviderName}>ผู้ให้บริการใกล้พี่</Text>
+            <Text style={styles.heroProviderMeta}>4.9 คะแนน · 18 นาที</Text>
           </View>
         </View>
         <View style={styles.promoBand}>
           <View>
-            <Text style={styles.promoTitle}>First booking care</Text>
-            <Text style={styles.promoCopy}>Save your address once, then book in a few taps.</Text>
+            <Text style={styles.promoTitle}>โปรสำหรับการจองครั้งแรก</Text>
+            <Text style={styles.promoCopy}>บันทึกที่อยู่ครั้งเดียว แล้วจองครั้งถัดไปได้เร็วขึ้น</Text>
           </View>
           <Text style={styles.promoBadge}>New</Text>
         </View>
         <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} />
         <View style={styles.demoPanel}>
-          <Text style={styles.demoTitle}>Your booking</Text>
+          <Text style={styles.demoTitle}>เส้นทางการจอง</Text>
           <View style={styles.demoSteps}>
-            <DemoStep active={role === "customer"} label="บริการ" onPress={() => setRole("customer")} />
+            <DemoStep active={role === "customer"} label="เลือกบริการ" onPress={() => setRole("customer")} />
             <DemoStep active={role === "account"} label="ที่อยู่" onPress={() => setRole("account")} />
-            <DemoStep active={role === "notifications"} label="แจ้งเตือน" onPress={() => setRole("notifications")} />
-            <DemoStep active={role === "privacy"} label="ติดตาม" onPress={() => setRole("privacy")} />
+            <DemoStep active={role === "notifications"} label="สถานะ" onPress={() => setRole("notifications")} />
+            <DemoStep active={role === "privacy"} label="ความปลอดภัย" onPress={() => setRole("privacy")} />
           </View>
           <Text style={styles.demoCopy}>{getDemoHint(role)}</Text>
         </View>
         <View style={styles.tabs}>
-          <RoleTab active={role === "customer"} label="Customer" onPress={() => setRole("customer")} />
+          <RoleTab active={role === "customer"} label="Home" onPress={() => setRole("customer")} />
+          <RoleTab active={role === "notifications"} label="Activity" onPress={() => setRole("notifications")} />
+          <RoleTab active={role === "account"} label="Profile" onPress={() => setRole("account")} />
+          <RoleTab active={role === "privacy"} label="Safety" onPress={() => setRole("privacy")} />
           <RoleTab active={role === "provider"} label="Provider" onPress={() => setRole("provider")} />
-          <RoleTab active={role === "account"} label="Account" onPress={() => setRole("account")} />
-          <RoleTab active={role === "notifications"} label="Inbox" onPress={() => setRole("notifications")} />
-          <RoleTab active={role === "privacy"} label="Privacy" onPress={() => setRole("privacy")} />
         </View>
         {sessionStatus === "auth_required" ? (
           <TesterLoginCard
@@ -243,8 +243,8 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
           <StatusBar barStyle="dark-content" />
           <View style={styles.container}>
             <View style={styles.loginCard}>
-              <Text style={styles.demoTitle}>Wellnest needs a restart</Text>
-              <Text style={styles.demoCopy}>Please close and reopen the app. If this screen appears again, send this screen to the Wellnest operator.</Text>
+          <Text style={styles.demoTitle}>เปิด Wellnest ใหม่อีกครั้ง</Text>
+          <Text style={styles.demoCopy}>กรุณาปิดแอพแล้วเปิดใหม่ หากยังเจอหน้านี้ให้ส่งภาพหน้าจอให้ทีมดูแล</Text>
             </View>
           </View>
         </SafeAreaView>
@@ -266,8 +266,8 @@ function PilotSetupCard({
 }) {
   return (
     <View style={styles.setupCard}>
-      <Text style={styles.demoTitle}>Pilot setup</Text>
-      <Text style={styles.demoCopy}>Allow location when the app opens, then use current location or save a map address in Account before booking.</Text>
+      <Text style={styles.demoTitle}>เริ่มจองได้ในไม่กี่ขั้นตอน</Text>
+      <Text style={styles.demoCopy}>อนุญาตตำแหน่ง แล้วบันทึกที่อยู่บริการเพื่อให้ผู้ให้บริการเดินทางได้ถูกต้อง</Text>
       <View style={styles.setupActions}>
         <Pressable
           accessibilityRole="button"
@@ -278,7 +278,7 @@ function PilotSetupCard({
             pressed ? styles.tabPressed : null,
           ]}
         >
-          <Text style={[styles.setupButtonText, currentRole === "account" ? styles.setupButtonTextActive : null]}>Account first</Text>
+          <Text style={[styles.setupButtonText, currentRole === "account" ? styles.setupButtonTextActive : null]}>บันทึกที่อยู่</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -289,7 +289,7 @@ function PilotSetupCard({
             pressed ? styles.tabPressed : null,
           ]}
         >
-          <Text style={[styles.setupButtonText, currentRole === "customer" ? styles.setupButtonTextActive : null]}>Book service</Text>
+          <Text style={[styles.setupButtonText, currentRole === "customer" ? styles.setupButtonTextActive : null]}>เลือกบริการ</Text>
         </Pressable>
       </View>
     </View>
@@ -341,9 +341,9 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
 
   return (
     <View style={styles.loginCard}>
-      <Text style={styles.demoTitle}>{role === "provider" ? "Provider tester login" : "Customer tester login"}</Text>
-      <Text style={styles.demoCopy}>1. Enter a phone number first. 2. Tap Send OTP. 3. Enter tester OTP 048550.</Text>
-      <Text style={styles.inputLabel}>Phone number first</Text>
+      <Text style={styles.demoTitle}>{role === "provider" ? "เข้าสู่ระบบผู้ให้บริการ" : "เข้าสู่ระบบ Wellnest"}</Text>
+      <Text style={styles.demoCopy}>ใส่เบอร์โทรศัพท์เพื่อรับรหัสยืนยันและเริ่มใช้งาน</Text>
+      <Text style={styles.inputLabel}>เบอร์โทรศัพท์</Text>
       <TextInput
         keyboardType="phone-pad"
         onChangeText={setPhone}
@@ -352,7 +352,7 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
         value={phone}
       />
       {looksLikeOtpInPhoneField ? (
-        <Text style={styles.loginHint}>048550 is the OTP. Enter your phone number here first, then tap Send OTP.</Text>
+        <Text style={styles.loginHint}>ช่องนี้ใส่เบอร์โทรก่อน จากนั้นค่อยใส่รหัสยืนยันในขั้นถัดไป</Text>
       ) : null}
       <Pressable
         accessibilityRole="button"
@@ -364,11 +364,11 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
           pressed ? styles.tabPressed : null,
         ]}
       >
-        <Text style={styles.loginButtonText}>{status === "sending" ? "Sending..." : "Send OTP"}</Text>
+        <Text style={styles.loginButtonText}>{status === "sending" ? "กำลังส่ง..." : "ส่งรหัสยืนยัน"}</Text>
       </Pressable>
       {challenge ? (
         <>
-          <Text style={styles.inputLabel}>Tester OTP</Text>
+          <Text style={styles.inputLabel}>รหัสยืนยัน</Text>
           <TextInput
             keyboardType="number-pad"
             maxLength={6}
@@ -387,16 +387,16 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
               pressed ? styles.tabPressed : null,
             ]}
           >
-            <Text style={styles.loginButtonText}>{status === "verifying" ? "Verifying..." : "Verify and continue"}</Text>
+            <Text style={styles.loginButtonText}>{status === "verifying" ? "กำลังตรวจสอบ..." : "ยืนยันและเข้าใช้งาน"}</Text>
           </Pressable>
-          {challenge.devOtp ? <Text style={styles.loginHint}>Development OTP: {challenge.devOtp}</Text> : null}
+          {challenge.devOtp ? <Text style={styles.loginHint}>รหัสสำหรับรอบทดสอบ: {challenge.devOtp}</Text> : null}
         </>
       ) : null}
       {status === "sent" && challenge?.deliveryChannel === "tester_code" ? (
-        <Text style={styles.loginHint}>Use the closed tester code from the Wellnest operator.</Text>
+        <Text style={styles.loginHint}>ใช้รหัสที่ทีม Wellnest แจ้งสำหรับรอบทดลองใช้งาน</Text>
       ) : null}
-      {status === "sent" && challenge?.deliveryChannel === "sms" ? <Text style={styles.loginHint}>OTP sent. Please enter the code to continue.</Text> : null}
-      {status === "error" ? <Text style={styles.errorText}>Login failed. Check the phone number or OTP and retry.</Text> : null}
+      {status === "sent" && challenge?.deliveryChannel === "sms" ? <Text style={styles.loginHint}>ส่งรหัสแล้ว กรุณาใส่รหัสเพื่อดำเนินการต่อ</Text> : null}
+      {status === "error" ? <Text style={styles.errorText}>เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจเบอร์หรือรหัสอีกครั้ง</Text> : null}
     </View>
   );
 }

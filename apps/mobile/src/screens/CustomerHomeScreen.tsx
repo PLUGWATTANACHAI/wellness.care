@@ -30,9 +30,9 @@ import {
 } from "../services/api";
 
 const bookingSlots = [
-  { id: "tomorrow_1400", label: "Tomorrow · 14:00", offsetHours: 30 },
-  { id: "tomorrow_1800", label: "Tomorrow · 18:00", offsetHours: 34 },
-  { id: "next_day_1000", label: "Next day · 10:00", offsetHours: 50 },
+  { id: "tomorrow_1400", label: "พรุ่งนี้ · 14:00", offsetHours: 30 },
+  { id: "tomorrow_1800", label: "พรุ่งนี้ · 18:00", offsetHours: 34 },
+  { id: "next_day_1000", label: "วันถัดไป · 10:00", offsetHours: 50 },
 ];
 
 export function CustomerHomeScreen() {
@@ -280,7 +280,7 @@ export function CustomerHomeScreen() {
   const holdSeconds = holdSecondsRemaining % 60;
   const holdCountdownText = `${holdMinutes}:${holdSeconds.toString().padStart(2, "0")}`;
   const selectedServicePrice = selectedService ? `฿${selectedService.priceTHB.toLocaleString("th-TH")}` : "เลือกบริการ";
-  const activeProviderName = availability?.nearestProvider?.name ?? "Provider matching";
+  const activeProviderName = availability?.nearestProvider?.name ?? "กำลังรอจับคู่";
   const activeProviderMeta =
     availability?.available && availability.nearestProvider
       ? `ใกล้พี่ ${(availability.nearestProvider.distanceMeters / 1000).toFixed(2)} กม.`
@@ -290,7 +290,7 @@ export function CustomerHomeScreen() {
     <View style={styles.card}>
       <View style={styles.screenHeader}>
         <View>
-          <Text style={styles.label}>Book service</Text>
+          <Text style={styles.label}>บริการถึงคอนโด</Text>
           <Text style={styles.title}>เลือกบริการที่ต้องการ</Text>
         </View>
         <View style={styles.liveBadge}>
@@ -299,7 +299,7 @@ export function CustomerHomeScreen() {
       </View>
       <View style={styles.bookingSummaryCard}>
         <View>
-          <Text style={styles.summaryLabel}>วันนี้แนะนำ</Text>
+          <Text style={styles.summaryLabel}>บริการที่เลือก</Text>
           <Text style={styles.summaryTitle}>{selectedService?.name ?? "Wellness service"}</Text>
           <Text style={styles.summaryMeta}>{selectedSlot.label} · {selectedServicePrice}</Text>
         </View>
@@ -380,15 +380,15 @@ export function CustomerHomeScreen() {
         <Text style={styles.row}>
           {customerAddress
             ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}`
-            : "No address saved yet"}
+            : "ยังไม่มีที่อยู่บริการ"}
         </Text>
         {customerAddress?.formattedAddress ? <Text style={styles.addressText}>{customerAddress.formattedAddress}</Text> : null}
         {customerAddress?.lat && customerAddress.lng ? (
           <Text style={styles.mapText}>
-            Map confirmed · {customerAddress.lat.toFixed(5)}, {customerAddress.lng.toFixed(5)}
+            ยืนยันจากแผนที่แล้ว · {customerAddress.lat.toFixed(5)}, {customerAddress.lng.toFixed(5)}
           </Text>
         ) : (
-          <Text style={styles.warning}>Please save a map address in Account before booking.</Text>
+          <Text style={styles.warning}>กรุณาบันทึกที่อยู่จากแผนที่ในหน้าโปรไฟล์ก่อนจอง</Text>
         )}
         <Pressable
           accessibilityRole="button"
@@ -405,7 +405,7 @@ export function CustomerHomeScreen() {
           ]}
         >
           <Text style={[styles.confirmButtonText, addressConfirmed ? styles.confirmButtonTextActive : null]}>
-            {addressConfirmed ? "Address confirmed" : "Tap to confirm address"}
+            {addressConfirmed ? "ยืนยันที่อยู่นี้แล้ว" : "ยืนยันที่อยู่นี้"}
           </Text>
         </Pressable>
       </View>
@@ -463,48 +463,48 @@ export function CustomerHomeScreen() {
         <View style={styles.reviewBox}>
           <Text style={styles.trackingTitle}>ตรวจสอบก่อนชำระเงิน</Text>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Service</Text>
+            <Text style={styles.reviewLabel}>บริการ</Text>
             <Text style={styles.reviewValue}>{selectedService?.name ?? latestBooking.serviceId}</Text>
           </View>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Schedule</Text>
+            <Text style={styles.reviewLabel}>วันและเวลา</Text>
             <Text style={styles.reviewValue}>{selectedSlot.label}</Text>
           </View>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Address</Text>
+            <Text style={styles.reviewLabel}>ที่อยู่</Text>
             <Text style={styles.reviewValue}>
               {customerAddress ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}` : latestBooking.addressId}
             </Text>
           </View>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Service price</Text>
+            <Text style={styles.reviewLabel}>ค่าบริการ</Text>
             <Text style={styles.reviewValue}>฿{(priceBreakdown?.subtotalTHB ?? latestBooking.totalTHB).toLocaleString("th-TH")}</Text>
           </View>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Coins discount</Text>
+            <Text style={styles.reviewLabel}>ส่วนลด Coins</Text>
             <Text style={styles.discountValue}>
               -฿{(priceBreakdown?.coinsDiscountTHB ?? 0).toLocaleString("th-TH")}
             </Text>
           </View>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Platform fee</Text>
+            <Text style={styles.reviewLabel}>ค่าดูแลระบบ</Text>
             <Text style={styles.reviewValue}>฿{(priceBreakdown?.platformFeeTHB ?? 0).toLocaleString("th-TH")}</Text>
           </View>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>Total to pay</Text>
+            <Text style={styles.reviewLabel}>ยอดที่ต้องชำระ</Text>
             <Text style={styles.reviewTotal}>
               ฿{(priceBreakdown?.totalTHB ?? latestBooking.totalTHB).toLocaleString("th-TH")}
             </Text>
           </View>
           {priceBreakdown ? (
             <Text style={styles.policyText}>
-              Uses {priceBreakdown.coinsUsed.toLocaleString("th-TH")} coins · earns {priceBreakdown.pointsEarned.toLocaleString("th-TH")} points after payment.
+              ใช้ {priceBreakdown.coinsUsed.toLocaleString("th-TH")} coins · ได้รับ {priceBreakdown.pointsEarned.toLocaleString("th-TH")} points หลังชำระเงิน
             </Text>
           ) : null}
           <Text style={styles.holdText}>
             {slotHold?.held
-              ? `Provider slot held for payment · ${holdCountdownText} remaining`
-              : "Provider slot hold expired. Please re-check availability."}
+              ? `ล็อกคิวผู้ให้บริการไว้ให้ชำระเงิน · เหลือ ${holdCountdownText}`
+              : "คิวผู้ให้บริการหมดเวลาแล้ว กรุณาตรวจผู้ให้บริการอีกครั้ง"}
           </Text>
           <Text style={styles.policyText}>
             ยกเลิกได้ตามเงื่อนไขบริการก่อนผู้ให้บริการเริ่มเดินทาง รายละเอียดนโยบายฉบับเต็มจะยืนยันก่อนเปิดสาธารณะ
@@ -519,7 +519,7 @@ export function CustomerHomeScreen() {
             ]}
           >
             <Text style={[styles.confirmButtonText, reviewAccepted ? styles.confirmButtonTextActive : null]}>
-              {reviewAccepted ? "Review confirmed" : "Confirm review"}
+              {reviewAccepted ? "ตรวจสอบข้อมูลแล้ว" : "ยืนยันข้อมูลก่อนชำระเงิน"}
             </Text>
           </Pressable>
         </View>
@@ -556,7 +556,7 @@ export function CustomerHomeScreen() {
             ]}
           >
             <Text style={[styles.methodChipText, paymentMethod === "card" ? styles.methodChipTextActive : null]}>
-              Credit card
+              บัตรเครดิต
             </Text>
           </Pressable>
         </View>
@@ -566,10 +566,10 @@ export function CustomerHomeScreen() {
             : latestBooking
               ? reviewAccepted
                 ? priceBreakdown && slotHold?.held
-                  ? `Ready to pay ฿${priceBreakdown.totalTHB.toLocaleString("th-TH")}`
-                  : "Slot hold expired. Please create a fresh booking."
-                : "Please confirm the booking review before payment."
-              : "Create booking before payment"}
+                  ? `พร้อมชำระ ฿${priceBreakdown.totalTHB.toLocaleString("th-TH")}`
+                  : "คิวหมดเวลา กรุณาจองใหม่อีกครั้ง"
+                : "กรุณายืนยันข้อมูลก่อนชำระเงิน"
+              : "กรุณายืนยันการจองก่อนชำระเงิน"}
         </Text>
         <View style={styles.paymentActions}>
           <Pressable
@@ -583,7 +583,7 @@ export function CustomerHomeScreen() {
             ]}
           >
             <Text style={styles.buttonSecondaryText}>
-              {paymentStatus === "creating" ? "Creating..." : paymentMethod === "promptpay" ? "Open PromptPay QR" : "Card tokenization next"}
+              {paymentStatus === "creating" ? "กำลังสร้างรายการ..." : paymentMethod === "promptpay" ? "เปิด QR PromptPay" : "บัตรเครดิตจะเปิดใช้งานเร็ว ๆ นี้"}
             </Text>
           </Pressable>
           <Pressable
@@ -598,20 +598,20 @@ export function CustomerHomeScreen() {
           >
             <Text style={styles.buttonText}>
               {paymentStatus === "confirming"
-                ? "Confirming..."
+                ? "กำลังยืนยัน..."
                 : paymentIntent?.provider === "sandbox"
-                  ? "Confirm test payment"
-                  : "Reopen payment"}
+                  ? "ยืนยันการชำระเงิน"
+                  : "เปิดหน้าชำระเงินอีกครั้ง"}
             </Text>
           </Pressable>
         </View>
         {paymentMethod === "card" ? (
           <Text style={styles.note}>
-            Card live payment is next. The API is ready for Omise card tokens; the app will add secure tokenization before testers use cards.
+            บัตรเครดิตจะเปิดหลังเพิ่มระบบเก็บ token ที่ปลอดภัยครบถ้วน
           </Text>
         ) : null}
-        {paymentIntent?.checkoutUrl ? <Text style={styles.note}>Complete payment in the opened Omise checkout/QR page. Booking confirms after webhook.</Text> : null}
-        {paymentStatus === "error" ? <Text style={styles.error}>Payment failed. Please retry.</Text> : null}
+        {paymentIntent?.checkoutUrl ? <Text style={styles.note}>ชำระเงินในหน้า Omise/QR ที่เปิดขึ้น ระบบจะยืนยันการจองหลังได้รับสถานะชำระเงิน</Text> : null}
+        {paymentStatus === "error" ? <Text style={styles.error}>ชำระเงินไม่สำเร็จ กรุณาลองอีกครั้ง</Text> : null}
       </View>
       <View style={styles.trackingBox}>
         <Text style={styles.trackingTitle}>ติดตามผู้ให้บริการ</Text>
@@ -623,7 +623,7 @@ export function CustomerHomeScreen() {
           </Text>
         ) : (
           <Text style={styles.row}>
-            {trackingStatus === "error" ? "No active provider location yet" : "Waiting for provider location"}
+            {trackingStatus === "error" ? "ยังไม่มีตำแหน่งผู้ให้บริการสำหรับงานนี้" : "รอตำแหน่งจากผู้ให้บริการ"}
           </Text>
         )}
         <Pressable
@@ -639,7 +639,7 @@ export function CustomerHomeScreen() {
       </View>
       {timeline.length > 0 ? (
         <View style={styles.timelineBox}>
-          <Text style={styles.trackingTitle}>Booking timeline</Text>
+          <Text style={styles.trackingTitle}>สถานะการจอง</Text>
           {timeline.map((event) => (
             <View key={event.id} style={styles.timelineItem}>
               <Text style={styles.timelineTitle}>{event.title}</Text>
@@ -650,13 +650,13 @@ export function CustomerHomeScreen() {
       ) : null}
       {latestBooking ? (
         <View style={styles.communicationBox}>
-          <Text style={styles.trackingTitle}>Booking messages</Text>
+          <Text style={styles.trackingTitle}>ข้อความกับผู้ให้บริการ</Text>
           <Text style={styles.row}>
             {communicationStatus === "loading"
-              ? "Loading messages..."
+              ? "กำลังโหลดข้อความ..."
               : communications.length
-                ? `${communications.length} message(s) with your provider`
-                : "No customer-provider messages yet"}
+                ? `${communications.length} ข้อความ`
+                : "ยังไม่มีข้อความ"}
           </Text>
           {communications.map((item) => (
             <View key={item.id} style={styles.communicationItem}>
@@ -670,7 +670,7 @@ export function CustomerHomeScreen() {
             multiline
             value={communicationText}
             onChangeText={setCommunicationText}
-            placeholder="Message your provider"
+            placeholder="พิมพ์ข้อความถึงผู้ให้บริการ"
             placeholderTextColor="#81908c"
             style={styles.messageInput}
           />
@@ -684,11 +684,11 @@ export function CustomerHomeScreen() {
               pressed ? styles.buttonPressed : null,
             ]}
           >
-            <Text style={styles.buttonText}>{communicationStatus === "sending" ? "Sending..." : "Send message"}</Text>
+            <Text style={styles.buttonText}>{communicationStatus === "sending" ? "กำลังส่ง..." : "ส่งข้อความ"}</Text>
           </Pressable>
-          {communicationStatus === "error" ? <Text style={styles.error}>Messages are unavailable right now.</Text> : null}
+          {communicationStatus === "error" ? <Text style={styles.error}>ยังส่งข้อความไม่ได้ในขณะนี้</Text> : null}
           <View style={styles.supportBox}>
-            <Text style={styles.trackingTitle}>Need support?</Text>
+            <Text style={styles.trackingTitle}>ต้องการความช่วยเหลือ?</Text>
             <TextInput
               multiline
               value={supportRequestText}
@@ -696,7 +696,7 @@ export function CustomerHomeScreen() {
                 setSupportRequestText(text);
                 if (supportStatus === "sent" || supportStatus === "error") setSupportStatus("idle");
               }}
-              placeholder="Tell support what happened"
+              placeholder="แจ้งทีมดูแลว่าเกิดอะไรขึ้น"
               placeholderTextColor="#81908c"
               style={styles.messageInput}
             />
@@ -711,7 +711,7 @@ export function CustomerHomeScreen() {
                   pressed ? styles.buttonPressed : null,
                 ]}
               >
-                <Text style={styles.supportButtonText}>Request support</Text>
+                <Text style={styles.supportButtonText}>ขอความช่วยเหลือ</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
@@ -723,11 +723,11 @@ export function CustomerHomeScreen() {
                   pressed ? styles.buttonPressed : null,
                 ]}
               >
-                <Text style={styles.supportDangerButtonText}>Report safety</Text>
+                <Text style={styles.supportDangerButtonText}>แจ้งความปลอดภัย</Text>
               </Pressable>
             </View>
-            {supportStatus === "sent" ? <Text style={styles.result}>Support request sent privately to operations.</Text> : null}
-            {supportStatus === "error" ? <Text style={styles.error}>Could not send support request.</Text> : null}
+            {supportStatus === "sent" ? <Text style={styles.result}>ส่งเรื่องให้ทีมดูแลแล้ว</Text> : null}
+            {supportStatus === "error" ? <Text style={styles.error}>ยังส่งเรื่องไม่ได้ กรุณาลองอีกครั้ง</Text> : null}
             {supportCases.length > 0 ? (
               <View style={styles.caseList}>
                 {supportCases.map((supportCase) => (
@@ -738,7 +738,7 @@ export function CustomerHomeScreen() {
                     <Text style={styles.row}>
                       {supportCase.status === "resolved" && supportCase.resolutionNote
                         ? supportCase.resolutionNote
-                        : "Operations has your request."}
+                        : "ทีมดูแลรับเรื่องแล้ว"}
                     </Text>
                   </View>
                 ))}
@@ -753,17 +753,17 @@ export function CustomerHomeScreen() {
 }
 
 function formatCommunicationActor(actorRole: string) {
-  if (actorRole === "provider") return "Provider";
-  if (actorRole === "admin") return "Support";
-  return "You";
+  if (actorRole === "provider") return "ผู้ให้บริการ";
+  if (actorRole === "admin") return "ทีมดูแล";
+  return "พี่";
 }
 
 function formatSupportReason(reasonCode: BookingSupportCaseDto["reasonCode"]) {
   const labels: Record<BookingSupportCaseDto["reasonCode"], string> = {
-    support_request: "Support request",
-    unsafe_message: "Safety report",
-    arrival_issue: "Arrival issue",
-    payment_issue: "Payment issue",
+    support_request: "ขอความช่วยเหลือ",
+    unsafe_message: "แจ้งความปลอดภัย",
+    arrival_issue: "ปัญหาการเดินทาง",
+    payment_issue: "ปัญหาการชำระเงิน",
   };
 
   return labels[reasonCode];
@@ -771,9 +771,9 @@ function formatSupportReason(reasonCode: BookingSupportCaseDto["reasonCode"]) {
 
 function formatSupportStatus(status: BookingSupportCaseDto["status"]) {
   const labels: Record<BookingSupportCaseDto["status"], string> = {
-    open: "Received",
-    in_review: "In review",
-    resolved: "Resolved",
+    open: "รับเรื่องแล้ว",
+    in_review: "กำลังตรวจสอบ",
+    resolved: "แก้ไขแล้ว",
   };
 
   return labels[status];
