@@ -32,6 +32,7 @@
       "channel": "preview"
     },
     "testflight": {
+      "credentialsSource": "local",
       "distribution": "store",
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://wellnest-api-staging.onrender.com"

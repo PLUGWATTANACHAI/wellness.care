@@ -27,3 +27,5 @@ coverage
 service-account*.json
 firebase*.json
 google-credentials*.json
+apps/mobile/credentials.json
+apps/mobile/ios/certs/
