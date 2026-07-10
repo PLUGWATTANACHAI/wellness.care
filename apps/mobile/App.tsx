@@ -22,6 +22,7 @@ export default function App() {
   const [startupLocationStatus, setStartupLocationStatus] = useState<"checking" | "permission_ready" | "denied" | "error">("checking");
 
   const activeLoginRole = getLoginRole(role);
+  const isSignedIn = sessionStatus === "ready";
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +49,8 @@ export default function App() {
   }, [activeLoginRole]);
 
   useEffect(() => {
+    if (!isSignedIn) return undefined;
+
     let cancelled = false;
     const requestTimer = setTimeout(() => {
       requestStartupLocationPermission()
@@ -69,7 +72,7 @@ export default function App() {
       cancelled = true;
       clearTimeout(requestTimer);
     };
-  }, []);
+  }, [isSignedIn]);
 
   async function handleRetryStartupLocation() {
     setStartupLocationStatus("checking");
@@ -100,7 +103,7 @@ export default function App() {
             <Text style={styles.profileBadgeText}>{session?.user.name?.slice(0, 1) || "W"}</Text>
           </View>
         </View>
-        <View style={styles.walletRow}>
+        {isSignedIn ? <View style={styles.walletRow}>
           <View style={styles.walletTile}>
             <Text style={styles.walletLabel}>Coins</Text>
             <Text style={styles.walletValue}>0</Text>
@@ -113,11 +116,11 @@ export default function App() {
             <Text style={styles.walletLabel}>Tier</Text>
             <Text style={styles.walletValue}>Member</Text>
           </View>
-        </View>
+        </View> : null}
         <View style={styles.heroCard}>
           <View style={styles.heroCopy}>
-            <Text style={styles.heroKicker}>พร้อมให้บริการวันนี้</Text>
-            <Text style={styles.heroTitle}>จองบริการดูแลตัวเองถึงคอนโด</Text>
+            <Text style={styles.heroKicker}>{isSignedIn ? "พร้อมให้บริการวันนี้" : "เข้าสู่ระบบเพื่อเริ่มดูแลตัวเอง"}</Text>
+            <Text style={styles.heroTitle}>{isSignedIn ? "จองบริการดูแลตัวเองถึงคอนโด" : "Wellness service ที่มาหาพี่ถึงคอนโด"}</Text>
             <Text style={styles.heroBody}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
           </View>
           <View style={styles.heroProviderCard}>
@@ -126,15 +129,15 @@ export default function App() {
             <Text style={styles.heroProviderMeta}>4.9 คะแนน · 18 นาที</Text>
           </View>
         </View>
-        <View style={styles.promoBand}>
+        {isSignedIn ? <View style={styles.promoBand}>
           <View>
             <Text style={styles.promoTitle}>โปรสำหรับการจองครั้งแรก</Text>
             <Text style={styles.promoCopy}>บันทึกที่อยู่ครั้งเดียว แล้วจองครั้งถัดไปได้เร็วขึ้น</Text>
           </View>
           <Text style={styles.promoBadge}>New</Text>
-        </View>
-        <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} />
-        <View style={styles.demoPanel}>
+        </View> : null}
+        {isSignedIn ? <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} /> : null}
+        {isSignedIn ? <View style={styles.demoPanel}>
           <Text style={styles.demoTitle}>เส้นทางการจอง</Text>
           <View style={styles.demoSteps}>
             <DemoStep active={role === "customer"} label="เลือกบริการ" onPress={() => setRole("customer")} />
@@ -143,14 +146,14 @@ export default function App() {
             <DemoStep active={role === "privacy"} label="ความปลอดภัย" onPress={() => setRole("privacy")} />
           </View>
           <Text style={styles.demoCopy}>{getDemoHint(role)}</Text>
-        </View>
-        <View style={styles.tabs}>
+        </View> : null}
+        {isSignedIn ? <View style={styles.tabs}>
           <RoleTab active={role === "customer"} label="Home" onPress={() => setRole("customer")} />
           <RoleTab active={role === "notifications"} label="Activity" onPress={() => setRole("notifications")} />
           <RoleTab active={role === "account"} label="Profile" onPress={() => setRole("account")} />
           <RoleTab active={role === "privacy"} label="Safety" onPress={() => setRole("privacy")} />
           <RoleTab active={role === "provider"} label="Provider" onPress={() => setRole("provider")} />
-        </View>
+        </View> : null}
         {sessionStatus === "auth_required" ? (
           <TesterLoginCard
             role={activeLoginRole}
@@ -167,7 +170,7 @@ export default function App() {
         {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreenLazy /> : null}
         {sessionStatus === "ready" && role === "account" ? <AccountProfileScreenLazy /> : null}
         {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreenLazy /> : null}
-        {role === "privacy" ? <PrivacyCenterScreenLazy /> : null}
+        {isSignedIn && role === "privacy" ? <PrivacyCenterScreenLazy /> : null}
         {sessionStatus === "loading" ? <Text style={styles.loadingText}>Checking secure session...</Text> : null}
         {sessionStatus === "error" ? <Text style={styles.errorText}>Could not start a secure session. Please retry.</Text> : null}
         </ScrollView>
@@ -342,7 +345,13 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
   return (
     <View style={styles.loginCard}>
       <Text style={styles.demoTitle}>{role === "provider" ? "เข้าสู่ระบบผู้ให้บริการ" : "เข้าสู่ระบบ Wellnest"}</Text>
-      <Text style={styles.demoCopy}>ใส่เบอร์โทรศัพท์เพื่อรับรหัสยืนยันและเริ่มใช้งาน</Text>
+      <Text style={styles.demoCopy}>เลือกวิธีเข้าสู่ระบบเพื่อดูบริการ โปรโมชัน และติดตามการจองของพี่</Text>
+      <View style={styles.socialLoginGrid}>
+        <AuthOptionButton disabled label="Apple ID" tone="dark" />
+        <AuthOptionButton disabled label="Facebook" tone="blue" />
+        <AuthOptionButton disabled label="Email" tone="light" />
+      </View>
+      <Text style={styles.loginHint}>ตอนนี้รอบทดสอบใช้เบอร์โทรก่อน ส่วน Apple ID, Facebook และ Email จะเชื่อมต่อในรอบ production</Text>
       <Text style={styles.inputLabel}>เบอร์โทรศัพท์</Text>
       <TextInput
         keyboardType="phone-pad"
@@ -398,6 +407,40 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
       {status === "sent" && challenge?.deliveryChannel === "sms" ? <Text style={styles.loginHint}>ส่งรหัสแล้ว กรุณาใส่รหัสเพื่อดำเนินการต่อ</Text> : null}
       {status === "error" ? <Text style={styles.errorText}>เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจเบอร์หรือรหัสอีกครั้ง</Text> : null}
     </View>
+  );
+}
+
+function AuthOptionButton({ disabled, label, tone }: { disabled?: boolean; label: string; tone: "dark" | "blue" | "light" }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.authOption,
+        tone === "dark" ? styles.authOptionDark : null,
+        tone === "blue" ? styles.authOptionBlue : null,
+        tone === "light" ? styles.authOptionLight : null,
+        disabled ? styles.authOptionDisabled : null,
+        pressed ? styles.tabPressed : null,
+      ]}
+    >
+      <Text
+        style={[
+          styles.authOptionText,
+          tone === "dark" || tone === "blue" ? styles.authOptionTextInverted : null,
+        ]}
+      >
+        {label}
+      </Text>
+      <Text
+        style={[
+          styles.authOptionMeta,
+          tone === "dark" || tone === "blue" ? styles.authOptionMetaInverted : null,
+        ]}
+      >
+        เร็ว ๆ นี้
+      </Text>
+    </Pressable>
   );
 }
 
@@ -739,6 +782,49 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#fff",
     padding: 14,
+  },
+  socialLoginGrid: {
+    gap: 8,
+  },
+  authOption: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  authOptionDark: {
+    borderColor: "#10231f",
+    backgroundColor: "#10231f",
+  },
+  authOptionBlue: {
+    borderColor: "#1d4ed8",
+    backgroundColor: "#1d4ed8",
+  },
+  authOptionLight: {
+    borderColor: "#d7e2df",
+    backgroundColor: "#f8fbfa",
+  },
+  authOptionDisabled: {
+    opacity: 0.72,
+  },
+  authOptionText: {
+    color: "#10231f",
+    fontWeight: "900",
+  },
+  authOptionTextInverted: {
+    color: "#fff",
+  },
+  authOptionMeta: {
+    color: "#50615d",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  authOptionMetaInverted: {
+    color: "rgba(255,255,255,0.78)",
   },
   setupCard: {
     gap: 10,
