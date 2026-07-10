@@ -1,6 +1,6 @@
 :root {
-  color: #18302d;
-  background: #f4faf8;
+  color: #10231f;
+  background: #dfe9e6;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -13,8 +13,7 @@ body {
 }
 
 button,
-input,
-textarea {
+input {
   font: inherit;
 }
 
@@ -22,129 +21,415 @@ button {
   cursor: pointer;
 }
 
-.shell {
-  width: min(1160px, calc(100% - 28px));
-  margin: 0 auto;
-  padding: 18px 0 28px;
-}
-
-.topBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 72px;
-}
-
-.topBar p,
-.promoBand p,
-.sectionHeader span,
-.providerRow span,
-.historyRow span,
-.muted {
-  color: #60736f;
-}
-
-.topBar p,
-.topBar h1,
-.promoBand p,
-.promoBand strong,
-.sectionHeader h2,
-.sidePanel h2 {
-  margin: 0;
-}
-
-.topBar h1 {
-  font-size: 34px;
-  letter-spacing: 0;
-}
-
-.iconButton {
+.previewShell {
+  min-height: 100vh;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid #d7e7e3;
-  border-radius: 8px;
-  background: #fff;
-  color: #0b8f88;
-  font-size: 22px;
-  font-weight: 900;
+  gap: 10px;
+  padding: 18px;
 }
 
-.promoBand {
+.previewInfo {
+  width: min(390px, 100%);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #50615d;
+  font-size: 12px;
+}
+
+.previewInfo strong {
+  color: #10231f;
+}
+
+.phoneFrame {
+  width: 390px;
+  height: 844px;
+  max-width: calc(100vw - 28px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #bfd2ce;
+  border-radius: 28px;
+  background: #f3fbfa;
+  box-shadow: 0 24px 72px rgba(16, 35, 31, 0.22);
+}
+
+.loginScreen,
+.homeScreen,
+.bookingScreen {
+  flex: 1;
+  overflow: auto;
+  padding: 18px;
+}
+
+.loginScreen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.loginHero {
+  min-height: 220px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 190px;
-  gap: 18px;
-  align-items: center;
-  min-height: 178px;
-  padding: 22px;
-  border-radius: 8px;
+  align-content: end;
+  gap: 10px;
+  border-radius: 20px;
+  padding: 18px;
   background:
-    linear-gradient(120deg, rgba(9, 131, 131, 0.95), rgba(21, 155, 121, 0.9)),
-    url("https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1400&q=70");
+    linear-gradient(140deg, rgba(9, 127, 123, 0.96), rgba(14, 159, 130, 0.85)),
+    url("https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=900&q=70");
   background-position: center;
   background-size: cover;
   color: #fff;
 }
 
-.promoBand span {
+.loginHero span,
+.heroCard span {
   color: #f3d17c;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
 }
 
-.promoBand strong {
-  display: block;
-  margin-top: 6px;
-  font-size: clamp(26px, 4vw, 46px);
+.loginHero h1,
+.heroCard h2,
+.appHeader h1,
+.screenBlock h2,
+.homeSection h2 {
+  margin: 0;
   letter-spacing: 0;
 }
 
-.promoBand p {
-  max-width: 580px;
-  margin-top: 10px;
-  color: rgba(255, 255, 255, 0.82);
-  line-height: 1.55;
+.loginHero h1 {
+  font-size: 31px;
+  line-height: 1.1;
 }
 
-.promoVisual {
+.loginHero p,
+.heroCard p,
+.providerCard p,
+.promoCard p,
+.finePrint,
+.mapCard p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.loginOptions {
+  display: grid;
+  gap: 8px;
+}
+
+.authButton,
+.primaryButton,
+.secondaryButton,
+.heroCard button,
+.sectionTitle button,
+.stepTabs button,
+.paymentSwitch button,
+.backButton,
+.profileButton,
+.bottomNav button {
+  border-radius: 10px;
+  font-weight: 900;
+}
+
+.authButton {
+  min-height: 48px;
+  border: 1px solid transparent;
+}
+
+.authButton.apple {
+  background: #10231f;
+  color: #fff;
+}
+
+.authButton.facebook {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.authButton.email {
+  border-color: #d7e2df;
+  background: #fff;
+  color: #10231f;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #6d7875;
+  font-size: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #d7e2df;
+}
+
+.fieldLabel {
+  display: grid;
+  gap: 6px;
+  color: #263b38;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #d7e2df;
+  border-radius: 10px;
+  background: #fff;
+  color: #10231f;
+  padding: 0 12px;
+}
+
+.primaryButton {
+  min-height: 48px;
+  border: 0;
+  background: #0793a4;
+  color: #fff;
+}
+
+.secondaryButton {
+  min-height: 42px;
+  border: 1px solid #c9dcd8;
+  background: #fff;
+  color: #0b756f;
+}
+
+.secondaryButton.confirmed {
+  border-color: #0b8f88;
+  background: #e3f6f2;
+}
+
+.finePrint {
+  color: #60736f;
+  font-size: 12px;
+}
+
+.appHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.appHeader.compact {
+  justify-content: flex-start;
+}
+
+.appHeader p {
+  margin: 0 0 2px;
+  color: #60736f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.appHeader h1 {
+  font-size: 30px;
+}
+
+.profileButton,
+.backButton {
+  width: 44px;
+  height: 44px;
+  border: 1px solid #d7e2df;
+  background: #fff;
+  color: #0b8f88;
+}
+
+.backButton {
+  font-size: 28px;
+}
+
+.walletStrip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.walletStrip div {
+  display: grid;
+  gap: 2px;
+  border: 1px solid #d7e2df;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+}
+
+.walletStrip span {
+  color: #60736f;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.walletStrip strong {
+  font-size: 15px;
+}
+
+.heroCard {
+  display: grid;
   gap: 10px;
-  align-items: end;
-  height: 126px;
+  border-radius: 20px;
+  background: #0b8f88;
+  color: #fff;
+  padding: 18px;
 }
 
-.promoVisual span {
-  display: block;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.7);
+.heroCard h2 {
+  font-size: 27px;
+  line-height: 1.12;
 }
 
-.promoVisual span:nth-child(1) {
-  height: 82px;
+.heroCard p {
+  color: rgba(255, 255, 255, 0.82);
 }
 
-.promoVisual span:nth-child(2) {
-  height: 118px;
+.heroCard button {
+  width: fit-content;
+  min-height: 42px;
+  border: 0;
   background: #f3d17c;
+  color: #10231f;
+  padding: 0 14px;
 }
 
-.promoVisual span:nth-child(3) {
-  height: 58px;
+.homeSection {
+  margin-top: 18px;
 }
 
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sectionTitle h2,
+.screenBlock h2 {
+  font-size: 20px;
+}
+
+.sectionTitle button {
+  border: 0;
+  background: transparent;
+  color: #0b756f;
+  font-size: 12px;
+}
+
+.serviceScroller {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 156px;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.serviceGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.serviceCard {
+  min-height: 142px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid #d7e2df;
+  border-radius: 14px;
+  background: #fff;
+  color: #10231f;
+  padding: 12px;
+  text-align: left;
+}
+
+.serviceCard.selected {
+  border-color: #0b8f88;
+  box-shadow: 0 12px 28px rgba(11, 143, 136, 0.14);
+}
+
+.serviceCard span {
+  width: fit-content;
+  border-radius: 999px;
+  background: #e3f6f2;
+  color: #0b756f;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 4px 8px;
+}
+
+.serviceCard small,
+.providerCard p,
+.promoCard p,
+.mapCard p {
+  color: #60736f;
+}
+
+.serviceCard b {
+  margin-top: auto;
+  color: #0b756f;
+}
+
+.promoList,
+.providerList {
+  display: grid;
+  gap: 10px;
+}
+
+.promoCard,
+.providerCard,
+.screenBlock,
 .progressPanel,
-.mainPanel,
-.sidePanel {
-  border: 1px solid #dfe9e6;
-  border-radius: 8px;
+.mapCard,
+.summaryList,
+.trackingCard {
+  border: 1px solid #d7e2df;
+  border-radius: 14px;
   background: #fff;
 }
 
+.promoCard {
+  padding: 12px;
+}
+
+.providerCard {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #e3f6f2;
+  color: #0b756f;
+  font-weight: 900;
+}
+
+.providerCard span {
+  color: #0b756f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .progressPanel {
-  margin-top: 14px;
-  padding: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
 }
 
 .progressTrack {
@@ -158,500 +443,171 @@ button {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #0b8f88, #f2c15d);
+  background: linear-gradient(90deg, #0b8f88, #f3d17c);
 }
 
-.steps {
+.stepTabs {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
 }
 
-.steps button {
-  min-height: 42px;
-  border: 1px solid #d9e6e2;
-  border-radius: 8px;
+.stepTabs button {
+  min-height: 36px;
+  border: 1px solid #d7e2df;
   background: #f8fbfa;
-  color: #536864;
-  font-weight: 900;
+  color: #60736f;
+  font-size: 12px;
 }
 
-.steps .active {
+.stepTabs .active {
   border-color: #0b8f88;
   background: #e3f6f2;
   color: #0b756f;
 }
 
-.contentGrid {
+.screenBlock {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 14px;
-  margin-top: 14px;
-}
-
-.mainPanel,
-.sidePanel {
-  padding: 18px;
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 12px;
-}
-
-.sectionHeader span {
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.sectionHeader h2,
-.sidePanel h2 {
-  margin-top: 4px;
-  font-size: 22px;
-  letter-spacing: 0;
-}
-
-.serviceGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.serviceTile {
-  display: grid;
-  min-height: 154px;
-  gap: 10px;
-  align-content: start;
-  border: 1px solid #dce8e5;
-  border-radius: 8px;
-  background: #fff;
-  color: #18302d;
   padding: 14px;
-  text-align: left;
-}
-
-.serviceTile.selected {
-  border-color: #0b8f88;
-  box-shadow: 0 14px 32px rgba(11, 143, 136, 0.16);
-}
-
-.category {
-  width: fit-content;
-  border-radius: 999px;
-  padding: 5px 8px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.teal {
-  background: #0b8f88;
-}
-
-.rose {
-  background: #bf5d6a;
-}
-
-.gold {
-  background: #a66d13;
-}
-
-.serviceTile strong {
-  font-size: 17px;
-}
-
-.serviceTile small,
-.recommendPanel p,
-.feedbackBox p,
-.trackingPanel p,
-.paymentPanel p,
-.paymentNotice p {
-  color: #60736f;
-  line-height: 1.5;
-}
-
-.recommendPanel,
-.feedbackBox,
-.trackingPanel,
-.mapPreview {
-  margin-top: 14px;
-  border-radius: 8px;
-  background: #f5faf8;
-  padding: 14px;
-}
-
-.mapSearchPanel {
-  display: grid;
-  gap: 10px;
-  border: 1px solid #d9e6e2;
-  border-radius: 8px;
-  background: #f8fbfa;
-  padding: 12px;
-}
-
-.primaryButton {
-  width: 100%;
-  min-height: 48px;
-  margin-top: 16px;
-  border: 0;
-  border-radius: 8px;
-  background: #0b8f88;
-  color: #fff;
-  font-weight: 950;
-}
-
-.secondaryButton {
-  min-height: 42px;
-  border: 1px solid #cde0dc;
-  border-radius: 8px;
-  background: #fff;
-  color: #0b756f;
-  font-weight: 950;
-}
-
-.secondaryButton.confirmed {
-  border-color: #0b8f88;
-  background: #e3f6f2;
-  color: #0b756f;
-}
-
-.mapActions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.autocompleteHost {
-  min-height: 42px;
-}
-
-.googlePlaceAutocomplete {
-  width: 100%;
-}
-
-.mapNotice,
-.mapStatus {
-  margin: 0;
-  color: #60736f;
-  font-size: 13px;
-  line-height: 1.45;
-  text-transform: none;
 }
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.formGrid label {
-  display: grid;
-  gap: 8px;
-  color: #526761;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .wide {
   grid-column: 1 / -1;
 }
 
-input,
-textarea {
-  width: 100%;
-  min-height: 46px;
-  border: 1px solid #d9e6e2;
-  border-radius: 8px;
-  color: #18302d;
-  padding: 10px 12px;
-}
-
-textarea {
-  min-height: 86px;
-  resize: vertical;
-}
-
-.mapPreview {
-  position: relative;
+.mapCard {
   display: grid;
-  place-items: center;
-  min-height: 180px;
-  overflow: hidden;
-  background:
-    linear-gradient(90deg, rgba(11, 143, 136, 0.12) 1px, transparent 1px),
-    linear-gradient(rgba(11, 143, 136, 0.12) 1px, transparent 1px),
-    #eef7f5;
-  background-size: 36px 36px;
-}
-
-.mapPreview a {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  max-width: calc(100% - 28px);
-  overflow: hidden;
-  border-radius: 999px;
-  background: #fff;
-  color: #18302d;
-  font-weight: 900;
-  padding: 8px 12px;
-  text-decoration: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  grid-template-columns: 38px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  background: #f8fbfa;
 }
 
 .pin {
-  width: 22px;
-  height: 22px;
-  border: 5px solid #bf5d6a;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 0 0 18px rgba(191, 93, 106, 0.12);
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 38%, #f3d17c 0 22%, #0b8f88 23% 100%);
+}
+
+.actionRow,
+.paymentSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .summaryList {
   display: grid;
-  gap: 10px;
-  margin-top: 16px;
+  overflow: hidden;
 }
 
-.summaryList div,
-.historyRow,
-.providerRow {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+.summaryList div {
+  display: flex;
+  justify-content: space-between;
   gap: 12px;
-  align-items: center;
-  border-bottom: 1px solid #eef3f1;
-  padding: 12px 0;
+  padding: 12px;
+  border-bottom: 1px solid #e4eeeb;
+}
+
+.summaryList div:last-child {
+  border-bottom: 0;
 }
 
 .summaryList span {
-  display: block;
   color: #60736f;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
 }
 
-.paymentChoice {
+.summaryList strong {
+  text-align: right;
+}
+
+.paymentSwitch button {
+  min-height: 42px;
+  border: 1px solid #d7e2df;
+  background: #fff;
+  color: #60736f;
+}
+
+.paymentSwitch .active {
+  border-color: #0b8f88;
+  background: #0b8f88;
+  color: #fff;
+}
+
+.trackingCard {
   display: grid;
-  gap: 10px;
-  margin: 16px 0 0;
-  border: 1px solid #dfe9e6;
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.paymentChoice legend {
-  color: #526761;
-  font-weight: 900;
-}
-
-.paymentChoice label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 38px;
-}
-
-.paymentChoice input {
-  width: 18px;
-  min-height: 18px;
-}
-
-.paymentPanel,
-.paymentNotice {
-  display: grid;
-  gap: 12px;
-  margin-top: 14px;
-  border: 1px solid #dfe9e6;
-  border-radius: 8px;
-  background: #f8fbfa;
+  gap: 8px;
   padding: 14px;
 }
 
-.paymentPanel {
-  grid-template-columns: 96px minmax(0, 1fr);
-  align-items: center;
-}
-
-.paymentPanel p,
-.paymentPanel small,
-.paymentNotice p {
-  margin: 4px 0 0;
-}
-
-.paymentPanel small {
-  color: #526761;
-  font-weight: 900;
-}
-
-.paymentQr {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 7px;
-  width: 82px;
-  height: 82px;
-  border: 8px solid #fff;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 0 0 1px #d9e6e2;
-}
-
-.paymentQr span {
-  border-radius: 4px;
-  background: #18302d;
-}
-
-.paymentQr span:nth-child(2),
-.paymentQr span:nth-child(3) {
-  background: #0b8f88;
-}
-
-.cardPreview {
-  display: grid;
-  align-content: space-between;
-  width: 94px;
-  height: 62px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #18302d, #0b8f88);
-  color: #fff;
-  padding: 10px;
-}
-
-.cardPreview span {
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.cardPreview strong {
-  font-size: 11px;
-  letter-spacing: 0;
-}
-
-.trackingPanel {
-  display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: center;
+.trackingCard mark {
+  width: fit-content;
+  border-radius: 999px;
+  background: #fff4ce;
+  color: #7a5200;
+  padding: 6px 10px;
 }
 
 .routeLine {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  align-items: center;
   gap: 6px;
 }
 
 .routeLine span {
-  height: 10px;
+  flex: 1;
+  height: 6px;
   border-radius: 999px;
   background: #0b8f88;
 }
 
 .routeLine span:nth-child(2) {
-  background: #f2c15d;
+  background: #f3d17c;
 }
 
 .routeLine span:nth-child(3) {
-  background: #bf5d6a;
+  background: #d7e2df;
 }
 
-mark {
-  width: fit-content;
-  border-radius: 999px;
-  background: #fff1c9;
-  color: #835814;
-  font-size: 12px;
-  font-weight: 900;
-  padding: 5px 8px;
-}
-
-.providerList,
-.historyList {
+.bottomNav {
   display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  margin: 12px 0 20px;
+  border-top: 1px solid #d7e2df;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 8px 12px 12px;
 }
 
-.providerRow {
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+.bottomNav button {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: #60736f;
+  font-size: 12px;
 }
 
-.avatar {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  background: #dff2ef;
+.bottomNav .active {
+  background: #e3f6f2;
   color: #0b756f;
-  font-weight: 950;
 }
 
-.providerMeta {
-  text-align: right;
-}
-
-.providerMeta span {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-}
-
-.historyRow {
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.historyRow span {
-  display: block;
-  margin-top: 3px;
-  font-size: 12px;
-}
-
-@media (max-width: 900px) {
-  .promoBand,
-  .contentGrid,
-  .serviceGrid {
-    grid-template-columns: 1fr;
+@media (max-width: 430px) {
+  .previewShell {
+    padding: 8px;
   }
 
-  .promoVisual {
-    display: none;
-  }
-
-  .steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .formGrid,
-  .mapActions,
-  .paymentPanel,
-  .trackingPanel {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 520px) {
-  .shell {
-    width: min(100% - 20px, 1160px);
-    padding-top: 10px;
-  }
-
-  .topBar h1 {
-    font-size: 28px;
-  }
-
-  .promoBand,
-  .mainPanel,
-  .sidePanel {
-    padding: 14px;
+  .phoneFrame {
+    height: calc(100vh - 44px);
+    border-radius: 20px;
   }
 }

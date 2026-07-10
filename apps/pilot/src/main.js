@@ -1,58 +1,39 @@
 import "./styles.css";
 
-const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
-let googleMapsLoadPromise;
-
 const services = [
-  {
-    id: "massage",
-    category: "Massage",
-    name: "นวดผ่อนคลายที่คอนโด",
-    duration: "90 นาที",
-    price: 1290,
-    accent: "teal",
-  },
-  {
-    id: "aroma",
-    category: "Aroma",
-    name: "Aroma Recovery",
-    duration: "120 นาที",
-    price: 1890,
-    accent: "rose",
-  },
-  {
-    id: "product",
-    category: "Product",
-    name: "Wellness Care Kit",
-    duration: "ส่งภายในวัน",
-    price: 690,
-    accent: "gold",
-  },
+  { id: "massage", name: "นวดผ่อนคลาย", desc: "90 นาที · เหมาะหลังเลิกงาน", price: 1290, tag: "Popular" },
+  { id: "aroma", name: "Aroma Recovery", desc: "120 นาที · ผ่อนคลายลึก", price: 1890, tag: "Premium" },
+  { id: "product", name: "Wellness Kit", desc: "สินค้า wellness ส่งถึงคอนโด", price: 690, tag: "Product" },
+  { id: "stretch", name: "Office Stretch", desc: "60 นาที · ลดออฟฟิศซินโดรม", price: 990, tag: "New" },
+];
+
+const promos = [
+  { title: "First booking", desc: "ลด 120 บาทสำหรับการจองครั้งแรก" },
+  { title: "After work care", desc: "ช่วง 18:00-21:00 มี provider เพิ่ม" },
 ];
 
 const providers = [
-  { name: "Mina", rating: "4.92", jobs: "318", eta: "18 นาที", status: "Available" },
-  { name: "Narin", rating: "4.88", jobs: "204", eta: "24 นาที", status: "Nearby" },
+  { name: "Mina", rating: "4.92", eta: "18 นาที", jobs: "318" },
+  { name: "Narin", rating: "4.88", eta: "24 นาที", jobs: "204" },
 ];
 
 const state = {
+  signedIn: false,
+  screen: "home",
+  step: 1,
+  phone: "",
   serviceId: "massage",
   date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
   time: "19:30",
   address: "The Line Sathorn, Tower A",
-  addressQuery: "The Line Sathorn",
-  placeName: "The Line Sathorn",
-  placeId: "",
-  placeLocation: "",
-  mapStatus: googleMapsApiKey ? "พร้อมค้นหาสถานที่จาก Google Places" : "ใช้ปุ่มค้นหา Google Maps ได้ทันที",
-  mapConfirmed: false,
-  note: "แจ้งนิติบุคคลก่อนขึ้นอาคาร",
+  placeConfirmed: false,
   payment: "promptpay",
-  paymentStatus: "ready",
-  step: 1,
+  bookingCode: "",
 };
 
-const savedBookings = JSON.parse(localStorage.getItem("wellnestPilotBookings") || "[]");
+function currency(value) {
+  return value.toLocaleString("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 });
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -63,427 +44,307 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function currency(value) {
-  return value.toLocaleString("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 });
-}
-
 function selectedService() {
   return services.find((service) => service.id === state.serviceId) || services[0];
 }
 
-function saveBooking() {
+function progressWidth() {
+  return `${Math.max(25, state.step * 25)}%`;
+}
+
+function loginScreen() {
+  return `
+    <section class="loginScreen">
+      <div class="loginHero">
+        <span>Wellnest</span>
+        <h1>บริการดูแลตัวเองถึงคอนโด</h1>
+        <p>ล็อกอินเพื่อดูบริการ โปรโมชั่น และจองผู้ให้บริการใกล้พี่</p>
+      </div>
+      <div class="loginOptions">
+        <button class="authButton apple" data-action="future-auth">Continue with Apple</button>
+        <button class="authButton facebook" data-action="future-auth">Continue with Facebook</button>
+        <button class="authButton email" data-action="future-auth">Continue with Email</button>
+      </div>
+      <div class="divider"><span>หรือรอบทดสอบ</span></div>
+      <label class="fieldLabel">เบอร์โทรศัพท์
+        <input data-field="phone" inputmode="tel" placeholder="0812345678" value="${escapeHtml(state.phone)}" />
+      </label>
+      <button class="primaryButton" data-action="login">เข้าสู่ระบบ</button>
+      <p class="finePrint">Apple ID, Facebook และ Email จะเชื่อมต่อจริงใน production ส่วนรอบนี้ใช้เบอร์เพื่อทดสอบ flow ก่อน</p>
+    </section>
+  `;
+}
+
+function homeScreen() {
+  return `
+    <section class="homeScreen">
+      <header class="appHeader">
+        <div>
+          <p>พร้อมดูแลพี่วันนี้</p>
+          <h1>Wellnest</h1>
+        </div>
+        <button class="profileButton" data-action="profile" aria-label="Profile">P</button>
+      </header>
+
+      <div class="walletStrip">
+        <div><span>Coins</span><strong>240</strong></div>
+        <div><span>Points</span><strong>1,850</strong></div>
+        <div><span>Tier</span><strong>Member</strong></div>
+      </div>
+
+      <article class="heroCard">
+        <span>Today available</span>
+        <h2>จองบริการที่บ้านได้ในไม่กี่ขั้นตอน</h2>
+        <p>เลือกบริการ เวลา และสถานที่ ระบบจะจับคู่ผู้ให้บริการที่พร้อมใกล้พี่</p>
+        <button data-action="start-booking">เริ่มจองบริการ</button>
+      </article>
+
+      <section class="homeSection">
+        <div class="sectionTitle">
+          <h2>บริการ</h2>
+          <button data-action="start-booking">ดูทั้งหมด</button>
+        </div>
+        <div class="serviceScroller">
+          ${services.map(serviceCard).join("")}
+        </div>
+      </section>
+
+      <section class="homeSection">
+        <div class="sectionTitle">
+          <h2>โปรวันนี้</h2>
+        </div>
+        <div class="promoList">${promos.map((promo) => `
+          <article class="promoCard">
+            <strong>${promo.title}</strong>
+            <p>${promo.desc}</p>
+          </article>
+        `).join("")}</div>
+      </section>
+
+      <section class="homeSection">
+        <div class="sectionTitle">
+          <h2>ผู้ให้บริการใกล้พี่</h2>
+        </div>
+        <div class="providerList">${providers.map(providerCard).join("")}</div>
+      </section>
+    </section>
+  `;
+}
+
+function bookingScreen() {
   const service = selectedService();
-  const booking = {
-    id: `WN-${Math.floor(10000 + Math.random() * 89999)}`,
-    service: service.name,
-    date: state.date,
-    time: state.time,
-    address: state.address,
-    payment: state.payment,
-    paymentStatus: "sandbox_paid",
-    status: "Provider assigned",
-    createdAt: new Date().toISOString(),
-  };
-  savedBookings.unshift(booking);
-  localStorage.setItem("wellnestPilotBookings", JSON.stringify(savedBookings.slice(0, 5)));
-  state.step = 4;
-  render();
+  const safeAddress = escapeHtml(state.address);
+  return `
+    <section class="bookingScreen">
+      <header class="appHeader compact">
+        <button class="backButton" data-action="go-home" aria-label="Back">‹</button>
+        <div>
+          <p>Booking</p>
+          <h1>จองบริการ</h1>
+        </div>
+      </header>
+      <div class="progressPanel">
+        <div class="progressTrack"><span style="width:${progressWidth()}"></span></div>
+        <div class="stepTabs">
+          <button class="${state.step === 1 ? "active" : ""}" data-action="step" data-step="1">บริการ</button>
+          <button class="${state.step === 2 ? "active" : ""}" data-action="step" data-step="2">เวลา</button>
+          <button class="${state.step === 3 ? "active" : ""}" data-action="step" data-step="3">ยืนยัน</button>
+          <button class="${state.step === 4 ? "active" : ""}" data-action="step" data-step="4">ติดตาม</button>
+        </div>
+      </div>
+
+      ${state.step === 1 ? `
+        <div class="screenBlock">
+          <h2>เลือกบริการ</h2>
+          <div class="serviceGrid">${services.map(serviceCard).join("")}</div>
+          <button class="primaryButton" data-action="step" data-step="2">เลือกวันเวลา</button>
+        </div>
+      ` : ""}
+
+      ${state.step === 2 ? `
+        <div class="screenBlock">
+          <h2>วัน เวลา และสถานที่</h2>
+          <div class="formGrid">
+            <label class="fieldLabel">วันที่<input type="date" data-field="date" value="${state.date}" /></label>
+            <label class="fieldLabel">เวลา<input type="time" data-field="time" value="${state.time}" /></label>
+            <label class="fieldLabel wide">คอนโด / ที่อยู่<input data-field="address" value="${safeAddress}" /></label>
+          </div>
+          <div class="mapCard">
+            <div class="pin"></div>
+            <div>
+              <strong>${safeAddress}</strong>
+              <p>${state.placeConfirmed ? "ยืนยันสถานที่แล้ว" : "กดยืนยันหลังตรวจตำแหน่ง"}</p>
+            </div>
+          </div>
+          <div class="actionRow">
+            <button class="secondaryButton" data-action="open-maps">ค้นหา Google Maps</button>
+            <button class="secondaryButton ${state.placeConfirmed ? "confirmed" : ""}" data-action="confirm-place">ยืนยันพื้นที่</button>
+          </div>
+          <button class="primaryButton" data-action="step" data-step="3">ตรวจสอบรายการ</button>
+        </div>
+      ` : ""}
+
+      ${state.step === 3 ? `
+        <div class="screenBlock">
+          <h2>ตรวจสอบก่อนชำระเงิน</h2>
+          <div class="summaryList">
+            <div><span>บริการ</span><strong>${service.name}</strong></div>
+            <div><span>วันเวลา</span><strong>${state.date} · ${state.time}</strong></div>
+            <div><span>สถานที่</span><strong>${safeAddress}</strong></div>
+            <div><span>ผู้ให้บริการ</span><strong>Mina · 18 นาที</strong></div>
+            <div><span>ยอดชำระ</span><strong>${currency(service.price)}</strong></div>
+          </div>
+          <div class="paymentSwitch">
+            <button class="${state.payment === "promptpay" ? "active" : ""}" data-action="payment" data-payment="promptpay">PromptPay / QR</button>
+            <button class="${state.payment === "card" ? "active" : ""}" data-action="payment" data-payment="card">บัตรเครดิต</button>
+          </div>
+          <button class="primaryButton" data-action="pay">${state.payment === "promptpay" ? "สร้าง QR ชำระเงิน" : "ชำระด้วยบัตร"}</button>
+        </div>
+      ` : ""}
+
+      ${state.step === 4 ? `
+        <div class="screenBlock">
+          <h2>ติดตามผู้ให้บริการ</h2>
+          <div class="trackingCard">
+            <div class="routeLine"><span></span><span></span><span></span></div>
+            <strong>${state.bookingCode || "WN-45821"}</strong>
+            <p>Mina กำลังเดินทางไปยัง ${safeAddress}</p>
+            <mark>ETA 18 นาที</mark>
+          </div>
+          <button class="secondaryButton" data-action="go-home">กลับหน้า Home</button>
+        </div>
+      ` : ""}
+    </section>
+  `;
 }
 
-function setStep(step) {
-  state.step = step;
-  render();
-}
-
-function updateField(key, value) {
-  state[key] = value;
-  if (key === "address") {
-    state.addressQuery = value;
-    state.placeName = value;
-    state.placeId = "";
-    state.placeLocation = "";
-    state.mapConfirmed = false;
-  }
-  render();
-}
-
-function googleMapsSearchUrl() {
-  const query = state.placeLocation || state.address || state.addressQuery || "condominium Bangkok";
-  const params = new URLSearchParams({ api: "1", query });
-  if (state.placeId) params.set("query_place_id", state.placeId);
-  return `https://www.google.com/maps/search/?${params.toString()}`;
-}
-
-function openGoogleMapsSearch() {
-  state.mapConfirmed = false;
-  state.mapStatus = "เปิด Google Maps แล้ว หลังเลือกหรือดูสถานที่เสร็จ ให้กลับมากด “ยืนยันสถานที่นี้” ใน Wellnest";
-  render();
-  window.open(googleMapsSearchUrl(), "_blank", "noopener,noreferrer");
-}
-
-function confirmMapLocation() {
-  state.mapConfirmed = true;
-  state.mapStatus = "ยืนยันสถานที่สำหรับ booking นี้แล้ว";
-  render();
-}
-
-function useCurrentLocation() {
-  if (!navigator.geolocation) {
-    state.mapStatus = "เครื่องนี้ไม่รองรับการใช้ตำแหน่งปัจจุบัน";
-    render();
-    return;
-  }
-
-  state.mapStatus = "กำลังขออนุญาตตำแหน่งจากเครื่อง";
-  render();
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude.toFixed(6);
-      const lng = position.coords.longitude.toFixed(6);
-      state.placeLocation = `${lat},${lng}`;
-      state.address = `ตำแหน่งปัจจุบัน (${lat}, ${lng})`;
-      state.addressQuery = state.address;
-      state.placeName = "ตำแหน่งปัจจุบัน";
-      state.placeId = "";
-      state.mapConfirmed = true;
-      state.mapStatus = "บันทึกพิกัดปัจจุบันแล้ว";
-      render();
-    },
-    () => {
-      state.mapStatus = "ยังไม่ได้รับอนุญาตใช้ตำแหน่ง สามารถพิมพ์ชื่อคอนโดหรือเปิด Google Maps ได้";
-      render();
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
-  );
-}
-
-function loadGoogleMapsScript() {
-  if (!googleMapsApiKey) return Promise.reject(new Error("Missing Google Maps API key"));
-  if (window.google?.maps?.importLibrary) return Promise.resolve();
-  if (googleMapsLoadPromise) return googleMapsLoadPromise;
-
-  googleMapsLoadPromise = new Promise((resolve, reject) => {
-    const callbackName = "wellnestGoogleMapsReady";
-    window[callbackName] = () => {
-      delete window[callbackName];
-      resolve();
-    };
-
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=weekly&libraries=places&callback=${callbackName}`;
-    script.async = true;
-    script.onerror = () => reject(new Error("Google Maps failed to load"));
-    document.head.appendChild(script);
-  });
-
-  return googleMapsLoadPromise;
-}
-
-async function initPlaceAutocomplete() {
-  const host = document.querySelector("#googlePlaceAutocompleteHost");
-  if (!host || host.dataset.ready === "true") return;
-
-  if (!googleMapsApiKey) {
-    host.innerHTML = '<p class="mapNotice">ยังไม่ได้ตั้ง Google Maps API key สำหรับ autocomplete ในแอพ ใช้ปุ่มเปิด Google Maps ด้านล่างได้ก่อน</p>';
-    host.dataset.ready = "true";
-    return;
-  }
-
-  host.innerHTML = '<p class="mapNotice">กำลังโหลด Google Places</p>';
-  host.dataset.ready = "true";
-
-  try {
-    await loadGoogleMapsScript();
-    const { PlaceAutocompleteElement } = await google.maps.importLibrary("places");
-    const placeAutocomplete = new PlaceAutocompleteElement();
-    placeAutocomplete.placeholder = "ค้นหาชื่อคอนโด อาคาร หรือสถานที่";
-    placeAutocomplete.className = "googlePlaceAutocomplete";
-    placeAutocomplete.addEventListener("gmp-select", async ({ placePrediction }) => {
-      const place = placePrediction.toPlace();
-      await place.fetchFields({ fields: ["displayName", "formattedAddress", "location", "id"] });
-      state.placeName = place.displayName || "";
-      state.address = place.formattedAddress || state.placeName || state.address;
-      state.addressQuery = state.address;
-      state.placeId = place.id || "";
-      state.placeLocation = place.location ? `${place.location.lat()},${place.location.lng()}` : "";
-      state.mapConfirmed = true;
-      state.mapStatus = "เลือกสถานที่จาก Google Places แล้ว";
-      render();
-    });
-
-    host.innerHTML = "";
-    host.appendChild(placeAutocomplete);
-  } catch {
-    host.innerHTML = '<p class="mapNotice">โหลด Google Places ไม่สำเร็จ ใช้ปุ่มเปิด Google Maps หรือพิมพ์ที่อยู่เองได้</p>';
-    state.mapStatus = "Google Places ยังไม่พร้อมใช้งาน";
-  }
-}
-
-function serviceButton(service) {
+function serviceCard(service) {
   const active = service.id === state.serviceId;
   return `
-    <button class="serviceTile ${active ? "selected" : ""}" data-action="service" data-service-id="${service.id}">
-      <span class="category ${service.accent}">${service.category}</span>
+    <button class="serviceCard ${active ? "selected" : ""}" data-action="select-service" data-service="${service.id}">
+      <span>${service.tag}</span>
       <strong>${service.name}</strong>
-      <small>${service.duration} · ${currency(service.price)}</small>
+      <small>${service.desc}</small>
+      <b>${currency(service.price)}</b>
     </button>
   `;
 }
 
-function providerCard(provider, index) {
+function providerCard(provider) {
   return `
-    <article class="providerRow">
+    <article class="providerCard">
       <div class="avatar">${provider.name.slice(0, 1)}</div>
       <div>
         <strong>${provider.name}</strong>
-        <span>${provider.status} · ${provider.jobs} jobs</span>
+        <p>${provider.jobs} jobs · ${provider.rating} คะแนน</p>
       </div>
-      <div class="providerMeta">
-        <strong>${provider.rating}</strong>
-        <span>${provider.eta}</span>
-      </div>
-      ${index === 0 ? '<mark>Best match</mark>' : ""}
+      <span>${provider.eta}</span>
     </article>
   `;
 }
 
-function paymentCard(service) {
-  const total = service.price;
-  if (state.payment === "promptpay") {
-    return `
-      <div class="paymentPanel">
-        <div class="paymentQr" aria-label="PromptPay sandbox QR preview">
-          <span></span><span></span><span></span><span></span>
-        </div>
-        <div>
-          <strong>PromptPay Sandbox</strong>
-          <p>ตัวจริงจะสร้าง QR จาก Opn/Omise แล้วรอ webhook ยืนยันการชำระเงินก่อนยืนยัน booking</p>
-          <small>ยอดทดลอง ${currency(total)} · Reference WN-PILOT</small>
-        </div>
-      </div>
-    `;
-  }
-
-  return `
-    <div class="paymentPanel">
-      <div class="cardPreview">
-        <span>•••• 4242</span>
-        <strong>VISA TEST</strong>
-      </div>
-      <div>
-        <strong>Credit / Debit Card Sandbox</strong>
-        <p>ตัวจริงต้องใช้ tokenization/checkout ของ payment provider เพื่อไม่ให้ Wellnest เก็บเลขบัตรเอง</p>
-        <small>ยอดทดลอง ${currency(total)} · ไม่มีการตัดเงินจริงใน pilot</small>
-      </div>
-    </div>
-  `;
-}
-
-function bookingHistory() {
-  if (savedBookings.length === 0) {
-    return '<p class="muted">ยังไม่มี booking ทดลองในเครื่องนี้</p>';
-  }
-
-  return savedBookings
-    .map(
-      (booking) => `
-        <article class="historyRow">
-          <div>
-            <strong>${booking.id}</strong>
-            <span>${booking.service}</span>
-          </div>
-          <div>
-            <strong>${booking.time}</strong>
-            <span>${booking.status}</span>
-          </div>
-        </article>
-      `,
-    )
-    .join("");
-}
-
 function render() {
-  const service = selectedService();
-  const progressWidth = `${state.step * 25}%`;
-  const safeAddress = escapeHtml(state.address);
-  const safeMapStatus = escapeHtml(state.mapStatus);
-  const safePlaceName = escapeHtml(state.placeName || state.address);
-  const mapsUrl = googleMapsSearchUrl();
-  const mapConfirmLabel = state.mapConfirmed ? "สถานที่ยืนยันแล้ว" : "ยืนยันสถานที่นี้";
-  const paymentPrimaryLabel = state.payment === "promptpay" ? "ยืนยันว่าโอน PromptPay แล้ว" : "ยืนยันชำระด้วยบัตรทดลอง";
   document.querySelector("#app").innerHTML = `
-    <main class="shell">
-      <section class="topBar">
-        <div>
-          <p>Coins 240 · Points 1,850</p>
-          <h1>Wellnest</h1>
-        </div>
-        <button class="iconButton" data-action="reset" aria-label="Reset booking">↻</button>
-      </section>
-
-      <section class="promoBand">
-        <div>
-          <span>Pilot Offer</span>
-          <strong>ทดลองจองบริการที่คอนโด</strong>
-          <p>เหมาะกับลูกค้าที่ไม่มีเวลาไปร้าน และต้องการดูสถานะผู้ให้บริการแบบใกล้เคียง real-time</p>
-        </div>
-        <div class="promoVisual">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      </section>
-
-      <section class="progressPanel">
-        <div class="progressTrack"><span style="width:${progressWidth}"></span></div>
-        <div class="steps">
-          <button class="${state.step === 1 ? "active" : ""}" data-action="step" data-step="1">บริการ</button>
-          <button class="${state.step === 2 ? "active" : ""}" data-action="step" data-step="2">วันเวลา</button>
-          <button class="${state.step === 3 ? "active" : ""}" data-action="step" data-step="3">ยืนยัน</button>
-          <button class="${state.step === 4 ? "active" : ""}" data-action="step" data-step="4">ติดตาม</button>
-        </div>
-      </section>
-
-      <section class="contentGrid">
-        <div class="mainPanel">
-          ${state.step === 1 ? `
-            <div class="sectionHeader">
-              <div>
-                <span>Step 1</span>
-                <h2>เลือกบริการหลัก</h2>
-              </div>
-            </div>
-            <div class="serviceGrid">${services.map(serviceButton).join("")}</div>
-            <div class="recommendPanel">
-              <strong>รายการแนะนำหลังเลือกบริการ</strong>
-              <p>${service.id === "product" ? "เพิ่มการ์ดข้อความและบริการจัดส่งด่วน" : "เพิ่มประคบร้อนหรือออยล์สำหรับการพักผ่อนหลังเลิกงาน"}</p>
-            </div>
-            <button class="primaryButton" data-action="step" data-step="2">ถัดไป</button>
-          ` : ""}
-
-          ${state.step === 2 ? `
-            <div class="sectionHeader">
-              <div>
-                <span>Step 2</span>
-                <h2>เลือกวัน เวลา และสถานที่</h2>
-              </div>
-            </div>
-            <div class="formGrid">
-              <label>วันที่ใช้บริการ<input type="date" data-field="date" value="${state.date}" /></label>
-              <label>เวลา<input type="time" data-field="time" value="${state.time}" /></label>
-              <div class="wide mapSearchPanel">
-                <label>ค้นหาสถานที่ / ชื่อคอนโด<input data-field="address" value="${safeAddress}" placeholder="พิมพ์ชื่อคอนโด อาคาร หรือที่อยู่" /></label>
-                <div id="googlePlaceAutocompleteHost" class="autocompleteHost"></div>
-                <div class="mapActions">
-                  <button type="button" class="secondaryButton" data-action="open-maps">ค้นหาใน Google Maps</button>
-                  <button type="button" class="secondaryButton" data-action="use-current-location">ใช้ตำแหน่งปัจจุบัน</button>
-                  <button type="button" class="secondaryButton ${state.mapConfirmed ? "confirmed" : ""}" data-action="confirm-map">${mapConfirmLabel}</button>
-                </div>
-                <p class="mapStatus">${safeMapStatus}</p>
-              </div>
-              <label class="wide">หมายเหตุถึงผู้ให้บริการ<textarea data-field="note">${escapeHtml(state.note)}</textarea></label>
-            </div>
-            <div class="mapPreview">
-              <div class="pin"></div>
-              <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">${safePlaceName}</a>
-            </div>
-            <button class="primaryButton" data-action="step" data-step="3">ตรวจสอบรายการ</button>
-          ` : ""}
-
-          ${state.step === 3 ? `
-            <div class="sectionHeader">
-              <div>
-                <span>Step 3</span>
-                <h2>ยืนยัน booking ทดลอง</h2>
-              </div>
-            </div>
-            <div class="summaryList">
-              <div><span>บริการ</span><strong>${service.name}</strong></div>
-              <div><span>วันเวลา</span><strong>${state.date} · ${state.time}</strong></div>
-              <div><span>สถานที่</span><strong>${safeAddress}</strong></div>
-              <div><span>สถานะสถานที่</span><strong>${state.mapConfirmed ? "ยืนยันจากลูกค้าแล้ว" : "ยังไม่ได้ยืนยันหลังเปิด Maps"}</strong></div>
-              <div><span>ยอดชำระทดลอง</span><strong>${currency(service.price)}</strong></div>
-            </div>
-            <fieldset class="paymentChoice">
-              <legend>เลือกวิธีชำระเงิน</legend>
-              <label><input type="radio" name="payment" value="promptpay" ${state.payment === "promptpay" ? "checked" : ""} /> PromptPay / QR</label>
-              <label><input type="radio" name="payment" value="card" ${state.payment === "card" ? "checked" : ""} /> บัตรเครดิต / เดบิต</label>
-            </fieldset>
-            ${paymentCard(service)}
-            <div class="paymentNotice">
-              <strong>สถานะ pilot</strong>
-              <p>หน้านี้ยังเป็น sandbox เพื่อทดสอบ flow เท่านั้น เงินจริงจะเปิดใช้หลังบัญชี Opn/Omise live ผ่านและเชื่อม webhook ครบ</p>
-            </div>
-            <button class="primaryButton" data-action="save">${paymentPrimaryLabel}</button>
-          ` : ""}
-
-          ${state.step === 4 ? `
-            <div class="sectionHeader">
-              <div>
-                <span>Step 4</span>
-                <h2>ติดตามผู้ให้บริการ</h2>
-              </div>
-            </div>
-            <div class="trackingPanel">
-              <div class="routeLine"><span></span><span></span><span></span></div>
-              <div>
-                <strong>Provider assigned</strong>
-                <p>กำลังเดินทางไปยัง ${safeAddress}</p>
-              </div>
-              <mark>ETA 18 นาที</mark>
-            </div>
-            <div class="feedbackBox">
-              <strong>หลังทดสอบเสร็จ</strong>
-              <p>ให้ tester ตอบ feedback เรื่องความเข้าใจ flow, ความน่าเชื่อถือ, ราคา และจุดที่ติดขัด</p>
-            </div>
-          ` : ""}
-        </div>
-
-        <aside class="sidePanel">
-          <h2>ผู้ให้บริการใกล้คุณ</h2>
-          <div class="providerList">${providers.map(providerCard).join("")}</div>
-          <h2>Booking ล่าสุด</h2>
-          <div class="historyList">${bookingHistory()}</div>
-        </aside>
-      </section>
+    <main class="previewShell">
+      <div class="previewInfo">
+        <strong>Mobile preview</strong>
+        <span>Frame 390 × 844 px</span>
+      </div>
+      <div class="phoneFrame" aria-label="Wellnest mobile app preview">
+        ${state.signedIn ? (state.screen === "booking" ? bookingScreen() : homeScreen()) : loginScreen()}
+        ${state.signedIn ? bottomNav() : ""}
+      </div>
     </main>
   `;
-
   bindEvents();
-  initPlaceAutocomplete();
+}
+
+function bottomNav() {
+  const items = [
+    ["home", "Home"],
+    ["activity", "Activity"],
+    ["wallet", "Wallet"],
+    ["profile", "Profile"],
+  ];
+  return `
+    <nav class="bottomNav">
+      ${items.map(([screen, label]) => `<button class="${state.screen === screen ? "active" : ""}" data-action="nav" data-screen="${screen}">${label}</button>`).join("")}
+    </nav>
+  `;
 }
 
 function bindEvents() {
-  document.querySelectorAll("[data-action='service']").forEach((button) => {
-    button.addEventListener("click", () => updateField("serviceId", button.dataset.serviceId));
+  document.querySelectorAll("[data-field]").forEach((input) => {
+    input.addEventListener("input", (event) => {
+      state[input.dataset.field] = event.target.value;
+      render();
+    });
   });
-
-  document.querySelectorAll("[data-action='step']").forEach((button) => {
-    button.addEventListener("click", () => setStep(Number(button.dataset.step)));
-  });
-
-  document.querySelector("[data-action='save']")?.addEventListener("click", saveBooking);
-  document.querySelector("[data-action='open-maps']")?.addEventListener("click", openGoogleMapsSearch);
-  document.querySelector("[data-action='confirm-map']")?.addEventListener("click", confirmMapLocation);
-  document.querySelector("[data-action='use-current-location']")?.addEventListener("click", useCurrentLocation);
-  document.querySelector("[data-action='reset']")?.addEventListener("click", () => {
-    state.step = 1;
+  document.querySelector("[data-action='login']")?.addEventListener("click", () => {
+    state.signedIn = true;
+    state.screen = "home";
     render();
   });
-
-  document.querySelectorAll("[data-field]").forEach((input) => {
-    input.addEventListener("input", (event) => updateField(input.dataset.field, event.target.value));
+  document.querySelectorAll("[data-action='future-auth']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.phone = "0812345678";
+      render();
+    });
   });
-
-  document.querySelectorAll("input[name='payment']").forEach((input) => {
-    input.addEventListener("change", (event) => updateField("payment", event.target.value));
+  document.querySelectorAll("[data-action='select-service']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.serviceId = button.dataset.service;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-action='step']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.step = Number(button.dataset.step);
+      state.screen = "booking";
+      render();
+    });
+  });
+  document.querySelectorAll("[data-action='start-booking']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.screen = "booking";
+      state.step = 1;
+      render();
+    });
+  });
+  document.querySelector("[data-action='go-home']")?.addEventListener("click", () => {
+    state.screen = "home";
+    render();
+  });
+  document.querySelector("[data-action='profile']")?.addEventListener("click", () => {
+    state.screen = "profile";
+    render();
+  });
+  document.querySelector("[data-action='confirm-place']")?.addEventListener("click", () => {
+    state.placeConfirmed = true;
+    render();
+  });
+  document.querySelector("[data-action='open-maps']")?.addEventListener("click", () => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(state.address)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+  document.querySelectorAll("[data-action='payment']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.payment = button.dataset.payment;
+      render();
+    });
+  });
+  document.querySelector("[data-action='pay']")?.addEventListener("click", () => {
+    state.bookingCode = `WN-${Math.floor(10000 + Math.random() * 89999)}`;
+    state.step = 4;
+    render();
+  });
+  document.querySelectorAll("[data-action='nav']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.screen = button.dataset.screen;
+      if (state.screen !== "home") state.screen = "home";
+      render();
+    });
   });
 }
 
 render();
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => undefined);
-  });
-}
