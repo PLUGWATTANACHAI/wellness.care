@@ -2,6 +2,11 @@
 
 This checklist prepares Wellnest for real user download through TestFlight, App Store, and Google Play.
 
+Official Apple references checked on 2026-07-10:
+
+- Apple Developer Program: https://developer.apple.com/programs/
+- TestFlight: https://developer.apple.com/testflight/
+
 ## Current Mobile Release Foundation
 
 - Expo / React Native app exists at `apps/mobile`.
@@ -17,6 +22,37 @@ This checklist prepares Wellnest for real user download through TestFlight, App 
 - Expo account for EAS Build and Submit.
 - Business display name, support email, support phone, privacy policy URL, and app support URL.
 - Store assets: app icon, splash screen, screenshots, short description, full description, keywords, and category.
+
+## iOS / App Store Status
+
+Wellnest does not have an App Store or TestFlight release yet.
+
+Apple allows a free Apple developer account to test apps on your own devices with Xcode, but TestFlight and App Store distribution require Apple Developer Program membership. Apple currently lists the Apple Developer Program at `$99 annual membership`.
+
+TestFlight is the correct first iPhone testing path after enrollment:
+
+- Internal testers: up to 100 App Store Connect team members.
+- External testers: up to 10,000 testers.
+- External TestFlight builds must pass Apple's beta app review before external testers can install.
+
+## App Store Connect Setup Steps
+
+1. Enroll in the Apple Developer Program as individual or organization.
+2. Open App Store Connect and create a new app record for Wellnest.
+3. Confirm bundle identifier: `com.wellnest.app`.
+4. Add app name, SKU, category, support URL, privacy policy URL, and contact email.
+5. Prepare iPhone screenshots from the real booking, address, payment, tracking, and profile flows.
+6. Fill App Privacy details for account data, phone number, location, payment, support messages, analytics, and crash logs.
+7. Create the first iOS preview build with EAS Build.
+8. Upload to TestFlight.
+9. Add internal testers first, then external testers after beta review.
+10. Move to App Store public review only after payment, OTP, privacy, support, and provider operations pass QA.
+
+## Update Policy After Users Install
+
+- Small UI, wording, booking flow, validation, and screen logic fixes can usually be sent through Expo OTA updates when runtime compatibility stays the same.
+- Native changes still need a new iOS/Android build and store review. Examples: permissions, SDK changes, native modules, app icon, splash screen, bundle/package identifiers, and runtime version changes.
+- Public App Store production users should receive OTA updates only after the same update is tested on preview/internal testers first.
 
 ## Build Flow
 

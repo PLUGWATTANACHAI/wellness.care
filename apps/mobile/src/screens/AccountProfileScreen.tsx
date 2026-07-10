@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActionButton } from "../components/ActionButton";
+import { SectionHeader } from "../components/SectionHeader";
+import { TextField } from "../components/TextField";
+import { WellnestCard } from "../components/WellnestCard";
+import { colors, copy, radius, spacing } from "../design/theme";
 import {
   getCustomerProfile,
   searchAddressSuggestions,
@@ -112,7 +117,7 @@ export function AccountProfileScreen() {
 
       setCondoName((currentCondoName) => currentCondoName || "Current location");
       if (!meetingPoint.trim()) {
-        setMeetingPoint("Lobby / main entrance");
+        setMeetingPoint(copy.defaultMeetingPoint);
       }
       setMapQuery(currentAddress.formattedAddress);
       setAddressSearchHint("ดึงตำแหน่งปัจจุบันแล้ว ตรวจชื่อคอนโด/จุดนัดพบ แล้วกด Save profile");
@@ -136,7 +141,7 @@ export function AccountProfileScreen() {
     setMapQuery(suggestion.formattedAddress);
     setAddressSearchHint("เลือกที่อยู่แล้ว ใส่จุดนัดพบถ้ามี แล้วกด Save profile");
     if (!meetingPoint.trim()) {
-      setMeetingPoint("Lobby / main entrance");
+      setMeetingPoint(copy.defaultMeetingPoint);
     }
     setSelectedMapAddress({
       googlePlaceId: suggestion.placeId,
@@ -158,48 +163,34 @@ export function AccountProfileScreen() {
       : "Search and select a map address before saving.";
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.label}>Account</Text>
-      <Text style={styles.title}>Customer profile</Text>
+    <WellnestCard>
+      <SectionHeader label="Account" title="Customer profile" />
       <Text style={styles.row}>
         {profile ? `${profile.tier} · ${profile.coins.toLocaleString("th-TH")} coins · ${profile.points} points` : "Loading profile..."}
       </Text>
-      <TextInput onChangeText={setName} placeholder="Name" style={styles.input} value={name} />
-      <TextInput onChangeText={setPhone} placeholder="Phone" style={styles.input} value={phone} />
-      <TextInput autoCapitalize="none" onChangeText={setEmail} placeholder="Email" style={styles.input} value={email} />
-      <TextInput onChangeText={setCondoName} placeholder="Condo name" style={styles.input} value={condoName} />
+      <TextField onChangeText={setName} placeholder="Name" value={name} />
+      <TextField onChangeText={setPhone} placeholder="Phone" value={phone} />
+      <TextField autoCapitalize="none" onChangeText={setEmail} placeholder="Email" value={email} />
+      <TextField onChangeText={setCondoName} placeholder="Condo name" value={condoName} />
       <View style={styles.mapSearch}>
-        <TextInput
+        <TextField
           onChangeText={setMapQuery}
           placeholder="Search condo or place"
           style={[styles.input, styles.mapInput]}
           value={mapQuery}
         />
-        <Pressable
-          accessibilityRole="button"
-          disabled={status === "loading" || status === "saving"}
-          onPress={handleSearchAddress}
-          style={({ pressed }) => [styles.mapButton, pressed ? styles.buttonPressed : null]}
-        >
-          <Text style={styles.mapButtonText}>{status === "saving" ? "..." : "Search"}</Text>
-        </Pressable>
+        <View style={styles.mapButtonWrap}>
+          <ActionButton disabled={status === "loading" || status === "saving"} onPress={handleSearchAddress} variant="dark">
+            {status === "saving" ? "..." : "Search"}
+          </ActionButton>
+        </View>
       </View>
-      <Pressable
-        accessibilityRole="button"
-        disabled={status === "loading" || status === "saving"}
-        onPress={handleUseDemoAddress}
-        style={({ pressed }) => [styles.secondaryButton, pressed ? styles.buttonPressed : null]}
-      >
-        <Text style={styles.secondaryButtonText}>Use demo address for testing</Text>
-      </Pressable>
-      <Pressable
-        accessibilityRole="button"
-        disabled={status === "loading" || status === "saving"}
-        onPress={handleUseCurrentLocation}
-        style={({ pressed }) => [styles.locationButton, pressed ? styles.buttonPressed : null]}
-      >
-        <Text style={styles.locationButtonText}>Use current location</Text>
-      </Pressable>
+      <ActionButton disabled={status === "loading" || status === "saving"} onPress={handleUseDemoAddress} variant="secondary">
+        Use demo address for testing
+      </ActionButton>
+      <ActionButton disabled={status === "loading" || status === "saving"} onPress={handleUseCurrentLocation} variant="location">
+        Use current location
+      </ActionButton>
       {addressSearchHint ? <Text style={styles.mapHint}>{addressSearchHint}</Text> : null}
       {addressSuggestions.map((suggestion) => (
         <Pressable
@@ -213,139 +204,70 @@ export function AccountProfileScreen() {
         </Pressable>
       ))}
       <Text style={styles.mapSummary}>{mapSummary}</Text>
-      <TextInput onChangeText={setMeetingPoint} placeholder="Meeting point" style={styles.input} value={meetingPoint} />
-      <TextInput onChangeText={setNote} placeholder="Note" style={styles.input} value={note} />
-      <Pressable
-        accessibilityRole="button"
-        disabled={status === "loading" || status === "saving"}
-        onPress={handleSave}
-        style={({ pressed }) => [styles.button, pressed ? styles.buttonPressed : null]}
-      >
-        <Text style={styles.buttonText}>{status === "saving" ? "Saving..." : "Save profile"}</Text>
-      </Pressable>
+      <TextField onChangeText={setMeetingPoint} placeholder="Meeting point" value={meetingPoint} />
+      <TextField onChangeText={setNote} placeholder="Note" value={note} />
+      <ActionButton disabled={status === "loading" || status === "saving"} onPress={handleSave}>
+        {status === "saving" ? "Saving..." : "Save profile"}
+      </ActionButton>
       {status === "error" ? <Text style={styles.error}>Profile save failed. Please retry.</Text> : null}
       {status === "ready" ? <Text style={styles.note}>Profile is stored in Supabase for this demo account.</Text> : null}
-    </View>
+    </WellnestCard>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: 8,
-    padding: 14,
-    borderRadius: 10,
-    backgroundColor: "#fff",
-  },
-  label: {
-    color: "#6d7875",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  title: {
-    color: "#10231f",
-    fontSize: 18,
-    fontWeight: "800",
-  },
   row: {
-    color: "#10231f",
+    color: colors.text,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#d7e2df",
-    borderRadius: 8,
-    color: "#10231f",
-    paddingHorizontal: 10,
-    paddingVertical: 9,
+    flex: 1,
   },
   mapSearch: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing.sm,
   },
   mapInput: {
     flex: 1,
   },
-  mapButton: {
-    alignItems: "center",
-    justifyContent: "center",
+  mapButtonWrap: {
     minWidth: 64,
-    borderRadius: 8,
-    backgroundColor: "#10231f",
-    paddingHorizontal: 12,
-  },
-  mapButtonText: {
-    color: "#fff",
-    fontWeight: "800",
-  },
-  secondaryButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#b9ddd6",
-    borderRadius: 8,
-    backgroundColor: "#f6fffc",
-    paddingVertical: 10,
-  },
-  secondaryButtonText: {
-    color: "#087f5b",
-    fontWeight: "800",
-  },
-  locationButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-    backgroundColor: "#edf4ff",
-    paddingVertical: 10,
-  },
-  locationButtonText: {
-    color: "#1d4ed8",
-    fontWeight: "800",
   },
   mapHint: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontSize: 12,
     lineHeight: 18,
   },
   suggestion: {
     borderWidth: 1,
-    borderColor: "#b9ddd6",
-    borderRadius: 8,
-    backgroundColor: "#eefaf7",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   suggestionTitle: {
-    color: "#10231f",
+    color: colors.text,
     fontWeight: "800",
   },
   suggestionBody: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontSize: 12,
     lineHeight: 17,
   },
   mapSummary: {
-    color: "#087f5b",
+    color: colors.green,
     fontSize: 12,
     fontWeight: "800",
-  },
-  button: {
-    alignItems: "center",
-    borderRadius: 8,
-    backgroundColor: "#0793a4",
-    paddingVertical: 10,
   },
   buttonPressed: {
     opacity: 0.78,
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "800",
-  },
   note: {
-    color: "#6d7875",
+    color: colors.textMuted,
     lineHeight: 20,
   },
   error: {
-    color: "#b42318",
+    color: colors.danger,
     fontWeight: "800",
   },
 });
