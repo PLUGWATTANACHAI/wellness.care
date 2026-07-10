@@ -3,10 +3,14 @@ import { appContent, promos, providers, services } from "./ui-content.js";
 
 const state = {
   signedIn: false,
-  screen: "home",
+  screen: "login",
   step: 1,
   loginId: "",
   passcode: "",
+  signupName: "",
+  signupEmail: "",
+  signupPhone: "",
+  signupPasscode: "",
   serviceId: "massage",
   date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
   time: "19:30",
@@ -69,6 +73,36 @@ function loginScreen() {
   `;
 }
 
+function signupScreen() {
+  const copy = appContent.signup;
+  return `
+    <section class="loginScreen signupScreen">
+      <div class="loginHero signupHero">
+        <span>${copy.brand}</span>
+        <h1>${copy.title}</h1>
+        <p>${copy.subtitle}</p>
+      </div>
+      <div class="loginCard">
+        <label class="fieldLabel">${copy.nameLabel}
+          <input data-field="signupName" placeholder="${copy.namePlaceholder}" value="${escapeHtml(state.signupName)}" />
+        </label>
+        <label class="fieldLabel">${copy.emailLabel}
+          <input data-field="signupEmail" inputmode="email" placeholder="${copy.emailPlaceholder}" value="${escapeHtml(state.signupEmail)}" />
+        </label>
+        <label class="fieldLabel">${copy.phoneLabel}
+          <input data-field="signupPhone" inputmode="tel" placeholder="${copy.phonePlaceholder}" value="${escapeHtml(state.signupPhone)}" />
+        </label>
+        <label class="fieldLabel">${copy.passcodeLabel}
+          <input data-field="signupPasscode" type="password" placeholder="${copy.passcodePlaceholder}" value="${escapeHtml(state.signupPasscode)}" />
+        </label>
+        <button class="primaryButton" data-action="create-account">${copy.createButton}</button>
+        <button class="createAccountButton" data-action="show-login">${copy.signInLink}</button>
+      </div>
+      <p class="finePrint">${copy.note}</p>
+    </section>
+  `;
+}
+
 function homeScreen() {
   const copy = appContent.home;
   return `
@@ -77,6 +111,7 @@ function homeScreen() {
         <div>
           <p>${copy.greeting}</p>
           <h1>${copy.brand}</h1>
+          <span class="locationLine">${copy.location}</span>
         </div>
         <button class="profileButton" data-action="profile" aria-label="Profile">P</button>
       </header>
@@ -88,10 +123,16 @@ function homeScreen() {
       </div>
 
       <article class="heroCard">
-        <span>${copy.heroLabel}</span>
-        <h2>${copy.heroTitle}</h2>
-        <p>${copy.heroSubtitle}</p>
-        <button data-action="start-booking">${copy.heroButton}</button>
+        <div>
+          <span>${copy.heroLabel}</span>
+          <h2>${copy.heroTitle}</h2>
+          <p>${copy.heroSubtitle}</p>
+          <button data-action="start-booking">${copy.heroButton}</button>
+        </div>
+        <div class="heroProviderMini">
+          <strong>Mina</strong>
+          <span>4.92 · 18 นาที</span>
+        </div>
       </article>
 
       <section class="homeSection">
@@ -102,6 +143,17 @@ function homeScreen() {
         <div class="serviceScroller">
           ${services.map(serviceCard).join("")}
         </div>
+      </section>
+
+      <section class="homeSection">
+        <div class="sectionTitle">
+          <h2>${copy.recentTitle}</h2>
+        </div>
+        <article class="recentCard">
+          <span>Next step</span>
+          <strong>${copy.recentBooking}</strong>
+          <p>เมื่อมีการจอง ระบบจะแสดงสถานะ ชำระเงิน และ ETA ของผู้ให้บริการตรงนี้</p>
+        </article>
       </section>
 
       <section class="homeSection">
@@ -246,7 +298,7 @@ function render() {
         <span>${appContent.preview.sizeLabel}</span>
       </div>
       <div class="phoneFrame" aria-label="Wellnest mobile app preview">
-        ${state.signedIn ? (state.screen === "booking" ? bookingScreen() : homeScreen()) : loginScreen()}
+        ${state.signedIn ? (state.screen === "booking" ? bookingScreen() : homeScreen()) : state.screen === "signup" ? signupScreen() : loginScreen()}
         ${state.signedIn ? bottomNav() : ""}
       </div>
     </main>
@@ -281,6 +333,14 @@ function bindEvents() {
     render();
   });
   document.querySelector("[data-action='signup']")?.addEventListener("click", () => {
+    state.screen = "signup";
+    render();
+  });
+  document.querySelector("[data-action='show-login']")?.addEventListener("click", () => {
+    state.screen = "login";
+    render();
+  });
+  document.querySelector("[data-action='create-account']")?.addEventListener("click", () => {
     state.signedIn = true;
     state.screen = "home";
     render();

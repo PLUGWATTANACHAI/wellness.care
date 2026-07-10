@@ -2,23 +2,24 @@
 
 Status date: 2026-07-10
 
-Apple Developer Program purchase is complete, but the Apple Developer Account is still pending. Apple says processing may take up to 48 hours.
+Apple Developer Program purchase is complete and the Apple Developer Account is no longer pending, based on พี่ปลั๊ก's update on 2026-07-10.
 
-## What To Do When Apple Activates Membership
+## App Store Connect App Record Fields
 
-1. Open App Store Connect: https://appstoreconnect.apple.com/
-2. Create a new app record.
+1. Open App Store Connect: https://appstoreconnect.apple.com/apps
+2. Click `+` then `New App`.
 3. Use these app identifiers:
    - App name: `Wellnest`
+   - Platform: `iOS`
    - Bundle ID: `com.wellnest.app`
    - SKU: `wellnest-ios-001`
-   - Primary language: English or Thai, depending on the final store copy.
-4. Confirm access to Certificates, Identifiers & Profiles.
-5. Create or confirm the iOS bundle identifier `com.wellnest.app`.
-6. Build iOS preview with EAS.
-7. Upload the build to TestFlight.
-8. Add พี่ปลั๊ก as the first internal tester.
-9. Test these flows on iPhone:
+   - Primary language: `Thai` if available, otherwise `English (U.S.)`
+   - User access: Full Access
+4. If `com.wellnest.app` is not selectable, create or confirm the iOS bundle identifier in Certificates, Identifiers & Profiles first.
+5. After the app record exists, create the iOS preview build with EAS.
+6. Upload the build to TestFlight.
+7. Add พี่ปลั๊ก as the first internal tester.
+8. Test these flows on iPhone:
    - OTP login and session persistence.
    - Location permission popup.
    - Current location save.

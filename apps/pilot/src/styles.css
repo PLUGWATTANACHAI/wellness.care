@@ -84,6 +84,10 @@ button {
   gap: 14px;
 }
 
+.signupScreen {
+  justify-content: flex-start;
+}
+
 .loginHero {
   min-height: 244px;
   display: grid;
@@ -98,6 +102,10 @@ button {
   background-size: cover;
   color: #fff;
   box-shadow: 0 18px 42px rgba(94, 61, 38, 0.24);
+}
+
+.signupHero {
+  min-height: 174px;
 }
 
 .loginHero span,
@@ -305,6 +313,14 @@ input {
   font-size: 30px;
 }
 
+.locationLine {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--brand-brown);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .profileButton,
 .backButton {
   width: 44px;
@@ -346,9 +362,13 @@ input {
 
 .heroCard {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
   gap: 10px;
+  align-items: end;
   border-radius: 20px;
-  background: #6d4c2f;
+  background:
+    linear-gradient(140deg, rgba(73, 48, 32, 0.95), rgba(124, 86, 53, 0.86)),
+    radial-gradient(circle at 85% 16%, rgba(241, 215, 164, 0.34), transparent 30%);
   color: #fff;
   padding: 18px;
 }
@@ -369,6 +389,26 @@ input {
   background: #f1d7a4;
   color: #2f2118;
   padding: 0 14px;
+}
+
+.heroProviderMini {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.14);
+  padding: 10px;
+  text-align: center;
+}
+
+.heroProviderMini strong {
+  color: #fff;
+}
+
+.heroProviderMini span {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .homeSection {
@@ -456,6 +496,7 @@ input {
 
 .promoCard,
 .providerCard,
+.recentCard,
 .screenBlock,
 .progressPanel,
 .mapCard,
@@ -468,6 +509,28 @@ input {
 
 .promoCard {
   padding: 12px;
+}
+
+.recentCard {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.recentCard span {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--brand-brown);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 4px 8px;
+}
+
+.recentCard p {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.45;
 }
 
 .providerCard {
