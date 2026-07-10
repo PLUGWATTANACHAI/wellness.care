@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { colors } from "../design/theme";
 import {
   checkProviderAvailability,
   confirmSandboxPayment,
@@ -278,12 +279,36 @@ export function CustomerHomeScreen() {
   const holdMinutes = Math.floor(holdSecondsRemaining / 60);
   const holdSeconds = holdSecondsRemaining % 60;
   const holdCountdownText = `${holdMinutes}:${holdSeconds.toString().padStart(2, "0")}`;
+  const selectedServicePrice = selectedService ? `฿${selectedService.priceTHB.toLocaleString("th-TH")}` : "เลือกบริการ";
+  const activeProviderName = availability?.nearestProvider?.name ?? "Provider matching";
+  const activeProviderMeta =
+    availability?.available && availability.nearestProvider
+      ? `ใกล้พี่ ${(availability.nearestProvider.distanceMeters / 1000).toFixed(2)} กม.`
+      : "ตรวจผู้ให้บริการก่อนยืนยัน";
 
   return (
     <View style={styles.card}>
-      <Text style={styles.label}>Customer App</Text>
-      <Text style={styles.title}>Book condo wellness service</Text>
-      <Text style={styles.row}>API: {status === "error" ? "connection issue" : "connected to Wellnest API"}</Text>
+      <View style={styles.screenHeader}>
+        <View>
+          <Text style={styles.label}>Book service</Text>
+          <Text style={styles.title}>เลือกบริการที่ต้องการ</Text>
+        </View>
+        <View style={styles.liveBadge}>
+          <Text style={styles.liveBadgeText}>{status === "error" ? "Offline" : "Online"}</Text>
+        </View>
+      </View>
+      <View style={styles.bookingSummaryCard}>
+        <View>
+          <Text style={styles.summaryLabel}>วันนี้แนะนำ</Text>
+          <Text style={styles.summaryTitle}>{selectedService?.name ?? "Wellness service"}</Text>
+          <Text style={styles.summaryMeta}>{selectedSlot.label} · {selectedServicePrice}</Text>
+        </View>
+        <View style={styles.providerMiniCard}>
+          <Text style={styles.providerAvatar}>W</Text>
+          <Text style={styles.providerMiniName}>{activeProviderName}</Text>
+          <Text style={styles.providerMiniMeta}>{activeProviderMeta}</Text>
+        </View>
+      </View>
       <View style={styles.serviceList}>
         {services.map((service) => {
           const active = service.id === selectedServiceId;
@@ -306,17 +331,20 @@ export function CustomerHomeScreen() {
                 {service.name}
               </Text>
               <Text style={[styles.serviceChipMeta, active ? styles.serviceChipTextActive : null]}>
-                ฿{service.priceTHB} · {service.durationMinutes || "delivery"} min
+                ฿{service.priceTHB.toLocaleString("th-TH")} · {service.durationMinutes || "delivery"} min
               </Text>
             </Pressable>
           );
         })}
       </View>
-      <Text style={styles.row}>
-        Selected: {selectedService ? `${selectedService.name} · ฿${selectedService.priceTHB}` : "loading services..."}
-      </Text>
-      <View style={styles.confirmBox}>
-        <Text style={styles.trackingTitle}>1. Select service time</Text>
+      <View style={styles.stepCard}>
+        <View style={styles.stepHeader}>
+          <Text style={styles.stepNumber}>1</Text>
+          <View>
+            <Text style={styles.trackingTitle}>เลือกวันและเวลา</Text>
+            <Text style={styles.stepCaption}>เวลาที่ผู้ให้บริการสามารถเตรียมงานได้</Text>
+          </View>
+        </View>
         <View style={styles.slotList}>
           {bookingSlots.map((slot) => {
             const active = slot.id === selectedSlotId;
@@ -341,8 +369,14 @@ export function CustomerHomeScreen() {
           })}
         </View>
       </View>
-      <View style={styles.confirmBox}>
-        <Text style={styles.trackingTitle}>2. Confirm address</Text>
+      <View style={styles.stepCard}>
+        <View style={styles.stepHeader}>
+          <Text style={styles.stepNumber}>2</Text>
+          <View>
+            <Text style={styles.trackingTitle}>ยืนยันที่อยู่บริการ</Text>
+            <Text style={styles.stepCaption}>ใช้ตำแหน่งจากแผนที่เพื่อให้ผู้ให้บริการเดินทางถูกต้อง</Text>
+          </View>
+        </View>
         <Text style={styles.row}>
           {customerAddress
             ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}`
@@ -375,14 +409,20 @@ export function CustomerHomeScreen() {
           </Text>
         </Pressable>
       </View>
-      <View style={styles.confirmBox}>
-        <Text style={styles.trackingTitle}>3. Check provider availability</Text>
+      <View style={styles.stepCard}>
+        <View style={styles.stepHeader}>
+          <Text style={styles.stepNumber}>3</Text>
+          <View>
+            <Text style={styles.trackingTitle}>ตรวจผู้ให้บริการ</Text>
+            <Text style={styles.stepCaption}>ระบบจะจับคู่จากบริการ เวลา และพื้นที่ของพี่</Text>
+          </View>
+        </View>
         <Text style={styles.row}>
           {availability?.available && availability.nearestProvider
-            ? `${availability.nearestProvider.name} is available nearby · ${(availability.nearestProvider.distanceMeters / 1000).toFixed(2)} km`
+            ? `${availability.nearestProvider.name} พร้อมให้บริการ · ${(availability.nearestProvider.distanceMeters / 1000).toFixed(2)} กม.`
             : availabilityStatus === "unavailable"
               ? describeAvailabilityReason(availability?.reason)
-              : "Check provider availability before creating the booking."}
+              : "กดตรวจผู้ให้บริการก่อนยืนยันการจอง"}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -397,16 +437,15 @@ export function CustomerHomeScreen() {
         >
           <Text style={styles.availabilityButtonText}>
             {availabilityStatus === "checking"
-              ? "Checking..."
+              ? "กำลังตรวจ..."
               : availability?.available
-                ? "Provider available"
-                : "Check provider"}
+                ? "มีผู้ให้บริการพร้อม"
+                : "ตรวจผู้ให้บริการ"}
           </Text>
         </Pressable>
       </View>
-      <Text style={styles.row}>Summary: {selectedService?.name ?? "service"} · {selectedSlot.label}</Text>
       {latestBooking ? (
-        <Text style={styles.result}>Created {latestBooking.code} · {latestBooking.status}</Text>
+        <Text style={styles.result}>Booking {latestBooking.code} · {formatBookingStatus(latestBooking.status)}</Text>
       ) : null}
       <Pressable
         accessibilityRole="button"
@@ -418,11 +457,11 @@ export function CustomerHomeScreen() {
           pressed ? styles.buttonPressed : null,
         ]}
       >
-        <Text style={styles.buttonText}>{status === "creating" ? "Creating..." : "Create booking"}</Text>
+        <Text style={styles.buttonText}>{status === "creating" ? "กำลังสร้างการจอง..." : "ยืนยันการจอง"}</Text>
       </Pressable>
       {latestBooking ? (
         <View style={styles.reviewBox}>
-          <Text style={styles.trackingTitle}>4. Review before payment</Text>
+          <Text style={styles.trackingTitle}>ตรวจสอบก่อนชำระเงิน</Text>
           <View style={styles.reviewRow}>
             <Text style={styles.reviewLabel}>Service</Text>
             <Text style={styles.reviewValue}>{selectedService?.name ?? latestBooking.serviceId}</Text>
@@ -468,7 +507,7 @@ export function CustomerHomeScreen() {
               : "Provider slot hold expired. Please re-check availability."}
           </Text>
           <Text style={styles.policyText}>
-            Free cancellation is planned for early MVP rules until a provider accepts the job. Final policy text should be confirmed before launch.
+            ยกเลิกได้ตามเงื่อนไขบริการก่อนผู้ให้บริการเริ่มเดินทาง รายละเอียดนโยบายฉบับเต็มจะยืนยันก่อนเปิดสาธารณะ
           </Text>
           <Pressable
             accessibilityRole="button"
@@ -486,7 +525,7 @@ export function CustomerHomeScreen() {
         </View>
       ) : null}
       <View style={styles.paymentBox}>
-        <Text style={styles.trackingTitle}>Payment</Text>
+        <Text style={styles.trackingTitle}>ชำระเงิน</Text>
         <View style={styles.paymentMethodRow}>
           <Pressable
             accessibilityRole="button"
@@ -575,8 +614,8 @@ export function CustomerHomeScreen() {
         {paymentStatus === "error" ? <Text style={styles.error}>Payment failed. Please retry.</Text> : null}
       </View>
       <View style={styles.trackingBox}>
-        <Text style={styles.trackingTitle}>Provider tracking</Text>
-        <Text style={styles.row}>Visible only after provider accepts and starts the trip.</Text>
+        <Text style={styles.trackingTitle}>ติดตามผู้ให้บริการ</Text>
+        <Text style={styles.row}>จะแสดงเมื่อผู้ให้บริการรับงานและเริ่มเดินทาง</Text>
         {trackedLocation ? (
           <Text style={styles.result}>
             {trackedLocation.lat.toFixed(5)}, {trackedLocation.lng.toFixed(5)} · {trackedLocation.accuracyMeters ?? "-"}m ·
@@ -594,7 +633,7 @@ export function CustomerHomeScreen() {
           style={({ pressed }) => [styles.buttonSecondary, pressed ? styles.buttonPressed : null]}
         >
           <Text style={styles.buttonSecondaryText}>
-            {trackingStatus === "loading" ? "Refreshing..." : "Refresh provider location"}
+            {trackingStatus === "loading" ? "กำลังอัปเดต..." : "อัปเดตตำแหน่ง"}
           </Text>
         </Pressable>
       </View>
@@ -708,7 +747,7 @@ export function CustomerHomeScreen() {
           </View>
         </View>
       ) : null}
-      <Text style={styles.note}>Connected: service catalog and booking API now use Supabase-backed backend.</Text>
+      <Text style={styles.note}>Wellnest จะใช้ข้อมูลนี้เพื่อจัดคิวบริการและดูแลความปลอดภัยของการจองเท่านั้น</Text>
     </View>
   );
 }
@@ -740,6 +779,18 @@ function formatSupportStatus(status: BookingSupportCaseDto["status"]) {
   return labels[status];
 }
 
+function formatBookingStatus(status: string) {
+  const labels: Record<string, string> = {
+    pending_payment: "รอชำระเงิน",
+    payment_confirmed: "ชำระเงินแล้ว",
+    confirmed: "ยืนยันแล้ว",
+    provider_assigned: "จับคู่ผู้ให้บริการแล้ว",
+    completed: "สำเร็จ",
+  };
+
+  return labels[status] || status;
+}
+
 function describeAvailabilityReason(reason?: ProviderAvailabilityDto["reason"]) {
   const descriptions: Record<string, string> = {
     no_provider_online: "No online provider is available right now.",
@@ -756,27 +807,98 @@ function describeAvailabilityReason(reason?: ProviderAvailabilityDto["reason"]) 
 
 const styles = StyleSheet.create({
   card: {
-    gap: 6,
+    gap: 10,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
+  },
+  screenHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
   },
   label: {
-    color: "#6d7875",
+    color: colors.textMuted,
     fontSize: 12,
     fontWeight: "800",
   },
   title: {
-    color: "#10231f",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "800",
   },
   row: {
-    color: "#10231f",
+    color: colors.text,
+    lineHeight: 20,
   },
   note: {
-    color: "#6d7875",
+    color: colors.textMuted,
     lineHeight: 20,
+  },
+  liveBadge: {
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  liveBadgeText: {
+    color: colors.green,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  bookingSummaryCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: "#163b38",
+    padding: 14,
+  },
+  summaryLabel: {
+    color: colors.gold,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  summaryTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 26,
+  },
+  summaryMeta: {
+    color: "rgba(255,255,255,0.78)",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  providerMiniCard: {
+    width: 112,
+    gap: 4,
+    alignItems: "center",
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    padding: 8,
+  },
+  providerAvatar: {
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    color: colors.text,
+    fontWeight: "900",
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  providerMiniName: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  providerMiniMeta: {
+    color: "rgba(255,255,255,0.72)",
+    fontSize: 10,
+    textAlign: "center",
   },
   serviceList: {
     gap: 8,
@@ -784,38 +906,59 @@ const styles = StyleSheet.create({
   serviceChip: {
     gap: 3,
     borderWidth: 1,
-    borderColor: "#e3e9e7",
+    borderColor: "#e1ebe8",
     borderRadius: 8,
-    backgroundColor: "#f8fbfa",
-    padding: 10,
+    backgroundColor: colors.surfaceMuted,
+    padding: 12,
   },
   serviceChipActive: {
-    borderColor: "#0793a4",
-    backgroundColor: "#e7f7f4",
+    borderColor: colors.primary,
+    backgroundColor: "#e8f7f8",
   },
   serviceChipText: {
-    color: "#10231f",
+    color: colors.text,
     fontWeight: "800",
   },
   serviceChipMeta: {
-    color: "#6d7875",
+    color: colors.textMuted,
     fontSize: 12,
   },
-  confirmBox: {
-    gap: 8,
+  stepCard: {
+    gap: 9,
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#f8fbfa",
-    padding: 10,
+    backgroundColor: colors.surfaceMuted,
+    padding: 12,
+  },
+  stepHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  stepNumber: {
+    overflow: "hidden",
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.text,
+    color: "#fff",
+    fontWeight: "900",
+    lineHeight: 28,
+    textAlign: "center",
+  },
+  stepCaption: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
   },
   reviewBox: {
     gap: 8,
     borderWidth: 1,
-    borderColor: "#b9ddd6",
+    borderColor: colors.borderStrong,
     borderRadius: 8,
-    backgroundColor: "#eefaf7",
-    padding: 10,
+    backgroundColor: colors.surfaceSoft,
+    padding: 12,
   },
   reviewRow: {
     flexDirection: "row",
@@ -823,30 +966,30 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   reviewLabel: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontSize: 12,
     fontWeight: "800",
   },
   reviewValue: {
     flex: 1,
-    color: "#10231f",
+    color: colors.text,
     textAlign: "right",
   },
   reviewTotal: {
-    color: "#087f5b",
+    color: colors.green,
     fontWeight: "800",
   },
   discountValue: {
-    color: "#b42318",
+    color: colors.danger,
     fontWeight: "800",
   },
   policyText: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontSize: 12,
     lineHeight: 18,
   },
   holdText: {
-    color: "#087f5b",
+    color: colors.green,
     fontSize: 12,
     fontWeight: "800",
     lineHeight: 18,
@@ -854,11 +997,11 @@ const styles = StyleSheet.create({
   availabilityButton: {
     alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "#10231f",
+    backgroundColor: colors.text,
     paddingVertical: 10,
   },
   availabilityButtonReady: {
-    backgroundColor: "#087f5b",
+    backgroundColor: colors.green,
   },
   availabilityButtonText: {
     color: "#fff",
@@ -869,77 +1012,77 @@ const styles = StyleSheet.create({
   },
   slotChip: {
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingHorizontal: 10,
     paddingVertical: 9,
   },
   slotChipActive: {
-    borderColor: "#0793a4",
+    borderColor: colors.primary,
     backgroundColor: "#e7f7f4",
   },
   slotText: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontWeight: "800",
   },
   slotTextActive: {
-    color: "#0793a4",
+    color: colors.primary,
   },
   addressText: {
-    color: "#50615d",
+    color: colors.textSoft,
     lineHeight: 20,
   },
   mapText: {
-    color: "#087f5b",
+    color: colors.green,
     fontSize: 12,
     fontWeight: "800",
   },
   warning: {
-    color: "#b42318",
+    color: colors.danger,
     fontSize: 12,
     fontWeight: "800",
   },
   confirmButton: {
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#10231f",
+    borderColor: colors.text,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingVertical: 10,
   },
   confirmButtonActive: {
-    borderColor: "#087f5b",
+    borderColor: colors.green,
     backgroundColor: "#e7f7f4",
   },
   confirmButtonText: {
-    color: "#10231f",
+    color: colors.text,
     fontWeight: "800",
   },
   confirmButtonTextActive: {
-    color: "#087f5b",
+    color: colors.green,
   },
   serviceChipTextActive: {
-    color: "#067889",
+    color: colors.primaryDark,
   },
   result: {
-    color: "#087f5b",
+    color: colors.green,
     fontWeight: "800",
   },
   trackingBox: {
     gap: 6,
     borderRadius: 8,
     backgroundColor: "#f1fbfb",
-    padding: 10,
+    padding: 12,
   },
   trackingTitle: {
-    color: "#10231f",
+    color: colors.text,
     fontWeight: "800",
   },
   button: {
     alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "#0793a4",
+    backgroundColor: colors.primary,
     paddingVertical: 10,
   },
   buttonPressed: {
@@ -956,19 +1099,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#0793a4",
-    backgroundColor: "#fff",
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
     paddingVertical: 10,
   },
   buttonSecondaryText: {
-    color: "#0793a4",
+    color: colors.primary,
     fontWeight: "800",
   },
   paymentBox: {
-    gap: 6,
+    gap: 8,
     borderRadius: 8,
     backgroundColor: "#fff8e8",
-    padding: 10,
+    padding: 12,
   },
   paymentActions: {
     flexDirection: "row",
@@ -982,25 +1125,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#d8e7eb",
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
   methodChipActive: {
-    borderColor: "#0793a4",
+    borderColor: colors.primary,
     backgroundColor: "#e8f7f8",
   },
   methodChipText: {
-    color: "#52605d",
+    color: colors.textSoft,
     fontWeight: "800",
   },
   methodChipTextActive: {
-    color: "#057d8b",
+    color: colors.primaryDark,
   },
   timelineBox: {
     gap: 8,
     borderRadius: 8,
-    backgroundColor: "#f8fbfa",
+    backgroundColor: colors.surfaceMuted,
     padding: 10,
   },
   timelineItem: {
@@ -1010,7 +1153,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   timelineTitle: {
-    color: "#10231f",
+    color: colors.text,
     fontWeight: "800",
   },
   communicationBox: {
@@ -1028,17 +1171,17 @@ const styles = StyleSheet.create({
     padding: 9,
   },
   communicationMeta: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontSize: 12,
     fontWeight: "800",
   },
   messageInput: {
     minHeight: 72,
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#fff",
-    color: "#10231f",
+    backgroundColor: colors.surface,
+    color: colors.text,
     paddingHorizontal: 10,
     paddingVertical: 9,
     textAlignVertical: "top",
@@ -1057,13 +1200,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#0793a4",
+    borderColor: colors.primary,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingVertical: 10,
   },
   supportButtonText: {
-    color: "#0793a4",
+    color: colors.primary,
     fontWeight: "800",
   },
   supportDangerButton: {
@@ -1076,7 +1219,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   supportDangerButtonText: {
-    color: "#b42318",
+    color: colors.danger,
     fontWeight: "800",
   },
   caseList: {
@@ -1085,11 +1228,11 @@ const styles = StyleSheet.create({
   caseItem: {
     gap: 3,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     padding: 9,
   },
   error: {
-    color: "#b42318",
+    color: colors.danger,
     fontWeight: "800",
   },
 });

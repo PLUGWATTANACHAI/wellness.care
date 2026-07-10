@@ -1,5 +1,6 @@
 import { Component, type ReactNode, useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
+import { colors } from "./src/design/theme";
 import {
   loginDemoRole,
   loadStoredLogin,
@@ -92,28 +93,49 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.topBar}>
           <View>
-            <Text style={styles.memberLine}>{session ? "Member · 0 coins · 0 points" : "Condo wellness, on demand"}</Text>
+            <Text style={styles.memberLine}>{session ? "Good evening" : "Condo wellness, on demand"}</Text>
             <Text style={styles.brandTitle}>Wellnest</Text>
           </View>
           <View style={styles.profileBadge}>
             <Text style={styles.profileBadgeText}>{session?.user.name?.slice(0, 1) || "W"}</Text>
           </View>
         </View>
+        <View style={styles.walletRow}>
+          <View style={styles.walletTile}>
+            <Text style={styles.walletLabel}>Coins</Text>
+            <Text style={styles.walletValue}>0</Text>
+          </View>
+          <View style={styles.walletTile}>
+            <Text style={styles.walletLabel}>Points</Text>
+            <Text style={styles.walletValue}>0</Text>
+          </View>
+          <View style={styles.walletTile}>
+            <Text style={styles.walletLabel}>Tier</Text>
+            <Text style={styles.walletValue}>Member</Text>
+          </View>
+        </View>
         <View style={styles.heroCard}>
           <View style={styles.heroCopy}>
-            <Text style={styles.heroKicker}>Pilot Offer</Text>
+            <Text style={styles.heroKicker}>Today available</Text>
             <Text style={styles.heroTitle}>จองบริการดูแลตัวเองถึงคอนโด</Text>
             <Text style={styles.heroBody}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
           </View>
-          <View style={styles.heroVisual}>
-            <View style={[styles.heroBar, styles.heroBarShort]} />
-            <View style={[styles.heroBar, styles.heroBarGold]} />
-            <View style={[styles.heroBar, styles.heroBarTiny]} />
+          <View style={styles.heroProviderCard}>
+            <Text style={styles.heroProviderAvatar}>WN</Text>
+            <Text style={styles.heroProviderName}>Top provider nearby</Text>
+            <Text style={styles.heroProviderMeta}>4.9 rating · 18 min</Text>
           </View>
+        </View>
+        <View style={styles.promoBand}>
+          <View>
+            <Text style={styles.promoTitle}>First booking care</Text>
+            <Text style={styles.promoCopy}>Save your address once, then book in a few taps.</Text>
+          </View>
+          <Text style={styles.promoBadge}>New</Text>
         </View>
         <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} />
         <View style={styles.demoPanel}>
-          <Text style={styles.demoTitle}>Booking flow</Text>
+          <Text style={styles.demoTitle}>Your booking</Text>
           <View style={styles.demoSteps}>
             <DemoStep active={role === "customer"} label="บริการ" onPress={() => setRole("customer")} />
             <DemoStep active={role === "account"} label="ที่อยู่" onPress={() => setRole("account")} />
@@ -412,19 +434,19 @@ function getSessionCopy(
   sessionStatus: "loading" | "ready" | "auth_required" | "error",
   role: DemoLoginRole,
 ) {
-  if (sessionStatus === "ready") return `Signed-in ${session?.user.name ?? role} · ready`;
-  if (sessionStatus === "auth_required") return `${role} OTP login required`;
-  if (sessionStatus === "loading") return `Checking ${role} session`;
-  return "Session error";
+  if (sessionStatus === "ready") return `พร้อมให้บริการสำหรับ ${session?.user.name ?? role}`;
+  if (sessionStatus === "auth_required") return "เข้าสู่ระบบด้วยเบอร์โทรเพื่อเริ่มจอง";
+  if (sessionStatus === "loading") return "กำลังเตรียมบัญชีของพี่";
+  return "ยังเชื่อมต่อบัญชีไม่ได้";
 }
 
 function getDemoHint(role: AppSection) {
   const hints: Record<typeof role, string> = {
-    customer: "Create booking, confirm review, pay sandbox, then send a message or support request.",
-    provider: "Accept the latest job, update trip status, send location, and reply to the customer.",
-    account: "Review customer profile, coins, points, and saved map address.",
-    notifications: "Check new message alerts and mark updates as read.",
-    privacy: "Review consent records for privacy and location sharing.",
+    customer: "เลือกบริการ วันเวลา ที่อยู่ แล้วตรวจผู้ให้บริการก่อนยืนยันจอง",
+    provider: "มุมมองผู้ให้บริการสำหรับรับงาน เดินทาง และอัปเดตสถานะ",
+    account: "จัดการข้อมูลลูกค้า ที่อยู่ Coins และ Points",
+    notifications: "ดูข้อความและสถานะการจองล่าสุด",
+    privacy: "จัดการสิทธิ์ตำแหน่งและความเป็นส่วนตัว",
   };
 
   return hints[role];
@@ -433,36 +455,36 @@ function getDemoHint(role: AppSection) {
 function getStartupLocationCopy(status: "checking" | "permission_ready" | "denied" | "error") {
   if (status === "checking") {
     return {
-      title: "Location setup",
-      body: "Please allow location so Wellnest can prepare your service address.",
+      title: "เตรียมตำแหน่งบริการ",
+      body: "อนุญาตตำแหน่งเพื่อช่วยบันทึกที่อยู่และคำนวณเวลาเดินทางของผู้ให้บริการ",
     };
   }
   if (status === "permission_ready") {
     return {
-      title: "Location permission allowed",
-      body: "Location access is ready. Use current location in Account to save your service address before booking.",
+      title: "ใช้ตำแหน่งได้แล้ว",
+      body: "ไปที่บัญชีเพื่อบันทึกที่อยู่ หรือเริ่มเลือกบริการที่ต้องการได้เลย",
     };
   }
   if (status === "denied") {
     return {
-      title: "Location not allowed",
-      body: "You can still browse, but booking needs a service address. Allow location in phone Settings or choose it in Account.",
+      title: "ยังไม่ได้อนุญาตตำแหน่ง",
+      body: "ยังเลือกดูบริการได้ แต่ก่อนจองต้องบันทึกที่อยู่ในบัญชีก่อน",
     };
   }
 
   return {
-    title: "Location unavailable",
-    body: "Please turn on GPS or Wi-Fi, then retry from Account before booking.",
+    title: "ตำแหน่งยังไม่พร้อม",
+    body: "เปิด GPS หรือ Wi-Fi แล้วลองบันทึกที่อยู่อีกครั้ง",
   };
 }
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#eef8f8",
+    backgroundColor: colors.background,
   },
   container: {
-    gap: 14,
+    gap: 12,
     padding: 18,
   },
   topBar: {
@@ -472,12 +494,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   memberLine: {
-    color: "#60736f",
+    color: colors.textSoft,
     fontSize: 12,
     fontWeight: "800",
   },
   brandTitle: {
-    color: "#18302d",
+    color: colors.text,
     fontSize: 34,
     fontWeight: "900",
   },
@@ -487,13 +509,37 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderWidth: 1,
-    borderColor: "#d7e7e3",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   profileBadgeText: {
-    color: "#0b8f88",
+    color: colors.teal,
     fontSize: 20,
+    fontWeight: "900",
+  },
+  walletRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  walletTile: {
+    flex: 1,
+    gap: 2,
+    borderWidth: 1,
+    borderColor: "#dce8e5",
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+  },
+  walletLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  walletValue: {
+    color: colors.text,
+    fontSize: 15,
     fontWeight: "900",
   },
   heroCard: {
@@ -503,7 +549,7 @@ const styles = StyleSheet.create({
     gap: 14,
     overflow: "hidden",
     borderRadius: 8,
-    backgroundColor: "#0b8f88",
+    backgroundColor: colors.teal,
     padding: 18,
   },
   heroCopy: {
@@ -511,7 +557,7 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   heroKicker: {
-    color: "#f3d17c",
+    color: colors.gold,
     fontSize: 12,
     fontWeight: "900",
   },
@@ -525,28 +571,64 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.84)",
     lineHeight: 20,
   },
-  heroVisual: {
-    width: 92,
-    height: 118,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  heroBar: {
-    flex: 1,
-    height: 76,
+  heroProviderCard: {
+    width: 112,
+    gap: 6,
+    alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "rgba(255,255,255,0.16)",
+    padding: 10,
   },
-  heroBarShort: {
-    height: 64,
+  heroProviderAvatar: {
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "900",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
-  heroBarGold: {
-    height: 112,
-    backgroundColor: "#f3d17c",
+  heroProviderName: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "900",
+    textAlign: "center",
   },
-  heroBarTiny: {
-    height: 48,
+  heroProviderMeta: {
+    color: "rgba(255,255,255,0.78)",
+    fontSize: 10,
+    textAlign: "center",
+  },
+  promoBand: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#f1dfb0",
+    borderRadius: 8,
+    backgroundColor: "#fff9ea",
+    padding: 12,
+  },
+  promoTitle: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  promoCopy: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  promoBadge: {
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   locationCard: {
     gap: 4,
