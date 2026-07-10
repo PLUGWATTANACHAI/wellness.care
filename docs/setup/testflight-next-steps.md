@@ -2,24 +2,25 @@
 
 Status date: 2026-07-10
 
-Apple Developer Program purchase is complete and the Apple Developer Account is no longer pending, based on พี่ปลั๊ก's update on 2026-07-10.
+Apple Developer Program purchase is complete, the Apple Developer Account is no longer pending, and the Wellnest App Store Connect app record has been created, based on พี่ปลั๊ก's update on 2026-07-10.
 
-## App Store Connect App Record Fields
+## App Store Connect App Record Status
 
-1. Open App Store Connect: https://appstoreconnect.apple.com/apps
-2. Click `+` then `New App`.
-3. Use these app identifiers:
+Created / confirmed:
+
    - App name: `Wellnest`
    - Platform: `iOS`
    - Bundle ID: `com.plugwattanachai.wellnest`
    - SKU: `wellnest-ios-001`
    - Primary language: `Thai` if available, otherwise `English (U.S.)`
    - User access: Full Access
-4. If `com.plugwattanachai.wellnest` is not selectable, create or confirm the iOS bundle identifier in Certificates, Identifiers & Profiles first.
-5. After the app record exists, create the iOS preview build with EAS.
-6. Upload the build to TestFlight.
-7. Add พี่ปลั๊ก as the first internal tester.
-8. Test these flows on iPhone:
+
+Next:
+
+1. Create the iOS preview build with EAS.
+2. Upload or attach the build to TestFlight.
+3. Add พี่ปลั๊ก as the first internal tester.
+4. Test these flows on iPhone:
    - OTP login and session persistence.
    - Location permission popup.
    - Current location save.
