@@ -21,8 +21,8 @@ const state = {
   signedIn: false,
   screen: "home",
   step: 1,
-  email: "",
-  phone: "",
+  loginId: "",
+  passcode: "",
   serviceId: "massage",
   date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
   time: "19:30",
@@ -62,11 +62,11 @@ function loginScreen() {
         <p>ล็อกอินเพื่อดูบริการ โปรโมชั่น และจองผู้ให้บริการใกล้พี่</p>
       </div>
       <div class="loginCard">
-        <label class="fieldLabel">อีเมล
-          <input data-field="email" inputmode="email" placeholder="plug@example.com" value="${escapeHtml(state.email)}" />
+        <label class="fieldLabel">อีเมล หรือ เบอร์โทรศัพท์
+          <input data-field="loginId" inputmode="email" placeholder="plug@example.com หรือ 0812345678" value="${escapeHtml(state.loginId)}" />
         </label>
-        <label class="fieldLabel">เบอร์โทรศัพท์
-          <input data-field="phone" inputmode="tel" placeholder="0812345678" value="${escapeHtml(state.phone)}" />
+        <label class="fieldLabel">รหัสเข้าใช้งาน
+          <input data-field="passcode" type="password" placeholder="ใส่รหัสผ่านหรือ OTP" value="${escapeHtml(state.passcode)}" />
         </label>
         <button class="primaryButton" data-action="login">Continue</button>
       </div>
@@ -74,9 +74,11 @@ function loginScreen() {
       <div class="loginOptions" aria-label="Social login options">
         <button class="authLogoButton apple" data-action="future-auth" aria-label="Continue with Apple"><span></span></button>
         <button class="authLogoButton facebook" data-action="future-auth" aria-label="Continue with Facebook"><span>f</span></button>
-        <button class="authLogoButton email" data-action="future-auth" aria-label="Continue with Email"><span>@</span></button>
+        <button class="authLogoButton gmail" data-action="future-auth" aria-label="Continue with Gmail">
+          <span class="gmailMark"><i></i><i></i><i></i><i></i></span>
+        </button>
       </div>
-      <p class="finePrint">รอบ production จะเชื่อม Apple ID, Facebook และ Email จริง ส่วนตอนนี้ปุ่ม Continue ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน</p>
+      <p class="finePrint">รอบ production จะเชื่อม Apple ID, Facebook และ Gmail จริง ส่วนตอนนี้ปุ่ม Continue ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน</p>
     </section>
   `;
 }

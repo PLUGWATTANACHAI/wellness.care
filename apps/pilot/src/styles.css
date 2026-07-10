@@ -1,6 +1,6 @@
 :root {
-  color: #10231f;
-  background: #dfe9e6;
+  color: #2f2118;
+  background: #eee4d6;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -34,12 +34,12 @@ button {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  color: #50615d;
+  color: #7d6d5c;
   font-size: 12px;
 }
 
 .previewInfo strong {
-  color: #10231f;
+  color: #2f2118;
 }
 
 .phoneFrame {
@@ -49,10 +49,10 @@ button {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border: 1px solid #bfd2ce;
+  border: 1px solid #d2c1ad;
   border-radius: 28px;
-  background: #f3fbfa;
-  box-shadow: 0 24px 72px rgba(16, 35, 31, 0.22);
+  background: #fbf7f0;
+  box-shadow: 0 24px 72px rgba(76, 50, 31, 0.22);
 }
 
 .loginScreen,
@@ -78,17 +78,17 @@ button {
   border-radius: 24px;
   padding: 18px;
   background:
-    linear-gradient(140deg, rgba(9, 127, 123, 0.96), rgba(14, 159, 130, 0.85)),
+    linear-gradient(140deg, rgba(74, 48, 31, 0.92), rgba(132, 93, 57, 0.72)),
     url("https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=900&q=70");
   background-position: center;
   background-size: cover;
   color: #fff;
-  box-shadow: 0 18px 42px rgba(11, 143, 136, 0.22);
+  box-shadow: 0 18px 42px rgba(94, 61, 38, 0.24);
 }
 
 .loginHero span,
 .heroCard span {
-  color: #f3d17c;
+  color: #f1d7a4;
   font-size: 12px;
   font-weight: 900;
 }
@@ -120,11 +120,11 @@ button {
 .loginCard {
   display: grid;
   gap: 10px;
-  border: 1px solid rgba(215, 226, 223, 0.86);
+  border: 1px solid rgba(218, 202, 181, 0.9);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.92);
   padding: 14px;
-  box-shadow: 0 14px 34px rgba(16, 35, 31, 0.08);
+  box-shadow: 0 14px 34px rgba(76, 50, 31, 0.08);
 }
 
 .loginOptions {
@@ -148,56 +148,101 @@ button {
 }
 
 .authLogoButton {
-  min-height: 54px;
+  min-height: 42px;
   display: grid;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 16px;
-  box-shadow: 0 10px 24px rgba(16, 35, 31, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(76, 50, 31, 0.07);
 }
 
 .authLogoButton span {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  font-size: 25px;
+  width: 22px;
+  height: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .authLogoButton.apple {
-  background: #10231f;
+  background: #2f2118;
   color: #fff;
 }
 
 .authLogoButton.facebook {
-  background: #1d4ed8;
-  color: #fff;
+  background: #fff;
+  border-color: #d8c8b6;
+  color: #6d4c2f;
 }
 
 .authLogoButton.facebook span {
   font-family: Arial, sans-serif;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 900;
 }
 
-.authLogoButton.email {
-  border-color: #d7e2df;
+.authLogoButton.gmail {
+  border-color: #d8c8b6;
   background: #fff;
-  color: #0b756f;
+  color: #6d4c2f;
 }
 
-.authLogoButton.email span {
-  border: 2px solid currentColor;
-  border-radius: 999px;
-  font-size: 18px;
+.gmailMark {
+  position: relative;
+  width: 22px;
+  height: 17px;
+  border: 2px solid #b8a38d;
+  border-top: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.gmailMark i {
+  position: absolute;
+  display: block;
+  height: 2px;
+  transform-origin: left center;
+}
+
+.gmailMark i:nth-child(1) {
+  width: 13px;
+  left: -1px;
+  top: 1px;
+  background: #d93025;
+  transform: rotate(33deg);
+}
+
+.gmailMark i:nth-child(2) {
+  width: 13px;
+  right: -2px;
+  top: 1px;
+  background: #fbbc04;
+  transform: rotate(147deg);
+}
+
+.gmailMark i:nth-child(3) {
+  width: 2px;
+  height: 15px;
+  left: -2px;
+  top: 1px;
+  background: #34a853;
+}
+
+.gmailMark i:nth-child(4) {
+  width: 2px;
+  height: 15px;
+  right: -2px;
+  top: 1px;
+  background: #4285f4;
 }
 
 .divider {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #6d7875;
+  color: #8a7865;
   font-size: 12px;
 }
 
@@ -206,13 +251,13 @@ button {
   content: "";
   flex: 1;
   height: 1px;
-  background: #d7e2df;
+  background: #dccdb9;
 }
 
 .fieldLabel {
   display: grid;
   gap: 7px;
-  color: #263b38;
+  color: #4b3526;
   font-size: 12px;
   font-weight: 900;
 }
@@ -220,10 +265,10 @@ button {
 input {
   width: 100%;
   min-height: 48px;
-  border: 1px solid #d7e2df;
+  border: 1px solid #d8c8b6;
   border-radius: 14px;
   background: #fff;
-  color: #10231f;
+  color: #2f2118;
   padding: 0 12px;
 }
 
@@ -231,25 +276,25 @@ input {
   min-height: 50px;
   border: 0;
   border-radius: 14px;
-  background: #0793a4;
+  background: #6d4c2f;
   color: #fff;
-  box-shadow: 0 12px 24px rgba(7, 147, 164, 0.22);
+  box-shadow: 0 12px 24px rgba(109, 76, 47, 0.22);
 }
 
 .secondaryButton {
   min-height: 42px;
-  border: 1px solid #c9dcd8;
+  border: 1px solid #d8c8b6;
   background: #fff;
-  color: #0b756f;
+  color: #6d4c2f;
 }
 
 .secondaryButton.confirmed {
-  border-color: #0b8f88;
-  background: #e3f6f2;
+  border-color: #6d4c2f;
+  background: #f4eadc;
 }
 
 .finePrint {
-  color: #60736f;
+  color: #7d6d5c;
   font-size: 12px;
 }
 
@@ -267,7 +312,7 @@ input {
 
 .appHeader p {
   margin: 0 0 2px;
-  color: #60736f;
+  color: #7d6d5c;
   font-size: 12px;
   font-weight: 900;
 }
@@ -280,9 +325,9 @@ input {
 .backButton {
   width: 44px;
   height: 44px;
-  border: 1px solid #d7e2df;
+  border: 1px solid #d8c8b6;
   background: #fff;
-  color: #0b8f88;
+  color: #6d4c2f;
 }
 
 .backButton {
@@ -299,14 +344,14 @@ input {
 .walletStrip div {
   display: grid;
   gap: 2px;
-  border: 1px solid #d7e2df;
+  border: 1px solid #d8c8b6;
   border-radius: 12px;
   background: #fff;
   padding: 10px;
 }
 
 .walletStrip span {
-  color: #60736f;
+  color: #7d6d5c;
   font-size: 11px;
   font-weight: 900;
 }
@@ -319,7 +364,7 @@ input {
   display: grid;
   gap: 10px;
   border-radius: 20px;
-  background: #0b8f88;
+  background: #6d4c2f;
   color: #fff;
   padding: 18px;
 }
@@ -337,8 +382,8 @@ input {
   width: fit-content;
   min-height: 42px;
   border: 0;
-  background: #f3d17c;
-  color: #10231f;
+  background: #f1d7a4;
+  color: #2f2118;
   padding: 0 14px;
 }
 
@@ -361,7 +406,7 @@ input {
 .sectionTitle button {
   border: 0;
   background: transparent;
-  color: #0b756f;
+  color: #6d4c2f;
   font-size: 12px;
 }
 
@@ -384,24 +429,24 @@ input {
   display: grid;
   align-content: start;
   gap: 8px;
-  border: 1px solid #d7e2df;
+  border: 1px solid #d8c8b6;
   border-radius: 14px;
   background: #fff;
-  color: #10231f;
+  color: #2f2118;
   padding: 12px;
   text-align: left;
 }
 
 .serviceCard.selected {
-  border-color: #0b8f88;
-  box-shadow: 0 12px 28px rgba(11, 143, 136, 0.14);
+  border-color: #6d4c2f;
+  box-shadow: 0 12px 28px rgba(109, 76, 47, 0.14);
 }
 
 .serviceCard span {
   width: fit-content;
   border-radius: 999px;
-  background: #e3f6f2;
-  color: #0b756f;
+  background: #f4eadc;
+  color: #6d4c2f;
   font-size: 11px;
   font-weight: 900;
   padding: 4px 8px;
@@ -411,12 +456,12 @@ input {
 .providerCard p,
 .promoCard p,
 .mapCard p {
-  color: #60736f;
+  color: #7d6d5c;
 }
 
 .serviceCard b {
   margin-top: auto;
-  color: #0b756f;
+  color: #6d4c2f;
 }
 
 .promoList,
@@ -432,7 +477,7 @@ input {
 .mapCard,
 .summaryList,
 .trackingCard {
-  border: 1px solid #d7e2df;
+  border: 1px solid #d8c8b6;
   border-radius: 14px;
   background: #fff;
 }
@@ -455,13 +500,13 @@ input {
   display: grid;
   place-items: center;
   border-radius: 12px;
-  background: #e3f6f2;
-  color: #0b756f;
+  background: #f4eadc;
+  color: #6d4c2f;
   font-weight: 900;
 }
 
 .providerCard span {
-  color: #0b756f;
+  color: #6d4c2f;
   font-size: 12px;
   font-weight: 900;
 }
@@ -482,7 +527,7 @@ input {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #0b8f88, #f3d17c);
+  background: linear-gradient(90deg, #6d4c2f, #f1d7a4);
 }
 
 .stepTabs {
@@ -494,16 +539,16 @@ input {
 
 .stepTabs button {
   min-height: 36px;
-  border: 1px solid #d7e2df;
-  background: #f8fbfa;
-  color: #60736f;
+  border: 1px solid #d8c8b6;
+  background: #fbf7f0;
+  color: #7d6d5c;
   font-size: 12px;
 }
 
 .stepTabs .active {
-  border-color: #0b8f88;
-  background: #e3f6f2;
-  color: #0b756f;
+  border-color: #6d4c2f;
+  background: #f4eadc;
+  color: #6d4c2f;
 }
 
 .screenBlock {
@@ -528,14 +573,14 @@ input {
   gap: 10px;
   align-items: center;
   padding: 12px;
-  background: #f8fbfa;
+  background: #fbf7f0;
 }
 
 .pin {
   width: 38px;
   height: 38px;
   border-radius: 14px;
-  background: radial-gradient(circle at 50% 38%, #f3d17c 0 22%, #0b8f88 23% 100%);
+  background: radial-gradient(circle at 50% 38%, #f1d7a4 0 22%, #6d4c2f 23% 100%);
 }
 
 .actionRow,
@@ -563,7 +608,7 @@ input {
 }
 
 .summaryList span {
-  color: #60736f;
+  color: #7d6d5c;
 }
 
 .summaryList strong {
@@ -572,14 +617,14 @@ input {
 
 .paymentSwitch button {
   min-height: 42px;
-  border: 1px solid #d7e2df;
+  border: 1px solid #d8c8b6;
   background: #fff;
-  color: #60736f;
+  color: #7d6d5c;
 }
 
 .paymentSwitch .active {
-  border-color: #0b8f88;
-  background: #0b8f88;
+  border-color: #6d4c2f;
+  background: #6d4c2f;
   color: #fff;
 }
 
@@ -607,22 +652,22 @@ input {
   flex: 1;
   height: 6px;
   border-radius: 999px;
-  background: #0b8f88;
+  background: #6d4c2f;
 }
 
 .routeLine span:nth-child(2) {
-  background: #f3d17c;
+  background: #f1d7a4;
 }
 
 .routeLine span:nth-child(3) {
-  background: #d7e2df;
+  background: #d8c8b6;
 }
 
 .bottomNav {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  border-top: 1px solid #d7e2df;
+  border-top: 1px solid #d8c8b6;
   background: rgba(255, 255, 255, 0.96);
   padding: 8px 12px 12px;
 }
@@ -631,13 +676,13 @@ input {
   min-height: 42px;
   border: 0;
   background: transparent;
-  color: #60736f;
+  color: #7d6d5c;
   font-size: 12px;
 }
 
 .bottomNav .active {
-  background: #e3f6f2;
-  color: #0b756f;
+  background: #f4eadc;
+  color: #6d4c2f;
 }
 
 @media (max-width: 430px) {
