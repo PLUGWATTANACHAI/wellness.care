@@ -342,62 +342,74 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
     }
   }
 
+  async function handleCreateAccountPreview() {
+    setStatus("verifying");
+    try {
+      const result = await loginDemoRole(role);
+      onSignedIn(result);
+    } catch {
+      setStatus("error");
+    }
+  }
+
   return (
     <View style={styles.loginCard}>
       <Text style={styles.demoTitle}>{role === "provider" ? "เข้าสู่ระบบผู้ให้บริการ" : "เข้าสู่ระบบ Wellnest"}</Text>
-      <Text style={styles.demoCopy}>เลือกวิธีเข้าสู่ระบบเพื่อดูบริการ โปรโมชัน และติดตามการจองของพี่</Text>
-      <View style={styles.socialLoginGrid}>
-        <AuthOptionButton disabled label="Apple ID" tone="dark" />
-        <AuthOptionButton disabled label="Facebook" tone="blue" />
-        <AuthOptionButton disabled label="Email" tone="light" />
-      </View>
-      <Text style={styles.loginHint}>ตอนนี้รอบทดสอบใช้เบอร์โทรก่อน ส่วน Apple ID, Facebook และ Email จะเชื่อมต่อในรอบ production</Text>
-      <Text style={styles.inputLabel}>เบอร์โทรศัพท์</Text>
+      <Text style={styles.demoCopy}>Sign in เพื่อดูบริการ โปรโมชัน และติดตามการจองของพี่</Text>
+      <Text style={styles.inputLabel}>อีเมล หรือ เบอร์โทรศัพท์</Text>
       <TextInput
-        keyboardType="phone-pad"
+        autoCapitalize="none"
+        keyboardType="email-address"
         onChangeText={setPhone}
-        placeholder="Example: 0812345678"
+        placeholder="plug@example.com หรือ 0812345678"
         style={styles.loginInput}
         value={phone}
       />
       {looksLikeOtpInPhoneField ? (
         <Text style={styles.loginHint}>ช่องนี้ใส่เบอร์โทรก่อน จากนั้นค่อยใส่รหัสยืนยันในขั้นถัดไป</Text>
       ) : null}
+      <Text style={styles.inputLabel}>รหัสเข้าใช้งาน</Text>
+      <TextInput
+        editable={Boolean(challenge)}
+        keyboardType="number-pad"
+        maxLength={6}
+        onChangeText={setOtp}
+        placeholder={challenge ? "048550" : "ขอรหัสก่อนเข้าสู่ระบบ"}
+        style={[styles.loginInput, !challenge ? styles.loginInputDisabled : null]}
+        value={otp}
+      />
       <Pressable
         accessibilityRole="button"
-        disabled={status === "sending" || status === "verifying" || trimmedPhone.length < 8}
-        onPress={handleRequestOtp}
+        disabled={status === "sending" || status === "verifying" || trimmedPhone.length < 8 || (Boolean(challenge) && otp.trim().length !== 6)}
+        onPress={challenge ? handleVerifyOtp : handleRequestOtp}
         style={({ pressed }) => [
           styles.loginButton,
-          status === "sending" || status === "verifying" || trimmedPhone.length < 8 ? styles.loginButtonDisabled : null,
+          status === "sending" || status === "verifying" || trimmedPhone.length < 8 || (Boolean(challenge) && otp.trim().length !== 6)
+            ? styles.loginButtonDisabled
+            : null,
           pressed ? styles.tabPressed : null,
         ]}
       >
-        <Text style={styles.loginButtonText}>{status === "sending" ? "กำลังส่ง..." : "ส่งรหัสยืนยัน"}</Text>
+        <Text style={styles.loginButtonText}>
+          {status === "sending" ? "กำลังส่ง..." : status === "verifying" ? "กำลังตรวจสอบ..." : challenge ? "Sign in" : "ส่งรหัสเข้าใช้งาน"}
+        </Text>
       </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        disabled={status === "verifying"}
+        onPress={handleCreateAccountPreview}
+        style={({ pressed }) => [styles.createAccountButton, pressed ? styles.tabPressed : null]}
+      >
+        <Text style={styles.createAccountText}>Create account</Text>
+      </Pressable>
+      <View style={styles.socialLoginGrid}>
+        <AuthOptionButton disabled label="" tone="dark" />
+        <AuthOptionButton disabled label="f" tone="light" />
+        <AuthOptionButton disabled label="G" tone="gmail" />
+      </View>
+      <Text style={styles.loginHint}>Apple ID, Facebook และ Gmail จะเชื่อมต่อในรอบ production</Text>
       {challenge ? (
         <>
-          <Text style={styles.inputLabel}>รหัสยืนยัน</Text>
-          <TextInput
-            keyboardType="number-pad"
-            maxLength={6}
-            onChangeText={setOtp}
-            placeholder="048550"
-            style={styles.loginInput}
-            value={otp}
-          />
-          <Pressable
-            accessibilityRole="button"
-            disabled={status === "verifying" || otp.trim().length !== 6}
-            onPress={handleVerifyOtp}
-            style={({ pressed }) => [
-              styles.loginButton,
-              status === "verifying" || otp.trim().length !== 6 ? styles.loginButtonDisabled : null,
-              pressed ? styles.tabPressed : null,
-            ]}
-          >
-            <Text style={styles.loginButtonText}>{status === "verifying" ? "กำลังตรวจสอบ..." : "ยืนยันและเข้าใช้งาน"}</Text>
-          </Pressable>
           {challenge.devOtp ? <Text style={styles.loginHint}>รหัสสำหรับรอบทดสอบ: {challenge.devOtp}</Text> : null}
         </>
       ) : null}
@@ -410,7 +422,7 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
   );
 }
 
-function AuthOptionButton({ disabled, label, tone }: { disabled?: boolean; label: string; tone: "dark" | "blue" | "light" }) {
+function AuthOptionButton({ disabled, label, tone }: { disabled?: boolean; label: string; tone: "dark" | "light" | "gmail" }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -418,8 +430,8 @@ function AuthOptionButton({ disabled, label, tone }: { disabled?: boolean; label
       style={({ pressed }) => [
         styles.authOption,
         tone === "dark" ? styles.authOptionDark : null,
-        tone === "blue" ? styles.authOptionBlue : null,
         tone === "light" ? styles.authOptionLight : null,
+        tone === "gmail" ? styles.authOptionGmail : null,
         disabled ? styles.authOptionDisabled : null,
         pressed ? styles.tabPressed : null,
       ]}
@@ -427,18 +439,11 @@ function AuthOptionButton({ disabled, label, tone }: { disabled?: boolean; label
       <Text
         style={[
           styles.authOptionText,
-          tone === "dark" || tone === "blue" ? styles.authOptionTextInverted : null,
+          tone === "dark" ? styles.authOptionTextInverted : null,
+          tone === "gmail" ? styles.authOptionTextGmail : null,
         ]}
       >
         {label}
-      </Text>
-      <Text
-        style={[
-          styles.authOptionMeta,
-          tone === "dark" || tone === "blue" ? styles.authOptionMetaInverted : null,
-        ]}
-      >
-        เร็ว ๆ นี้
       </Text>
     </Pressable>
   );
@@ -676,24 +681,24 @@ const styles = StyleSheet.create({
   locationCard: {
     gap: 4,
     borderWidth: 1,
-    borderColor: "#b9ddd6",
+    borderColor: colors.borderStrong,
     borderRadius: 10,
-    backgroundColor: "#f6fffc",
+    backgroundColor: colors.surfaceSoft,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   locationTitle: {
-    color: "#087f5b",
+    color: colors.primary,
     fontWeight: "800",
   },
   locationCopy: {
-    color: "#50615d",
+    color: colors.textSoft,
     lineHeight: 20,
   },
   locationRetryButton: {
     alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "#087f5b",
+    backgroundColor: colors.primary,
     paddingVertical: 10,
   },
   locationRetryText: {
@@ -707,13 +712,13 @@ const styles = StyleSheet.create({
   demoPanel: {
     gap: 10,
     borderWidth: 1,
-    borderColor: "#cfe2df",
+    borderColor: colors.border,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     padding: 12,
   },
   demoTitle: {
-    color: "#10231f",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "800",
   },
@@ -725,24 +730,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#f8fbfa",
+    backgroundColor: colors.surfaceSoft,
     paddingVertical: 9,
   },
   demoStepActive: {
-    borderColor: "#0793a4",
-    backgroundColor: "#e7f7f4",
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceMuted,
   },
   demoStepText: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontWeight: "800",
   },
   demoStepTextActive: {
-    color: "#0793a4",
+    color: colors.primary,
   },
   demoCopy: {
-    color: "#50615d",
+    color: colors.textSoft,
     lineHeight: 20,
   },
   tab: {
@@ -750,88 +755,85 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#cfe2df",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     paddingVertical: 10,
   },
   tabActive: {
-    borderColor: "#0793a4",
-    backgroundColor: "#e7f7f4",
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceMuted,
   },
   tabPressed: {
     opacity: 0.78,
   },
   tabText: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontWeight: "800",
   },
   tabTextActive: {
-    color: "#0793a4",
+    color: colors.primary,
   },
   loadingText: {
     borderRadius: 8,
-    backgroundColor: "#fff",
-    color: "#50615d",
+    backgroundColor: colors.surface,
+    color: colors.textSoft,
     padding: 12,
     textAlign: "center",
   },
   loginCard: {
     gap: 10,
     borderWidth: 1,
-    borderColor: "#cfe2df",
+    borderColor: colors.border,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     padding: 14,
   },
   socialLoginGrid: {
+    flexDirection: "row",
     gap: 8,
   },
   authOption: {
-    minHeight: 48,
-    flexDirection: "row",
+    flex: 1,
+    minHeight: 38,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
   },
   authOptionDark: {
-    borderColor: "#10231f",
-    backgroundColor: "#10231f",
-  },
-  authOptionBlue: {
-    borderColor: "#1d4ed8",
-    backgroundColor: "#1d4ed8",
+    borderColor: colors.text,
+    backgroundColor: colors.text,
   },
   authOptionLight: {
-    borderColor: "#d7e2df",
-    backgroundColor: "#f8fbfa",
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSoft,
+  },
+  authOptionGmail: {
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceSoft,
   },
   authOptionDisabled: {
-    opacity: 0.72,
+    opacity: 0.8,
   },
   authOptionText: {
-    color: "#10231f",
+    color: colors.text,
+    fontSize: 16,
     fontWeight: "900",
   },
   authOptionTextInverted: {
-    color: "#fff",
+    color: colors.surface,
   },
-  authOptionMeta: {
-    color: "#50615d",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  authOptionMetaInverted: {
-    color: "rgba(255,255,255,0.78)",
+  authOptionTextGmail: {
+    color: "#d64b3c",
   },
   setupCard: {
     gap: 10,
     borderWidth: 1,
-    borderColor: "#9bd5d8",
+    borderColor: colors.borderStrong,
     borderRadius: 10,
-    backgroundColor: "#f1fbfb",
+    backgroundColor: colors.surfaceSoft,
     padding: 14,
   },
   setupActions: {
@@ -842,17 +844,17 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#cfe2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingVertical: 10,
   },
   setupButtonActive: {
-    borderColor: "#0793a4",
-    backgroundColor: "#0793a4",
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
   },
   setupButtonText: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontWeight: "800",
   },
   setupButtonTextActive: {
@@ -860,14 +862,18 @@ const styles = StyleSheet.create({
   },
   loginInput: {
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    color: "#10231f",
+    color: colors.text,
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
+  loginInputDisabled: {
+    backgroundColor: colors.surfaceMuted,
+    color: colors.textMuted,
+  },
   inputLabel: {
-    color: "#263b38",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "800",
     marginBottom: -4,
@@ -875,7 +881,7 @@ const styles = StyleSheet.create({
   loginButton: {
     alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "#0793a4",
+    backgroundColor: colors.primary,
     paddingVertical: 11,
   },
   loginButtonDisabled: {
@@ -886,9 +892,21 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   loginHint: {
-    color: "#087f5b",
+    color: colors.textSoft,
     fontWeight: "700",
     lineHeight: 20,
+  },
+  createAccountButton: {
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    paddingVertical: 11,
+  },
+  createAccountText: {
+    color: colors.primaryDark,
+    fontWeight: "900",
   },
   errorText: {
     borderRadius: 8,
