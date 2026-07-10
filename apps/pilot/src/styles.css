@@ -67,15 +67,15 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .loginHero {
-  min-height: 220px;
+  min-height: 244px;
   display: grid;
   align-content: end;
   gap: 10px;
-  border-radius: 20px;
+  border-radius: 24px;
   padding: 18px;
   background:
     linear-gradient(140deg, rgba(9, 127, 123, 0.96), rgba(14, 159, 130, 0.85)),
@@ -83,6 +83,7 @@ button {
   background-position: center;
   background-size: cover;
   color: #fff;
+  box-shadow: 0 18px 42px rgba(11, 143, 136, 0.22);
 }
 
 .loginHero span,
@@ -116,12 +117,23 @@ button {
   line-height: 1.45;
 }
 
-.loginOptions {
+.loginCard {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  border: 1px solid rgba(215, 226, 223, 0.86);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 14px;
+  box-shadow: 0 14px 34px rgba(16, 35, 31, 0.08);
 }
 
-.authButton,
+.loginOptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.authLogoButton,
 .primaryButton,
 .secondaryButton,
 .heroCard button,
@@ -135,25 +147,50 @@ button {
   font-weight: 900;
 }
 
-.authButton {
-  min-height: 48px;
+.authLogoButton {
+  min-height: 54px;
+  display: grid;
+  place-items: center;
   border: 1px solid transparent;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(16, 35, 31, 0.08);
 }
 
-.authButton.apple {
+.authLogoButton span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.authLogoButton.apple {
   background: #10231f;
   color: #fff;
 }
 
-.authButton.facebook {
+.authLogoButton.facebook {
   background: #1d4ed8;
   color: #fff;
 }
 
-.authButton.email {
+.authLogoButton.facebook span {
+  font-family: Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.authLogoButton.email {
   border-color: #d7e2df;
   background: #fff;
-  color: #10231f;
+  color: #0b756f;
+}
+
+.authLogoButton.email span {
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  font-size: 18px;
 }
 
 .divider {
@@ -174,7 +211,7 @@ button {
 
 .fieldLabel {
   display: grid;
-  gap: 6px;
+  gap: 7px;
   color: #263b38;
   font-size: 12px;
   font-weight: 900;
@@ -182,19 +219,21 @@ button {
 
 input {
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   border: 1px solid #d7e2df;
-  border-radius: 10px;
+  border-radius: 14px;
   background: #fff;
   color: #10231f;
   padding: 0 12px;
 }
 
 .primaryButton {
-  min-height: 48px;
+  min-height: 50px;
   border: 0;
+  border-radius: 14px;
   background: #0793a4;
   color: #fff;
+  box-shadow: 0 12px 24px rgba(7, 147, 164, 0.22);
 }
 
 .secondaryButton {

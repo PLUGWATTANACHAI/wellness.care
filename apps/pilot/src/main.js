@@ -21,6 +21,7 @@ const state = {
   signedIn: false,
   screen: "home",
   step: 1,
+  email: "",
   phone: "",
   serviceId: "massage",
   date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
@@ -60,17 +61,22 @@ function loginScreen() {
         <h1>บริการดูแลตัวเองถึงคอนโด</h1>
         <p>ล็อกอินเพื่อดูบริการ โปรโมชั่น และจองผู้ให้บริการใกล้พี่</p>
       </div>
-      <div class="loginOptions">
-        <button class="authButton apple" data-action="future-auth">Continue with Apple</button>
-        <button class="authButton facebook" data-action="future-auth">Continue with Facebook</button>
-        <button class="authButton email" data-action="future-auth">Continue with Email</button>
+      <div class="loginCard">
+        <label class="fieldLabel">อีเมล
+          <input data-field="email" inputmode="email" placeholder="plug@example.com" value="${escapeHtml(state.email)}" />
+        </label>
+        <label class="fieldLabel">เบอร์โทรศัพท์
+          <input data-field="phone" inputmode="tel" placeholder="0812345678" value="${escapeHtml(state.phone)}" />
+        </label>
+        <button class="primaryButton" data-action="login">Continue</button>
       </div>
-      <div class="divider"><span>หรือรอบทดสอบ</span></div>
-      <label class="fieldLabel">เบอร์โทรศัพท์
-        <input data-field="phone" inputmode="tel" placeholder="0812345678" value="${escapeHtml(state.phone)}" />
-      </label>
-      <button class="primaryButton" data-action="login">เข้าสู่ระบบ</button>
-      <p class="finePrint">Apple ID, Facebook และ Email จะเชื่อมต่อจริงใน production ส่วนรอบนี้ใช้เบอร์เพื่อทดสอบ flow ก่อน</p>
+      <div class="divider"><span>หรือเข้าสู่ระบบด้วย</span></div>
+      <div class="loginOptions" aria-label="Social login options">
+        <button class="authLogoButton apple" data-action="future-auth" aria-label="Continue with Apple"><span></span></button>
+        <button class="authLogoButton facebook" data-action="future-auth" aria-label="Continue with Facebook"><span>f</span></button>
+        <button class="authLogoButton email" data-action="future-auth" aria-label="Continue with Email"><span>@</span></button>
+      </div>
+      <p class="finePrint">รอบ production จะเชื่อม Apple ID, Facebook และ Email จริง ส่วนตอนนี้ปุ่ม Continue ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน</p>
     </section>
   `;
 }
