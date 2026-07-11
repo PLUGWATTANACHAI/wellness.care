@@ -35,15 +35,11 @@ const bookingSlots = [
   { id: "next_day_1000", label: "วันถัดไป · 10:00", offsetHours: 50 },
 ];
 
-const promoItems = [
-  { title: "First booking", body: "ลด 120 บาทสำหรับการจองครั้งแรก" },
-  { title: "After work care", body: "ช่วง 18:00-21:00 มี provider เพิ่ม" },
-];
-
-const nearbyProviders = [
-  { name: "Mina", meta: "4.92 · 18 นาที" },
-  { name: "Narin", meta: "4.88 · 24 นาที" },
-];
+const awCampaign = {
+  eyebrow: "Featured campaign",
+  title: "Wellness Week Privilege",
+  body: "พื้นที่ AW สำหรับ artwork โปรโมชันหลัก ส่วนลดสมาชิก หรือแคมเปญพาร์ทเนอร์",
+};
 
 export function CustomerHomeScreen() {
   const [services, setServices] = useState<ServiceItemDto[]>([]);
@@ -329,19 +325,28 @@ export function CustomerHomeScreen() {
         </View>
       </View>
       <View style={styles.bookingSummaryCard}>
-        <View>
-          <Text style={styles.summaryLabel}>Available tonight</Text>
-          <Text style={styles.summaryTitle}>บริการ wellness ส่วนตัวถึงคอนโด</Text>
-          <Text style={styles.summaryMeta}>เลือกบริการ เวลาที่สะดวก และยืนยันพื้นที่ ระบบจะจับคู่ผู้ให้บริการใกล้พี่</Text>
+        <View style={styles.summaryCopy}>
+          <Text style={styles.summaryLabel}>Private wellness</Text>
+          <Text style={styles.summaryTitle}>จองบริการดูแลตัวเองแบบส่วนตัว</Text>
+          <Text style={styles.summaryMeta}>เลือกบริการ เวลา และพื้นที่ให้ชัดเจน แล้วระบบจะจัดการขั้นตอนถัดไปอย่างเป็นระเบียบ</Text>
         </View>
-        <View style={styles.providerMiniCard}>
-          <Text style={styles.providerAvatar}>M</Text>
-          <Text style={styles.providerMiniName}>Mina</Text>
-          <Text style={styles.providerMiniMeta}>4.92 · 18 นาที</Text>
+        <View style={styles.heroTrustCard}>
+          <Text style={styles.heroTrustTitle}>Verified care</Text>
+          <Text style={styles.heroTrustMeta}>ยืนยันพื้นที่ก่อนจอง · ชำระเงินผ่านระบบ · ติดตามสถานะได้</Text>
+        </View>
+      </View>
+      <View style={styles.awPanel}>
+        <View style={styles.awMark}>
+          <Text style={styles.awMarkText}>AW</Text>
+        </View>
+        <View style={styles.awCopy}>
+          <Text style={styles.awEyebrow}>{awCampaign.eyebrow}</Text>
+          <Text style={styles.awTitle}>{awCampaign.title}</Text>
+          <Text style={styles.awBody}>{awCampaign.body}</Text>
         </View>
       </View>
       <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitle}>บริการ</Text>
+        <Text style={styles.sectionTitle}>เลือกบริการหลัก</Text>
         <Text style={styles.sectionAction}>ดูทั้งหมด</Text>
       </View>
       <View style={styles.serviceList}>
@@ -371,31 +376,6 @@ export function CustomerHomeScreen() {
             </Pressable>
           );
         })}
-      </View>
-      <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitle}>โปรวันนี้</Text>
-      </View>
-      <View style={styles.promoList}>
-        {promoItems.map((promo) => (
-          <View key={promo.title} style={styles.promoCard}>
-            <Text style={styles.promoTitle}>{promo.title}</Text>
-            <Text style={styles.promoBody}>{promo.body}</Text>
-          </View>
-        ))}
-      </View>
-      <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitle}>ผู้ให้บริการใกล้พี่</Text>
-      </View>
-      <View style={styles.nearbyProviderList}>
-        {nearbyProviders.map((provider) => (
-          <View key={provider.name} style={styles.nearbyProviderCard}>
-            <Text style={styles.nearbyAvatar}>{provider.name.slice(0, 1)}</Text>
-            <View style={styles.nearbyProviderCopy}>
-              <Text style={styles.nearbyProviderName}>{provider.name}</Text>
-              <Text style={styles.nearbyProviderMeta}>{provider.meta}</Text>
-            </View>
-          </View>
-        ))}
       </View>
       <View style={styles.sectionTitleRow}>
         <Text style={styles.sectionTitle}>เริ่มจองบริการ</Text>
@@ -1038,74 +1018,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
-  promoList: {
-    gap: 8,
-  },
-  promoCard: {
-    gap: 3,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  promoTitle: {
-    color: colors.text,
-    fontWeight: "900",
-  },
-  promoBody: {
-    color: colors.textSoft,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  nearbyProviderList: {
-    gap: 8,
-  },
-  nearbyProviderCard: {
-    minHeight: 54,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceSoft,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-  nearbyAvatar: {
-    overflow: "hidden",
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: colors.gold,
-    color: colors.text,
-    fontWeight: "900",
-    lineHeight: 34,
-    textAlign: "center",
-  },
-  nearbyProviderCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  nearbyProviderName: {
-    color: colors.text,
-    fontWeight: "900",
-  },
-  nearbyProviderMeta: {
-    color: colors.textSoft,
-    fontSize: 12,
-    lineHeight: 17,
-  },
   bookingSummaryCard: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 12,
+    gap: 14,
     overflow: "hidden",
     borderRadius: 8,
     backgroundColor: colors.primaryDark,
-    padding: 14,
+    padding: 16,
+  },
+  summaryCopy: {
+    flex: 1,
+    gap: 4,
   },
   summaryLabel: {
     color: colors.gold,
@@ -1123,33 +1047,70 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  providerMiniCard: {
-    width: 112,
-    gap: 4,
-    alignItems: "center",
+  heroTrustCard: {
+    width: 118,
+    gap: 6,
+    alignSelf: "flex-end",
     borderRadius: 8,
     backgroundColor: "rgba(255,255,255,0.12)",
-    padding: 8,
+    padding: 10,
   },
-  providerAvatar: {
-    overflow: "hidden",
-    borderRadius: 8,
-    backgroundColor: colors.gold,
-    color: colors.text,
+  heroTrustTitle: {
+    color: colors.surface,
+    fontSize: 12,
     fontWeight: "900",
-    paddingHorizontal: 9,
-    paddingVertical: 6,
   },
-  providerMiniName: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "900",
-    textAlign: "center",
-  },
-  providerMiniMeta: {
+  heroTrustMeta: {
     color: "rgba(255,255,255,0.72)",
     fontSize: 10,
-    textAlign: "center",
+    lineHeight: 14,
+  },
+  awPanel: {
+    minHeight: 142,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    padding: 14,
+  },
+  awMark: {
+    width: 72,
+    height: 94,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(109,76,47,0.2)",
+    borderRadius: 8,
+    backgroundColor: colors.primaryDark,
+  },
+  awMarkText: {
+    color: colors.gold,
+    fontSize: 23,
+    fontWeight: "900",
+  },
+  awCopy: {
+    flex: 1,
+    gap: 5,
+  },
+  awEyebrow: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  awTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 23,
+  },
+  awBody: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
   },
   serviceList: {
     gap: 8,

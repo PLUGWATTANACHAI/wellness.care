@@ -1,5 +1,5 @@
 import "./styles.css";
-import { appContent, promos, providers, services } from "./ui-content.js";
+import { appContent, services } from "./ui-content.js";
 
 const state = {
   signedIn: false,
@@ -129,11 +129,23 @@ function homeScreen() {
           <p>${copy.heroSubtitle}</p>
           <button data-action="start-booking">${copy.heroButton}</button>
         </div>
-        <div class="heroProviderMini">
-          <strong>Mina</strong>
-          <span>4.92 · 18 นาที</span>
+        <div class="heroTrustMini">
+          <strong>${copy.heroTrustTitle}</strong>
+          <span>${copy.heroTrustBody}</span>
         </div>
       </article>
+
+      <section class="homeSection">
+        <article class="awPanel">
+          <div class="awMark">${copy.awTitle}</div>
+          <div>
+            <span>${copy.awEyebrow}</span>
+            <h2>${copy.awHeadline}</h2>
+            <p>${copy.awBody}</p>
+            <button data-action="start-booking">${copy.awButton}</button>
+          </div>
+        </article>
+      </section>
 
       <section class="homeSection">
         <div class="sectionTitle">
@@ -143,36 +155,6 @@ function homeScreen() {
         <div class="serviceScroller">
           ${services.map(serviceCard).join("")}
         </div>
-      </section>
-
-      <section class="homeSection">
-        <div class="sectionTitle">
-          <h2>${copy.recentTitle}</h2>
-        </div>
-        <article class="recentCard">
-          <span>Next step</span>
-          <strong>${copy.recentBooking}</strong>
-          <p>เมื่อมีการจอง ระบบจะแสดงสถานะ ชำระเงิน และ ETA ของผู้ให้บริการตรงนี้</p>
-        </article>
-      </section>
-
-      <section class="homeSection">
-        <div class="sectionTitle">
-          <h2>${copy.promoTitle}</h2>
-        </div>
-        <div class="promoList">${promos.map((promo) => `
-          <article class="promoCard">
-            <strong>${promo.title}</strong>
-            <p>${promo.desc}</p>
-          </article>
-        `).join("")}</div>
-      </section>
-
-      <section class="homeSection">
-        <div class="sectionTitle">
-          <h2>${copy.providerTitle}</h2>
-        </div>
-        <div class="providerList">${providers.map(providerCard).join("")}</div>
       </section>
     </section>
   `;
@@ -274,19 +256,6 @@ function serviceCard(service) {
       <small>${service.desc}</small>
       <b>${currency(service.price)}</b>
     </button>
-  `;
-}
-
-function providerCard(provider) {
-  return `
-    <article class="providerCard">
-      <div class="avatar">${provider.name.slice(0, 1)}</div>
-      <div>
-        <strong>${provider.name}</strong>
-        <p>${provider.jobs} jobs · ${provider.rating} คะแนน</p>
-      </div>
-      <span>${provider.eta}</span>
-    </article>
   `;
 }
 

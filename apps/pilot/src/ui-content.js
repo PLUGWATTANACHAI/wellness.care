@@ -6,7 +6,7 @@ export const appContent = {
   login: {
     brand: "Wellnest",
     title: "บริการดูแลตัวเองถึงคอนโด",
-    subtitle: "ล็อกอินเพื่อดูบริการ โปรโมชั่น และจองผู้ให้บริการใกล้พี่",
+    subtitle: "ล็อกอินเพื่อดูบริการ โปรโมชัน และเริ่มจองบริการส่วนตัว",
     loginLabel: "อีเมล หรือ เบอร์โทรศัพท์",
     loginPlaceholder: "plug@example.com หรือ 0812345678",
     passcodeLabel: "รหัสเข้าใช้งาน",
@@ -36,16 +36,19 @@ export const appContent = {
     greeting: "พร้อมดูแลพี่วันนี้",
     brand: "Wellnest",
     location: "Sathorn · Bangkok",
-    heroLabel: "Available tonight",
-    heroTitle: "บริการ wellness ส่วนตัวถึงคอนโด",
-    heroSubtitle: "เลือกบริการ เวลาที่สะดวก และยืนยันพื้นที่ ระบบจะจับคู่ผู้ให้บริการที่พร้อมใกล้พี่",
+    heroLabel: "Private wellness",
+    heroTitle: "จองบริการดูแลตัวเองแบบส่วนตัว",
+    heroSubtitle: "เลือกบริการ เวลา และพื้นที่ให้ชัดเจน แล้วระบบจะจัดการขั้นตอนถัดไปอย่างเป็นระเบียบ",
     heroButton: "เริ่มจองบริการ",
-    servicesTitle: "บริการ",
+    heroTrustTitle: "Verified care",
+    heroTrustBody: "ยืนยันพื้นที่ก่อนจอง · ชำระเงินผ่านระบบ · ติดตามสถานะได้",
+    servicesTitle: "เลือกบริการหลัก",
     viewAllButton: "ดูทั้งหมด",
-    promoTitle: "โปรวันนี้",
-    providerTitle: "ผู้ให้บริการใกล้พี่",
-    recentTitle: "การจองล่าสุด",
-    recentBooking: "ยังไม่มีการจองล่าสุด",
+    awTitle: "AW",
+    awEyebrow: "Featured campaign",
+    awHeadline: "Wellness Week Privilege",
+    awBody: "พื้นที่สำหรับ artwork โปรโมชันหลัก เช่น ส่วนลดสมาชิก แพ็กเกจช่วงเย็น หรือแบรนด์พาร์ทเนอร์",
+    awButton: "ดูรายละเอียด",
   },
 };
 
@@ -54,14 +57,4 @@ export const services = [
   { id: "aroma", name: "Aroma Recovery", desc: "120 นาที · ผ่อนคลายลึก", price: 1890, tag: "Premium" },
   { id: "product", name: "Wellness Kit", desc: "สินค้า wellness ส่งถึงคอนโด", price: 690, tag: "Product" },
   { id: "stretch", name: "Office Stretch", desc: "60 นาที · ลดออฟฟิศซินโดรม", price: 990, tag: "New" },
-];
-
-export const promos = [
-  { title: "First booking", desc: "ลด 120 บาทสำหรับการจองครั้งแรก" },
-  { title: "After work care", desc: "ช่วง 18:00-21:00 มี provider เพิ่ม" },
-];
-
-export const providers = [
-  { name: "Mina", rating: "4.92", eta: "18 นาที", jobs: "318" },
-  { name: "Narin", rating: "4.88", eta: "24 นาที", jobs: "204" },
 ];
