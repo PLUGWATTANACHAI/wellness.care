@@ -41,9 +41,29 @@ const awCampaign = {
   body: "พื้นที่ AW สำหรับ artwork โปรโมชันหลัก ส่วนลดสมาชิก หรือแคมเปญพาร์ทเนอร์",
 };
 
+const partnerClinics = [
+  {
+    id: "clinic-sathorn",
+    name: "Sathorn Wellness Clinic",
+    type: "Aroma recovery · Office stretch",
+    area: "Sathorn · 1.8 km",
+    note: "รับ booking หลังเลิกงาน",
+    serviceId: "svc_beauty_90",
+  },
+  {
+    id: "clinic-langsuan",
+    name: "Langsuan Recovery Studio",
+    type: "Therapy room · Wellness kit",
+    area: "Langsuan · 2.4 km",
+    note: "เหมาะกับแพ็กเกจฟื้นฟู",
+    serviceId: "svc_product_sleep",
+  },
+];
+
 export function CustomerHomeScreen() {
   const [services, setServices] = useState<ServiceItemDto[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>();
+  const [selectedClinicId, setSelectedClinicId] = useState<string | undefined>();
   const [selectedSlotId, setSelectedSlotId] = useState(bookingSlots[0].id);
   const [customerProfile, setCustomerProfile] = useState<CustomerProfileDto | undefined>();
   const [addressConfirmed, setAddressConfirmed] = useState(false);
@@ -107,6 +127,7 @@ export function CustomerHomeScreen() {
   }
 
   const selectedService = services.find((service) => service.id === selectedServiceId);
+  const selectedClinic = partnerClinics.find((clinic) => clinic.id === selectedClinicId);
   const selectedSlot = bookingSlots.find((slot) => slot.id === selectedSlotId) || bookingSlots[0];
   const customerAddress = customerProfile?.address;
   const canCheckAvailability = Boolean(selectedServiceId && customerAddress?.id && addressConfirmed);
@@ -359,6 +380,7 @@ export function CustomerHomeScreen() {
               key={service.id}
               onPress={() => {
                 setSelectedServiceId(service.id);
+                setSelectedClinicId(undefined);
                 resetAvailability();
               }}
               style={({ pressed }) => [
@@ -378,9 +400,46 @@ export function CustomerHomeScreen() {
         })}
       </View>
       <View style={styles.sectionTitleRow}>
-        <Text style={styles.sectionTitle}>เริ่มจองบริการ</Text>
-        <Text style={styles.sectionAction}>{selectedService?.name ?? "เลือกบริการ"}</Text>
+        <Text style={styles.sectionTitle}>Partner Clinics</Text>
+        <Text style={styles.sectionAction}>จองกับคลินิก</Text>
       </View>
+      <View style={styles.clinicList}>
+        {partnerClinics.map((clinic) => (
+          <Pressable
+            accessibilityRole="button"
+            key={clinic.id}
+            onPress={() => {
+              setSelectedServiceId(clinic.serviceId);
+              setSelectedClinicId(clinic.id);
+              resetAvailability();
+            }}
+            style={({ pressed }) => [
+              styles.clinicCard,
+              selectedClinicId === clinic.id ? styles.clinicCardActive : null,
+              pressed ? styles.buttonPressed : null,
+            ]}
+          >
+            <Text style={styles.clinicLogo}>{clinic.name.slice(0, 1)}</Text>
+            <View style={styles.clinicCopy}>
+              <Text style={styles.clinicName}>{clinic.name}</Text>
+              <Text style={styles.clinicType}>{clinic.type}</Text>
+              <Text style={styles.clinicMeta}>{clinic.area} · {clinic.note}</Text>
+            </View>
+            <Text style={styles.clinicCta}>{selectedClinicId === clinic.id ? "เลือกแล้ว" : "จอง"}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>เริ่มจองบริการ</Text>
+        <Text style={styles.sectionAction}>{selectedClinic?.name ?? selectedService?.name ?? "เลือกบริการ"}</Text>
+      </View>
+      {selectedClinic ? (
+        <View style={styles.selectedClinicCard}>
+          <Text style={styles.selectedClinicLabel}>จองผ่านคลินิกพาร์ทเนอร์</Text>
+          <Text style={styles.selectedClinicName}>{selectedClinic.name}</Text>
+          <Text style={styles.selectedClinicMeta}>{selectedClinic.area} · ระบบจะใช้บริการที่เหมาะกับคลินิกนี้</Text>
+        </View>
+      ) : null}
       <View style={styles.bookingProgressCard}>
         <View style={styles.progressTrack}>
           {bookingProgress.map((step, index) => (
@@ -1134,6 +1193,83 @@ const styles = StyleSheet.create({
   serviceChipMeta: {
     color: colors.textMuted,
     fontSize: 12,
+  },
+  clinicList: {
+    gap: 8,
+  },
+  clinicCard: {
+    minHeight: 82,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  clinicCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
+  clinicLogo: {
+    overflow: "hidden",
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: colors.primaryDark,
+    color: colors.gold,
+    fontSize: 16,
+    fontWeight: "900",
+    lineHeight: 42,
+    textAlign: "center",
+  },
+  clinicCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  clinicName: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  clinicType: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 17,
+  },
+  clinicMeta: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  clinicCta: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  selectedClinicCard: {
+    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    padding: 12,
+  },
+  selectedClinicLabel: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  selectedClinicName: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  selectedClinicMeta: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
   },
   stepCard: {
     gap: 9,

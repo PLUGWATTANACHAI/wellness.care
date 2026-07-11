@@ -44,6 +44,8 @@ export const appContent = {
     heroTrustBody: "ยืนยันพื้นที่ก่อนจอง · ชำระเงินผ่านระบบ · ติดตามสถานะได้",
     servicesTitle: "เลือกบริการหลัก",
     viewAllButton: "ดูทั้งหมด",
+    clinicsTitle: "Partner Clinics",
+    clinicsAction: "จองกับคลินิก",
     awTitle: "AW",
     awEyebrow: "Featured campaign",
     awHeadline: "Wellness Week Privilege",
@@ -57,4 +59,23 @@ export const services = [
   { id: "aroma", name: "Aroma Recovery", desc: "120 นาที · ผ่อนคลายลึก", price: 1890, tag: "Premium" },
   { id: "product", name: "Wellness Kit", desc: "สินค้า wellness ส่งถึงคอนโด", price: 690, tag: "Product" },
   { id: "stretch", name: "Office Stretch", desc: "60 นาที · ลดออฟฟิศซินโดรม", price: 990, tag: "New" },
+];
+
+export const partnerClinics = [
+  {
+    id: "clinic-sathorn",
+    name: "Sathorn Wellness Clinic",
+    type: "Aroma recovery · Office stretch",
+    area: "Sathorn · 1.8 km",
+    note: "รับ booking หลังเลิกงาน",
+    serviceId: "aroma",
+  },
+  {
+    id: "clinic-langsuan",
+    name: "Langsuan Recovery Studio",
+    type: "Therapy room · Wellness kit",
+    area: "Langsuan · 2.4 km",
+    note: "เหมาะกับแพ็กเกจฟื้นฟู",
+    serviceId: "stretch",
+  },
 ];

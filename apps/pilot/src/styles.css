@@ -450,6 +450,64 @@ input {
   padding-bottom: 4px;
 }
 
+.clinicList {
+  display: grid;
+  gap: 10px;
+}
+
+.clinicCard {
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #d8c8b6;
+  border-radius: 16px;
+  background: #fffaf2;
+  color: #2f2118;
+  padding: 12px;
+  text-align: left;
+}
+
+.clinicCard:hover {
+  border-color: #6d4c2f;
+}
+
+.clinicLogo {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #4a301f;
+  color: #f1d7a4;
+  font-weight: 900;
+}
+
+.clinicCard strong,
+.clinicCard p,
+.clinicCard span {
+  display: block;
+}
+
+.clinicCard p {
+  margin: 3px 0;
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.clinicCard span {
+  color: var(--text-soft);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.clinicCard b {
+  color: #6d4c2f;
+  font-size: 12px;
+}
+
 .awPanel {
   position: relative;
   overflow: hidden;

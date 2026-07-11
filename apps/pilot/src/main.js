@@ -1,5 +1,5 @@
 import "./styles.css";
-import { appContent, services } from "./ui-content.js";
+import { appContent, partnerClinics, services } from "./ui-content.js";
 
 const state = {
   signedIn: false,
@@ -156,6 +156,16 @@ function homeScreen() {
           ${services.map(serviceCard).join("")}
         </div>
       </section>
+
+      <section class="homeSection">
+        <div class="sectionTitle">
+          <h2>${copy.clinicsTitle}</h2>
+          <button data-action="start-booking">${copy.clinicsAction}</button>
+        </div>
+        <div class="clinicList">
+          ${partnerClinics.map(clinicCard).join("")}
+        </div>
+      </section>
     </section>
   `;
 }
@@ -259,6 +269,20 @@ function serviceCard(service) {
   `;
 }
 
+function clinicCard(clinic) {
+  return `
+    <button class="clinicCard" data-action="select-clinic" data-service="${clinic.serviceId}">
+      <div class="clinicLogo">${clinic.name.slice(0, 1)}</div>
+      <div>
+        <strong>${clinic.name}</strong>
+        <p>${clinic.type}</p>
+        <span>${clinic.area} · ${clinic.note}</span>
+      </div>
+      <b>จอง</b>
+    </button>
+  `;
+}
+
 function render() {
   document.querySelector("#app").innerHTML = `
     <main class="previewShell">
@@ -323,6 +347,14 @@ function bindEvents() {
   document.querySelectorAll("[data-action='select-service']").forEach((button) => {
     button.addEventListener("click", () => {
       state.serviceId = button.dataset.service;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-action='select-clinic']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.serviceId = button.dataset.service;
+      state.screen = "booking";
+      state.step = 1;
       render();
     });
   });
