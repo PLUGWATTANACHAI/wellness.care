@@ -1,13 +1,14 @@
 import { StyleSheet, Text, View } from "react-native";
+import { colors } from "../design/theme";
 
 export function PrivacyCenterScreen() {
   return (
     <View style={styles.card}>
       <Text style={styles.label}>Privacy Center</Text>
-      <Text style={styles.title}>Location and consent defaults</Text>
-      <Text style={styles.row}>Raw location retention: 72 hours</Text>
-      <Text style={styles.row}>Admin exact access: reason + 15 min grant</Text>
-      <Text style={styles.row}>Customer tracking: active booking only</Text>
+      <Text style={styles.title}>ตำแหน่งและความยินยอม</Text>
+      <Text style={styles.row}>เก็บ raw location: 72 ชั่วโมง</Text>
+      <Text style={styles.row}>Admin ดูตำแหน่งละเอียด: ต้องมีเหตุผลและสิทธิ์ 15 นาที</Text>
+      <Text style={styles.row}>ลูกค้าติดตามตำแหน่ง: เฉพาะ booking ที่ active เท่านั้น</Text>
     </View>
   );
 }
@@ -17,20 +18,20 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: "#f8fbfa",
+    backgroundColor: colors.surfaceSoft,
   },
   label: {
-    color: "#6d7875",
+    color: colors.textMuted,
     fontSize: 12,
     fontWeight: "800",
   },
   title: {
-    color: "#10231f",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "800",
   },
   row: {
-    color: "#10231f",
+    color: colors.text,
+    lineHeight: 20,
   },
 });
-

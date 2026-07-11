@@ -721,7 +721,7 @@ export function CustomerHomeScreen() {
             value={communicationText}
             onChangeText={setCommunicationText}
             placeholder="พิมพ์ข้อความถึงผู้ให้บริการ"
-            placeholderTextColor="#81908c"
+            placeholderTextColor={colors.textMuted}
             style={styles.messageInput}
           />
           <Pressable
@@ -747,7 +747,7 @@ export function CustomerHomeScreen() {
                 if (supportStatus === "sent" || supportStatus === "error") setSupportStatus("idle");
               }}
               placeholder="แจ้งทีมดูแลว่าเกิดอะไรขึ้น"
-              placeholderTextColor="#81908c"
+              placeholderTextColor={colors.textMuted}
               style={styles.messageInput}
             />
             <View style={styles.supportActions}>
@@ -1171,7 +1171,7 @@ const styles = StyleSheet.create({
   },
   slotChipActive: {
     borderColor: colors.primary,
-    backgroundColor: "#e7f7f4",
+    backgroundColor: colors.surfaceSoft,
   },
   slotText: {
     color: colors.textSoft,
@@ -1204,7 +1204,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonActive: {
     borderColor: colors.green,
-    backgroundColor: "#e7f7f4",
+    backgroundColor: colors.surfaceSoft,
   },
   confirmButtonText: {
     color: colors.text,
@@ -1223,7 +1223,7 @@ const styles = StyleSheet.create({
   trackingBox: {
     gap: 6,
     borderRadius: 8,
-    backgroundColor: "#f1fbfb",
+    backgroundColor: colors.surfaceSoft,
     padding: 12,
   },
   trackingTitle: {
@@ -1274,7 +1274,7 @@ const styles = StyleSheet.create({
   },
   methodChip: {
     borderWidth: 1,
-    borderColor: "#d8e7eb",
+    borderColor: colors.border,
     borderRadius: 8,
     backgroundColor: colors.surface,
     paddingHorizontal: 10,
@@ -1282,7 +1282,7 @@ const styles = StyleSheet.create({
   },
   methodChipActive: {
     borderColor: colors.primary,
-    backgroundColor: "#e8f7f8",
+    backgroundColor: colors.surfaceSoft,
   },
   methodChipText: {
     color: colors.textSoft,
@@ -1300,7 +1300,7 @@ const styles = StyleSheet.create({
   timelineItem: {
     gap: 2,
     borderBottomWidth: 1,
-    borderBottomColor: "#e3e9e7",
+    borderBottomColor: colors.border,
     paddingBottom: 8,
   },
   timelineTitle: {
@@ -1310,9 +1310,9 @@ const styles = StyleSheet.create({
   communicationBox: {
     gap: 8,
     borderWidth: 1,
-    borderColor: "#d8e7eb",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#f6fcfd",
+    backgroundColor: colors.surfaceSoft,
     padding: 10,
   },
   communicationItem: {
@@ -1340,7 +1340,7 @@ const styles = StyleSheet.create({
   supportBox: {
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: "#d8e7eb",
+    borderTopColor: colors.border,
     paddingTop: 10,
   },
   supportActions: {

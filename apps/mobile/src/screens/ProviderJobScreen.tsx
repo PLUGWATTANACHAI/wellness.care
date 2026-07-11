@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { colors } from "../design/theme";
 import {
   acceptProviderJob,
   checkProviderServiceRadius,
@@ -219,33 +220,56 @@ export function ProviderJobScreen() {
     }
   }
 
+  const offerExpiresAt = topJob?.offerExpiresAt
+    ? new Date(topJob.offerExpiresAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })
+    : undefined;
+  const providerInitial = profile?.name?.slice(0, 1) || "W";
+
   return (
     <View style={styles.card}>
-      <Text style={styles.label}>Provider App</Text>
-      <Text style={styles.title}>{topJob ? `Job ${topJob.code}` : "Provider jobs"}</Text>
-      <Text style={styles.row}>API: {status === "error" ? "connection issue" : "connected to provider jobs"}</Text>
-      <Text style={styles.row}>Customer: {topJob?.customer ?? "loading..."}</Text>
-      <Text style={styles.row}>Service: {topJob?.service ?? "loading..."}</Text>
-      <Text style={styles.row}>Status: {topJob?.status ?? "loading..."}</Text>
-      <Text style={styles.row}>
-        Offer: {topJob?.offerStatus ?? "-"}
-        {topJob?.offerExpiresAt ? ` · expires ${new Date(topJob.offerExpiresAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}` : ""}
-      </Text>
-      <Text style={styles.row}>
-        Provider: {profile ? `${profile.name} · ${profile.onlineStatus} · ${profile.rating.toFixed(1)}★` : "loading profile..."}
-      </Text>
-      <Text style={styles.row}>
-        Service area: {profile ? `${(profile.serviceRadiusMeters / 1000).toFixed(1)} km radius` : "loading radius..."}
-      </Text>
-      <Text style={styles.row}>
-        Skills: {profile?.skills?.length ? profile.skills.slice(0, 2).join(" · ") : "loading skills..."}
-      </Text>
-      <Text style={styles.row}>
-        Hours: {profile?.workingHours?.length ? profile.workingHours.slice(0, 2).join(" · ") : "loading hours..."}
-      </Text>
-      <Text style={styles.row}>
-        Location sharing: {locationConsentAccepted ? "consent accepted" : "needs provider consent"}
-      </Text>
+      <View style={styles.providerHero}>
+        <View style={styles.providerHeroCopy}>
+          <Text style={styles.label}>Provider workspace</Text>
+          <Text style={styles.title}>{topJob ? `งาน ${topJob.code}` : "งานที่พร้อมให้รับ"}</Text>
+          <Text style={styles.heroMeta}>
+            {profile ? `${profile.name} · ${profile.rating.toFixed(1)}★ · ${formatOnlineStatus(profile.onlineStatus)}` : "กำลังโหลดข้อมูลผู้ให้บริการ"}
+          </Text>
+        </View>
+        <Text style={styles.providerAvatar}>{providerInitial}</Text>
+      </View>
+      <View style={styles.metricGrid}>
+        <View style={styles.metricTile}>
+          <Text style={styles.metricLabel}>Jobs</Text>
+          <Text style={styles.metricValue}>{jobs.length}</Text>
+        </View>
+        <View style={styles.metricTile}>
+          <Text style={styles.metricLabel}>Area</Text>
+          <Text style={styles.metricValue}>{profile ? `${(profile.serviceRadiusMeters / 1000).toFixed(1)} km` : "-"}</Text>
+        </View>
+        <View style={styles.metricTile}>
+          <Text style={styles.metricLabel}>Location</Text>
+          <Text style={styles.metricValue}>{locationConsentAccepted ? "On" : "Off"}</Text>
+        </View>
+      </View>
+      <View style={styles.jobCard}>
+        <View style={styles.jobCardHeader}>
+          <View>
+            <Text style={styles.sectionTitle}>งานล่าสุด</Text>
+            <Text style={styles.jobTitle}>{topJob?.service ?? "ยังไม่มีงานใหม่"}</Text>
+          </View>
+          <View style={styles.offerBadge}>
+            <Text style={styles.offerBadgeText}>{formatOfferStatus(topJob?.offerStatus)}</Text>
+          </View>
+        </View>
+        <Text style={styles.row}>ลูกค้า: {topJob?.customer ?? "รอข้อมูลลูกค้า"}</Text>
+        <Text style={styles.row}>สถานะงาน: {formatJobStatus(topJob?.status)}</Text>
+        <Text style={styles.row}>{offerExpiresAt ? `รับงานก่อน ${offerExpiresAt}` : "เมื่อมีงานใหม่ ระบบจะแสดงเวลาหมดอายุของ offer"}</Text>
+      </View>
+      <View style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>บริการที่ทำได้</Text>
+        <Text style={styles.row}>{profile?.skills?.length ? profile.skills.slice(0, 3).join(" · ") : "กำลังโหลด skill"}</Text>
+        <Text style={styles.mutedRow}>{profile?.workingHours?.length ? profile.workingHours.slice(0, 2).join(" · ") : "กำลังโหลดเวลาทำงาน"}</Text>
+      </View>
       <View style={styles.actions}>
         {(["online", "busy", "offline"] as const).map((onlineStatus) => (
           <Pressable
@@ -272,7 +296,7 @@ export function ProviderJobScreen() {
           onPress={handleAccept}
           style={({ pressed }) => [styles.button, pressed ? styles.buttonPressed : null]}
         >
-          <Text style={styles.buttonText}>Accept</Text>
+          <Text style={styles.buttonText}>รับงาน</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -280,7 +304,7 @@ export function ProviderJobScreen() {
           onPress={handleReject}
           style={({ pressed }) => [styles.rejectButton, pressed ? styles.buttonPressed : null]}
         >
-          <Text style={styles.rejectButtonText}>Reject</Text>
+          <Text style={styles.rejectButtonText}>ปฏิเสธ</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -288,7 +312,7 @@ export function ProviderJobScreen() {
           onPress={handleOnTheWay}
           style={({ pressed }) => [styles.buttonSecondary, pressed ? styles.buttonPressed : null]}
         >
-          <Text style={styles.buttonSecondaryText}>{status === "saving" ? "Saving..." : "On the way"}</Text>
+          <Text style={styles.buttonSecondaryText}>{status === "saving" ? "กำลังบันทึก..." : "กำลังเดินทาง"}</Text>
         </Pressable>
       </View>
       <Pressable
@@ -298,16 +322,20 @@ export function ProviderJobScreen() {
         style={({ pressed }) => [styles.radiusButton, pressed ? styles.buttonPressed : null]}
       >
         <Text style={styles.radiusButtonText}>
-          {status === "saving" ? "Checking..." : "Check service radius"}
+          {status === "saving" ? "กำลังตรวจ..." : "ตรวจพื้นที่ให้บริการ"}
         </Text>
       </Pressable>
       {radiusCheck ? (
         <Text style={radiusCheck.withinRadius ? styles.result : styles.warning}>
-          {radiusCheck.withinRadius ? "Inside service area" : "Outside service area"} · {(radiusCheck.distanceMeters / 1000).toFixed(2)} km
-          from base
+          {radiusCheck.withinRadius ? "อยู่ในพื้นที่ให้บริการ" : "อยู่นอกพื้นที่ให้บริการ"} · {(radiusCheck.distanceMeters / 1000).toFixed(2)} กม.
         </Text>
       ) : null}
-      <View style={styles.actions}>
+      <View style={styles.locationCard}>
+        <View>
+          <Text style={styles.sectionTitle}>แชร์ตำแหน่งระหว่างเดินทาง</Text>
+          <Text style={styles.mutedRow}>ลูกค้าจะเห็นตำแหน่งเฉพาะตอนมีงาน active และเก็บตาม retention policy</Text>
+        </View>
+        <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
           disabled={status === "saving"}
@@ -315,7 +343,7 @@ export function ProviderJobScreen() {
           style={({ pressed }) => [styles.buttonSecondary, pressed ? styles.buttonPressed : null]}
         >
           <Text style={styles.buttonSecondaryText}>
-            {locationConsentAccepted ? "Consent saved" : "Allow location"}
+            {locationConsentAccepted ? "ยินยอมแล้ว" : "อนุญาตตำแหน่ง"}
           </Text>
         </Pressable>
         <Pressable
@@ -328,23 +356,24 @@ export function ProviderJobScreen() {
             pressed ? styles.buttonPressed : null,
           ]}
         >
-          <Text style={styles.buttonText}>Send location</Text>
+          <Text style={styles.buttonText}>ส่งตำแหน่ง</Text>
         </Pressable>
+        </View>
       </View>
       {locationResult ? (
         <Text style={styles.result}>
-          Location visible to active customer · retained {locationResult.retentionHours}h
+          ลูกค้าเห็นตำแหน่งสำหรับงานนี้แล้ว · เก็บ {locationResult.retentionHours} ชม.
         </Text>
       ) : null}
       {topJob ? (
         <View style={styles.communicationBox}>
-          <Text style={styles.sectionTitle}>Customer messages</Text>
+          <Text style={styles.sectionTitle}>ข้อความกับลูกค้า</Text>
           <Text style={styles.row}>
             {communicationStatus === "loading"
-              ? "Loading messages..."
+              ? "กำลังโหลดข้อความ..."
               : communications.length
-                ? `${communications.length} booking message(s)`
-                : "No customer-provider messages yet"}
+                ? `${communications.length} ข้อความ`
+                : "ยังไม่มีข้อความระหว่างลูกค้าและผู้ให้บริการ"}
           </Text>
           {communications.map((item) => (
             <View key={item.id} style={styles.communicationItem}>
@@ -358,8 +387,8 @@ export function ProviderJobScreen() {
             multiline
             value={communicationText}
             onChangeText={setCommunicationText}
-            placeholder="Message the customer"
-            placeholderTextColor="#81908c"
+            placeholder="พิมพ์ข้อความถึงลูกค้า"
+            placeholderTextColor={colors.textMuted}
             style={styles.messageInput}
           />
           <Pressable
@@ -372,11 +401,11 @@ export function ProviderJobScreen() {
               pressed ? styles.buttonPressed : null,
             ]}
           >
-            <Text style={styles.buttonText}>{communicationStatus === "sending" ? "Sending..." : "Send message"}</Text>
+            <Text style={styles.buttonText}>{communicationStatus === "sending" ? "กำลังส่ง..." : "ส่งข้อความ"}</Text>
           </Pressable>
-          {communicationStatus === "error" ? <Text style={styles.warning}>Messages are unavailable right now.</Text> : null}
+          {communicationStatus === "error" ? <Text style={styles.warning}>ยังใช้ข้อความไม่ได้ในขณะนี้</Text> : null}
           <View style={styles.supportBox}>
-            <Text style={styles.sectionTitle}>Need support?</Text>
+            <Text style={styles.sectionTitle}>ต้องการให้ทีมช่วยดูแล?</Text>
             <TextInput
               multiline
               value={supportRequestText}
@@ -384,8 +413,8 @@ export function ProviderJobScreen() {
                 setSupportRequestText(text);
                 if (supportStatus === "sent" || supportStatus === "error") setSupportStatus("idle");
               }}
-              placeholder="Tell operations what happened"
-              placeholderTextColor="#81908c"
+              placeholder="แจ้งทีมดูแลว่าเกิดอะไรขึ้น"
+              placeholderTextColor={colors.textMuted}
               style={styles.messageInput}
             />
             <View style={styles.actions}>
@@ -399,7 +428,7 @@ export function ProviderJobScreen() {
                   pressed ? styles.buttonPressed : null,
                 ]}
               >
-                <Text style={styles.buttonSecondaryText}>Request support</Text>
+                <Text style={styles.buttonSecondaryText}>ขอความช่วยเหลือ</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
@@ -411,11 +440,11 @@ export function ProviderJobScreen() {
                   pressed ? styles.buttonPressed : null,
                 ]}
               >
-                <Text style={styles.rejectButtonText}>Report safety</Text>
+                <Text style={styles.rejectButtonText}>แจ้งความปลอดภัย</Text>
               </Pressable>
             </View>
-            {supportStatus === "sent" ? <Text style={styles.result}>Support request sent privately to operations.</Text> : null}
-            {supportStatus === "error" ? <Text style={styles.warning}>Could not send support request.</Text> : null}
+            {supportStatus === "sent" ? <Text style={styles.result}>ส่งเรื่องให้ทีมดูแลแล้ว</Text> : null}
+            {supportStatus === "error" ? <Text style={styles.warning}>ยังส่งเรื่องไม่ได้</Text> : null}
             {supportCases.length > 0 ? (
               <View style={styles.caseList}>
                 {supportCases.map((supportCase) => (
@@ -426,7 +455,7 @@ export function ProviderJobScreen() {
                     <Text style={styles.row}>
                       {supportCase.status === "resolved" && supportCase.resolutionNote
                         ? supportCase.resolutionNote
-                        : "Operations has your request."}
+                        : "ทีมดูแลรับเรื่องแล้ว"}
                     </Text>
                   </View>
                 ))}
@@ -435,23 +464,51 @@ export function ProviderJobScreen() {
           </View>
         </View>
       ) : null}
-      <Text style={styles.note}>{jobs.length} Supabase-backed job(s) available for this provider.</Text>
+      <Text style={styles.note}>งานและตำแหน่งเชื่อมกับ Supabase staging สำหรับรอบทดสอบนี้</Text>
     </View>
   );
 }
 
+function formatOnlineStatus(status?: ProviderProfileDto["onlineStatus"]) {
+  if (status === "online") return "พร้อมรับงาน";
+  if (status === "busy") return "กำลังให้บริการ";
+  if (status === "offline") return "ปิดรับงาน";
+  return "กำลังโหลด";
+}
+
+function formatOfferStatus(status?: BookingListItemDto["offerStatus"]) {
+  if (status === "offered") return "รอรับงาน";
+  if (status === "accepted") return "รับแล้ว";
+  if (status === "rejected") return "ปฏิเสธ";
+  if (status === "expired") return "หมดเวลา";
+  return "ไม่มี offer";
+}
+
+function formatJobStatus(status?: BookingListItemDto["status"]) {
+  const labels: Record<string, string> = {
+    pending_payment: "รอชำระเงิน",
+    payment_confirmed: "ชำระเงินแล้ว",
+    confirmed: "ยืนยันแล้ว",
+    provider_assigned: "มอบหมายงานแล้ว",
+    provider_on_the_way: "กำลังเดินทาง",
+    completed: "สำเร็จ",
+  };
+
+  return labels[status || ""] || status || "รอข้อมูล";
+}
+
 function formatCommunicationActor(actorRole: string) {
-  if (actorRole === "customer") return "Customer";
-  if (actorRole === "admin") return "Support";
-  return "You";
+  if (actorRole === "customer") return "ลูกค้า";
+  if (actorRole === "admin") return "ทีมดูแล";
+  return "คุณ";
 }
 
 function formatSupportReason(reasonCode: BookingSupportCaseDto["reasonCode"]) {
   const labels: Record<BookingSupportCaseDto["reasonCode"], string> = {
-    support_request: "Support request",
-    unsafe_message: "Safety report",
-    arrival_issue: "Arrival issue",
-    payment_issue: "Payment issue",
+    support_request: "ขอความช่วยเหลือ",
+    unsafe_message: "แจ้งความปลอดภัย",
+    arrival_issue: "ปัญหาการเดินทาง",
+    payment_issue: "ปัญหาการชำระเงิน",
   };
 
   return labels[reasonCode];
@@ -459,9 +516,9 @@ function formatSupportReason(reasonCode: BookingSupportCaseDto["reasonCode"]) {
 
 function formatSupportStatus(status: BookingSupportCaseDto["status"]) {
   const labels: Record<BookingSupportCaseDto["status"], string> = {
-    open: "Received",
-    in_review: "In review",
-    resolved: "Resolved",
+    open: "รับเรื่องแล้ว",
+    in_review: "กำลังตรวจสอบ",
+    resolved: "แก้ไขแล้ว",
   };
 
   return labels[status];
@@ -469,30 +526,138 @@ function formatSupportStatus(status: BookingSupportCaseDto["status"]) {
 
 const styles = StyleSheet.create({
   card: {
-    gap: 6,
+    gap: 10,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: "#fffaf0",
+    backgroundColor: colors.surface,
+  },
+  providerHero: {
+    minHeight: 132,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 14,
+    borderRadius: 8,
+    backgroundColor: colors.primaryDark,
+    padding: 14,
+  },
+  providerHeroCopy: {
+    flex: 1,
+    gap: 5,
   },
   label: {
-    color: "#6d7875",
+    color: colors.gold,
     fontSize: 12,
-    fontWeight: "800",
+    fontWeight: "900",
   },
   title: {
-    color: "#10231f",
-    fontSize: 18,
+    color: colors.surface,
+    fontSize: 24,
+    fontWeight: "900",
+    lineHeight: 30,
+  },
+  heroMeta: {
+    color: "rgba(255,255,255,0.8)",
+    lineHeight: 20,
+  },
+  providerAvatar: {
+    overflow: "hidden",
+    width: 54,
+    height: 54,
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "900",
+    lineHeight: 54,
+    textAlign: "center",
+  },
+  metricGrid: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  metricTile: {
+    flex: 1,
+    gap: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+  },
+  metricLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
     fontWeight: "800",
+  },
+  metricValue: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  jobCard: {
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    padding: 12,
+  },
+  jobCardHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  jobTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 24,
+  },
+  offerBadge: {
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  offerBadgeText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  infoCard: {
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    padding: 12,
+  },
+  locationCard: {
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    padding: 12,
   },
   row: {
-    color: "#10231f",
+    color: colors.text,
+    lineHeight: 20,
+  },
+  mutedRow: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
   },
   sectionTitle: {
-    color: "#10231f",
-    fontWeight: "800",
+    color: colors.text,
+    fontWeight: "900",
   },
   note: {
-    color: "#6d7875",
+    color: colors.textMuted,
     lineHeight: 20,
   },
   actions: {
@@ -503,7 +668,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "#0793a4",
+    backgroundColor: colors.primary,
     paddingVertical: 10,
   },
   buttonSecondary: {
@@ -511,8 +676,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#0793a4",
-    backgroundColor: "#fff",
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surface,
     paddingVertical: 10,
   },
   rejectButton: {
@@ -531,11 +696,11 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.surface,
     fontWeight: "800",
   },
   buttonSecondaryText: {
-    color: "#0793a4",
+    color: colors.primary,
     fontWeight: "800",
   },
   rejectButtonText: {
@@ -543,7 +708,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   result: {
-    color: "#087f5b",
+    color: colors.primary,
     fontWeight: "800",
   },
   warning: {
@@ -553,7 +718,7 @@ const styles = StyleSheet.create({
   radiusButton: {
     alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "#10231f",
+    backgroundColor: colors.text,
     paddingVertical: 10,
   },
   radiusButtonText: {
@@ -564,48 +729,48 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingVertical: 8,
   },
   statusChipActive: {
-    borderColor: "#0793a4",
-    backgroundColor: "#e7f7f4",
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceMuted,
   },
   statusChipText: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontWeight: "800",
   },
   statusChipTextActive: {
-    color: "#0793a4",
+    color: colors.primary,
   },
   communicationBox: {
     gap: 8,
     borderWidth: 1,
-    borderColor: "#d8e7eb",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#f6fcfd",
+    backgroundColor: colors.surfaceSoft,
     padding: 10,
   },
   communicationItem: {
     gap: 3,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     padding: 9,
   },
   communicationMeta: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontSize: 12,
     fontWeight: "800",
   },
   messageInput: {
     minHeight: 72,
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#fff",
-    color: "#10231f",
+    backgroundColor: colors.surface,
+    color: colors.text,
     paddingHorizontal: 10,
     paddingVertical: 9,
     textAlignVertical: "top",
@@ -613,7 +778,7 @@ const styles = StyleSheet.create({
   supportBox: {
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: "#d8e7eb",
+    borderTopColor: colors.border,
     paddingTop: 10,
   },
   caseList: {
@@ -622,7 +787,7 @@ const styles = StyleSheet.create({
   caseItem: {
     gap: 3,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     padding: 9,
   },
 });

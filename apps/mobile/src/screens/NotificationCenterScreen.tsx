@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "../design/theme";
 import { getNotifications, markNotificationRead, type NotificationDto } from "../services/api";
 
 type InboxRole = "customer" | "provider";
@@ -39,9 +40,9 @@ export function NotificationCenterScreen() {
   return (
     <View style={styles.card}>
       <Text style={styles.label}>Notifications</Text>
-      <Text style={styles.title}>{role === "customer" ? "Customer inbox" : "Provider inbox"}</Text>
+      <Text style={styles.title}>{role === "customer" ? "กล่องข้อความลูกค้า" : "กล่องข้อความผู้ให้บริการ"}</Text>
       <Text style={styles.countText}>
-        {unreadCount > 0 ? `${unreadCount} unread update(s)` : "All caught up"}
+        {unreadCount > 0 ? `${unreadCount} รายการยังไม่ได้อ่าน` : "ไม่มีข้อความใหม่"}
       </Text>
       <View style={styles.roleSwitch}>
         {(["customer", "provider"] as const).map((nextRole) => (
@@ -68,14 +69,14 @@ export function NotificationCenterScreen() {
         onPress={loadNotifications}
         style={({ pressed }) => [styles.button, pressed ? styles.buttonPressed : null]}
       >
-        <Text style={styles.buttonText}>{status === "loading" ? "Loading..." : status === "saving" ? "Saving..." : "Refresh"}</Text>
+        <Text style={styles.buttonText}>{status === "loading" ? "กำลังโหลด..." : status === "saving" ? "กำลังบันทึก..." : "Refresh"}</Text>
       </Pressable>
       <View style={styles.list}>
         {notifications.map((notification) => (
           <View key={notification.id} style={[styles.item, !notification.readAt ? styles.itemUnread : null]}>
             <View style={styles.itemHeader}>
               <Text style={styles.itemTitle}>{notification.title}</Text>
-              {!notification.readAt ? <Text style={styles.unreadBadge}>New</Text> : null}
+              {!notification.readAt ? <Text style={styles.unreadBadge}>ใหม่</Text> : null}
             </View>
             <Text style={styles.itemBody}>{notification.body}</Text>
             <Text style={styles.itemMeta}>{new Date(notification.createdAt).toLocaleString("th-TH")}</Text>
@@ -86,13 +87,13 @@ export function NotificationCenterScreen() {
                 onPress={() => handleMarkRead(notification.id)}
                 style={({ pressed }) => [styles.readButton, pressed ? styles.buttonPressed : null]}
               >
-                <Text style={styles.readButtonText}>Mark as read</Text>
+                <Text style={styles.readButtonText}>อ่านแล้ว</Text>
               </Pressable>
             ) : null}
           </View>
         ))}
-        {status === "ready" && notifications.length === 0 ? <Text style={styles.note}>No notifications yet.</Text> : null}
-        {status === "error" ? <Text style={styles.error}>Could not load notifications.</Text> : null}
+        {status === "ready" && notifications.length === 0 ? <Text style={styles.note}>ยังไม่มีการแจ้งเตือน</Text> : null}
+        {status === "error" ? <Text style={styles.error}>โหลดการแจ้งเตือนไม่สำเร็จ</Text> : null}
       </View>
     </View>
   );
@@ -103,20 +104,20 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   label: {
-    color: "#6d7875",
+    color: colors.textMuted,
     fontSize: 12,
     fontWeight: "800",
   },
   title: {
-    color: "#10231f",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "800",
   },
   countText: {
-    color: "#087f5b",
+    color: colors.primary,
     fontWeight: "800",
   },
   roleSwitch: {
@@ -127,33 +128,33 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#d7e2df",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingVertical: 9,
   },
   roleChipActive: {
-    borderColor: "#0793a4",
-    backgroundColor: "#e7f7f4",
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceMuted,
   },
   roleChipText: {
-    color: "#50615d",
+    color: colors.textSoft,
     fontWeight: "800",
   },
   roleChipTextActive: {
-    color: "#0793a4",
+    color: colors.primary,
   },
   button: {
     alignItems: "center",
     borderRadius: 8,
-    backgroundColor: "#0793a4",
+    backgroundColor: colors.primary,
     paddingVertical: 10,
   },
   buttonPressed: {
     opacity: 0.78,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.surface,
     fontWeight: "800",
   },
   list: {
@@ -162,14 +163,14 @@ const styles = StyleSheet.create({
   item: {
     gap: 3,
     borderWidth: 1,
-    borderColor: "#edf3f1",
+    borderColor: colors.border,
     borderRadius: 8,
-    backgroundColor: "#f8fbfa",
+    backgroundColor: colors.surfaceSoft,
     padding: 10,
   },
   itemUnread: {
-    borderColor: "#9bd5d8",
-    backgroundColor: "#f1fbfb",
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceMuted,
   },
   itemHeader: {
     flexDirection: "row",
@@ -179,39 +180,39 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     flex: 1,
-    color: "#10231f",
+    color: colors.text,
     fontWeight: "800",
   },
   unreadBadge: {
     borderRadius: 8,
-    backgroundColor: "#0793a4",
-    color: "#fff",
+    backgroundColor: colors.primary,
+    color: colors.surface,
     fontSize: 11,
     fontWeight: "800",
     paddingHorizontal: 7,
     paddingVertical: 3,
   },
   itemBody: {
-    color: "#50615d",
+    color: colors.textSoft,
     lineHeight: 20,
   },
   itemMeta: {
-    color: "#6d7875",
+    color: colors.textMuted,
     fontSize: 12,
   },
   note: {
-    color: "#6d7875",
+    color: colors.textMuted,
   },
   readButton: {
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#0793a4",
+    borderColor: colors.primary,
     borderRadius: 8,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     paddingVertical: 8,
   },
   readButtonText: {
-    color: "#0793a4",
+    color: colors.primary,
     fontWeight: "800",
   },
   error: {
