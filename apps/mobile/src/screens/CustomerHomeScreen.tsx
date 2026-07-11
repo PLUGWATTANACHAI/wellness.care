@@ -289,6 +289,20 @@ export function CustomerHomeScreen() {
   const holdMinutes = Math.floor(holdSecondsRemaining / 60);
   const holdSeconds = holdSecondsRemaining % 60;
   const holdCountdownText = `${holdMinutes}:${holdSeconds.toString().padStart(2, "0")}`;
+  const bookingProgress = [
+    { label: "บริการ", done: Boolean(selectedServiceId), active: !latestBooking },
+    { label: "เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
+    { label: "ที่อยู่", done: addressConfirmed, active: !addressConfirmed },
+    { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: Boolean(latestBooking) },
+  ];
+  const paymentReadyText = latestBooking
+    ? reviewAccepted
+      ? priceBreakdown && slotHold?.held
+        ? `พร้อมชำระ ฿${priceBreakdown.totalTHB.toLocaleString("th-TH")}`
+        : "คิวหมดเวลา กรุณาจองใหม่อีกครั้ง"
+      : "กรุณายืนยันข้อมูลก่อนชำระเงิน"
+    : "กรุณายืนยันการจองก่อนชำระเงิน";
+
   return (
     <View style={styles.card}>
       <View style={styles.screenHeader}>
@@ -386,6 +400,24 @@ export function CustomerHomeScreen() {
       <View style={styles.sectionTitleRow}>
         <Text style={styles.sectionTitle}>เริ่มจองบริการ</Text>
         <Text style={styles.sectionAction}>{selectedService?.name ?? "เลือกบริการ"}</Text>
+      </View>
+      <View style={styles.bookingProgressCard}>
+        <View style={styles.progressTrack}>
+          {bookingProgress.map((step, index) => (
+            <View key={step.label} style={styles.progressItem}>
+              <Text
+                style={[
+                  styles.progressDot,
+                  step.done ? styles.progressDotDone : null,
+                  step.active && !step.done ? styles.progressDotActive : null,
+                ]}
+              >
+                {step.done ? "✓" : index + 1}
+              </Text>
+              <Text style={[styles.progressLabel, step.done || step.active ? styles.progressLabelActive : null]}>{step.label}</Text>
+            </View>
+          ))}
+        </View>
       </View>
       <View style={styles.stepCard}>
         <View style={styles.stepHeader}>
@@ -494,9 +526,6 @@ export function CustomerHomeScreen() {
           </Text>
         </Pressable>
       </View>
-      {latestBooking ? (
-        <Text style={styles.result}>Booking {latestBooking.code} · {formatBookingStatus(latestBooking.status)}</Text>
-      ) : null}
       <Pressable
         accessibilityRole="button"
         disabled={status === "loading" || status === "creating" || !canCreateBooking}
@@ -509,6 +538,21 @@ export function CustomerHomeScreen() {
       >
         <Text style={styles.buttonText}>{status === "creating" ? "กำลังสร้างการจอง..." : "ยืนยันการจอง"}</Text>
       </Pressable>
+      {latestBooking ? (
+        <View style={styles.bookingConfirmedCard}>
+          <View>
+            <Text style={styles.confirmedLabel}>Booking confirmed</Text>
+            <Text style={styles.confirmedCode}>{latestBooking.code}</Text>
+          </View>
+          <View style={styles.confirmedPill}>
+            <Text style={styles.confirmedPillText}>{formatBookingStatus(latestBooking.status)}</Text>
+          </View>
+          <Text style={styles.confirmedMeta}>{selectedSlot.label} · {selectedService?.name ?? latestBooking.serviceId}</Text>
+          <Text style={styles.confirmedMeta}>
+            {slotHold?.held ? `คิวถูกล็อกไว้ · เหลือ ${holdCountdownText}` : "คิวหมดเวลา กรุณาตรวจผู้ให้บริการอีกครั้ง"}
+          </Text>
+        </View>
+      ) : null}
       {latestBooking ? (
         <View style={styles.reviewBox}>
           <Text style={styles.trackingTitle}>ตรวจสอบก่อนชำระเงิน</Text>
@@ -563,19 +607,33 @@ export function CustomerHomeScreen() {
             accessibilityRole="button"
             onPress={() => setReviewAccepted((accepted) => !accepted)}
             style={({ pressed }) => [
-              styles.confirmButton,
-              reviewAccepted ? styles.confirmButtonActive : null,
+              styles.reviewConsentRow,
+              reviewAccepted ? styles.reviewConsentRowActive : null,
               pressed ? styles.buttonPressed : null,
             ]}
           >
-            <Text style={[styles.confirmButtonText, reviewAccepted ? styles.confirmButtonTextActive : null]}>
-              {reviewAccepted ? "ตรวจสอบข้อมูลแล้ว" : "ยืนยันข้อมูลก่อนชำระเงิน"}
+            <Text style={[styles.reviewCheckbox, reviewAccepted ? styles.reviewCheckboxActive : null]}>{reviewAccepted ? "✓" : ""}</Text>
+            <Text style={[styles.reviewConsentText, reviewAccepted ? styles.reviewConsentTextActive : null]}>
+              ตรวจสอบบริการ เวลา ที่อยู่ ยอดชำระ และเงื่อนไขการยกเลิกแล้ว
             </Text>
           </Pressable>
         </View>
       ) : null}
-      <View style={styles.paymentBox}>
-        <Text style={styles.trackingTitle}>ชำระเงิน</Text>
+      {latestBooking ? <View style={styles.paymentBox}>
+        <View style={styles.paymentHeader}>
+          <View>
+            <Text style={styles.trackingTitle}>ชำระเงิน</Text>
+            <Text style={styles.paymentCaption}>PromptPay / QR พร้อมใช้ก่อน บัตรเครดิตจะตามหลังเมื่อ tokenization พร้อม</Text>
+          </View>
+          <Text style={styles.paymentStatusBadge}>{paymentIntent?.status === "succeeded" ? "Paid" : "Pending"}</Text>
+        </View>
+        <View style={styles.paymentReadyCard}>
+          <Text style={styles.paymentReadyLabel}>ยอดสำหรับรายการนี้</Text>
+          <Text style={styles.paymentReadyValue}>
+            {priceBreakdown ? `฿${priceBreakdown.totalTHB.toLocaleString("th-TH")}` : latestBooking ? `฿${latestBooking.totalTHB.toLocaleString("th-TH")}` : "รอยืนยันการจอง"}
+          </Text>
+          <Text style={styles.paymentReadyMeta}>{paymentReadyText}</Text>
+        </View>
         <View style={styles.paymentMethodRow}>
           <Pressable
             accessibilityRole="button"
@@ -595,6 +653,7 @@ export function CustomerHomeScreen() {
           </Pressable>
           <Pressable
             accessibilityRole="button"
+            disabled
             onPress={() => {
               setPaymentMethod("card");
               setPaymentIntent(undefined);
@@ -602,59 +661,52 @@ export function CustomerHomeScreen() {
             style={({ pressed }) => [
               styles.methodChip,
               paymentMethod === "card" ? styles.methodChipActive : null,
+              styles.methodChipDisabled,
               pressed ? styles.buttonPressed : null,
             ]}
           >
             <Text style={[styles.methodChipText, paymentMethod === "card" ? styles.methodChipTextActive : null]}>
-              บัตรเครดิต
+              บัตรเครดิต · เร็ว ๆ นี้
             </Text>
           </Pressable>
         </View>
-        <Text style={styles.row}>
-          {paymentIntent
-            ? `฿${paymentIntent.amountTHB.toLocaleString("th-TH")} · ${paymentIntent.paymentMethod} · ${paymentIntent.status}`
-            : latestBooking
-              ? reviewAccepted
-                ? priceBreakdown && slotHold?.held
-                  ? `พร้อมชำระ ฿${priceBreakdown.totalTHB.toLocaleString("th-TH")}`
-                  : "คิวหมดเวลา กรุณาจองใหม่อีกครั้ง"
-                : "กรุณายืนยันข้อมูลก่อนชำระเงิน"
-              : "กรุณายืนยันการจองก่อนชำระเงิน"}
-        </Text>
-        <View style={styles.paymentActions}>
-          <Pressable
-            accessibilityRole="button"
-            disabled={!canCreatePaymentIntent}
-            onPress={handleCreatePaymentIntent}
-            style={({ pressed }) => [
-              styles.buttonSecondary,
-              !canCreatePaymentIntent ? styles.buttonDisabled : null,
-              pressed ? styles.buttonPressed : null,
-            ]}
-          >
-            <Text style={styles.buttonSecondaryText}>
-              {paymentStatus === "creating" ? "กำลังสร้างรายการ..." : paymentMethod === "promptpay" ? "เปิด QR PromptPay" : "บัตรเครดิตจะเปิดใช้งานเร็ว ๆ นี้"}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={!paymentIntent || paymentIntent.status === "succeeded" || paymentStatus === "confirming"}
-            onPress={handleConfirmPayment}
-            style={({ pressed }) => [
-              styles.button,
-              !paymentIntent || paymentIntent.status === "succeeded" ? styles.buttonDisabled : null,
-              pressed ? styles.buttonPressed : null,
-            ]}
-          >
-            <Text style={styles.buttonText}>
-              {paymentStatus === "confirming"
-                ? "กำลังยืนยัน..."
-                : paymentIntent?.provider === "sandbox"
-                  ? "ยืนยันการชำระเงิน"
-                  : "เปิดหน้าชำระเงินอีกครั้ง"}
-            </Text>
-          </Pressable>
-        </View>
+        {paymentIntent ? (
+          <View style={styles.qrPreviewCard}>
+            <Text style={styles.qrMark}>QR</Text>
+            <View style={styles.qrCopy}>
+              <Text style={styles.qrTitle}>{paymentIntent.provider === "sandbox" ? "Sandbox PromptPay" : "Opn / Omise Checkout"}</Text>
+              <Text style={styles.qrMeta}>฿{paymentIntent.amountTHB.toLocaleString("th-TH")} · {paymentIntent.paymentMethod} · {paymentIntent.status}</Text>
+            </View>
+          </View>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          disabled={
+            paymentIntent
+              ? paymentIntent.status === "succeeded" || paymentStatus === "confirming"
+              : !canCreatePaymentIntent
+          }
+          onPress={paymentIntent ? handleConfirmPayment : handleCreatePaymentIntent}
+          style={({ pressed }) => [
+            styles.button,
+            paymentIntent
+              ? paymentIntent.status === "succeeded" || paymentStatus === "confirming" ? styles.buttonDisabled : null
+              : !canCreatePaymentIntent ? styles.buttonDisabled : null,
+            pressed ? styles.buttonPressed : null,
+          ]}
+        >
+          <Text style={styles.buttonText}>
+            {paymentStatus === "creating"
+              ? "กำลังสร้าง QR..."
+              : paymentStatus === "confirming"
+                ? "กำลังตรวจสอบ..."
+                : paymentIntent
+                  ? paymentIntent.provider === "sandbox"
+                    ? "ตรวจสอบสถานะชำระเงิน"
+                    : "เปิดหน้าชำระเงินอีกครั้ง"
+                  : "สร้าง QR เพื่อชำระเงิน"}
+          </Text>
+        </Pressable>
         {paymentMethod === "card" ? (
           <Text style={styles.note}>
             บัตรเครดิตจะเปิดหลังเพิ่มระบบเก็บ token ที่ปลอดภัยครบถ้วน
@@ -662,7 +714,7 @@ export function CustomerHomeScreen() {
         ) : null}
         {paymentIntent?.checkoutUrl ? <Text style={styles.note}>ชำระเงินในหน้า Omise/QR ที่เปิดขึ้น ระบบจะยืนยันการจองหลังได้รับสถานะชำระเงิน</Text> : null}
         {paymentStatus === "error" ? <Text style={styles.error}>ชำระเงินไม่สำเร็จ กรุณาลองอีกครั้ง</Text> : null}
-      </View>
+      </View> : null}
       <View style={styles.trackingBox}>
         <Text style={styles.trackingTitle}>ติดตามผู้ให้บริการ</Text>
         <Text style={styles.row}>จะแสดงเมื่อผู้ให้บริการรับงานและเริ่มเดินทาง</Text>
@@ -919,6 +971,54 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
+  bookingProgressCard: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    padding: 10,
+  },
+  progressTrack: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  progressItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 5,
+  },
+  progressDot: {
+    overflow: "hidden",
+    width: 26,
+    height: 26,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 24,
+    textAlign: "center",
+  },
+  progressDotDone: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+    color: colors.surface,
+  },
+  progressDotActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.gold,
+    color: colors.text,
+  },
+  progressLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  progressLabelActive: {
+    color: colors.primaryDark,
+  },
   row: {
     color: colors.text,
     lineHeight: 20,
@@ -1111,6 +1211,41 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceSoft,
     padding: 12,
   },
+  bookingConfirmedCard: {
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.primaryDark,
+    padding: 12,
+  },
+  confirmedLabel: {
+    color: colors.gold,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  confirmedCode: {
+    color: colors.surface,
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 26,
+  },
+  confirmedPill: {
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  confirmedPillText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  confirmedMeta: {
+    color: "rgba(255,255,255,0.82)",
+    lineHeight: 20,
+  },
   reviewRow: {
     flexDirection: "row",
     gap: 10,
@@ -1144,6 +1279,49 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     lineHeight: 18,
+  },
+  reviewConsentRow: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+  },
+  reviewConsentRowActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceMuted,
+  },
+  reviewCheckbox: {
+    overflow: "hidden",
+    width: 24,
+    height: 24,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 6,
+    color: colors.surface,
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 22,
+    textAlign: "center",
+  },
+  reviewCheckboxActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  reviewConsentText: {
+    flex: 1,
+    color: colors.textSoft,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 18,
+  },
+  reviewConsentTextActive: {
+    color: colors.primaryDark,
   },
   availabilityButton: {
     alignItems: "center",
@@ -1284,12 +1462,95 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.surfaceSoft,
   },
+  methodChipDisabled: {
+    opacity: 0.55,
+  },
   methodChipText: {
     color: colors.textSoft,
     fontWeight: "800",
   },
   methodChipTextActive: {
     color: colors.primaryDark,
+  },
+  paymentHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  paymentCaption: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  paymentStatusBadge: {
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  paymentReadyCard: {
+    gap: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    padding: 10,
+  },
+  paymentReadyLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  paymentReadyValue: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "900",
+    lineHeight: 28,
+  },
+  paymentReadyMeta: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  qrPreviewCard: {
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    padding: 10,
+  },
+  qrMark: {
+    overflow: "hidden",
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: colors.text,
+    color: colors.surface,
+    fontWeight: "900",
+    lineHeight: 42,
+    textAlign: "center",
+  },
+  qrCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  qrTitle: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  qrMeta: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
   },
   timelineBox: {
     gap: 8,
