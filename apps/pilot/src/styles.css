@@ -714,7 +714,7 @@ input {
 
 .stepTabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
   gap: 6px;
   margin-top: 10px;
 }
@@ -724,7 +724,7 @@ input {
   border: 1px solid #d8c8b6;
   background: #fbf7f0;
   color: #7d6d5c;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .stepTabs .active {
@@ -737,6 +737,68 @@ input {
   display: grid;
   gap: 12px;
   padding: 14px;
+}
+
+.clinicDetailPanel {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #d8c8b6;
+  border-radius: 14px;
+  background: #fffaf2;
+  padding: 12px;
+}
+
+.clinicDetailPanel p,
+.clinicPromoPanel p {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.clinicPromoPanel {
+  display: grid;
+  gap: 4px;
+  border: 1px solid #c9b49c;
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px;
+}
+
+.clinicPromoPanel span {
+  color: #6d4c2f;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.clinicPackageList {
+  display: grid;
+  gap: 8px;
+}
+
+.clinicPackage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #d8c8b6;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text-main);
+  padding: 11px 12px;
+  text-align: left;
+}
+
+.clinicPackage.selected {
+  border-color: #6d4c2f;
+  background: #f4eadc;
+}
+
+.clinicPackage span {
+  color: var(--text-soft);
+  font-size: 12px;
 }
 
 .formGrid {

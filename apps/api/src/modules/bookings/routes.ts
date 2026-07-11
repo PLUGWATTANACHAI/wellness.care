@@ -71,6 +71,7 @@ export function registerBookingRoutes(app: FastifyInstance) {
       serviceId: string;
       addressId: string;
       scheduledAt: string;
+      partnerClinicId: string;
     }>;
 
     if (!body.serviceId || !body.addressId || !body.scheduledAt) {
@@ -88,6 +89,7 @@ export function registerBookingRoutes(app: FastifyInstance) {
           serviceId: body.serviceId,
           addressId: body.addressId,
           scheduledAt: scheduledAt.toISOString(),
+          partnerClinicId: body.partnerClinicId,
         },
         getCurrentUser(request),
       );

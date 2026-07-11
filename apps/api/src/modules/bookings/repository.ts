@@ -10,6 +10,7 @@ export interface CreateBookingInput {
   serviceId: string;
   addressId: string;
   scheduledAt: string;
+  partnerClinicId?: string;
 }
 
 export interface ProviderAvailabilityCheck {
@@ -924,9 +925,11 @@ export async function createBookingDraft(input: CreateBookingInput, customer: Cu
           address_id,
           status,
           scheduled_at,
-          total_thb
+          total_thb,
+          partner_clinic_id,
+          booking_channel
         )
-        VALUES ($1, $2, $3, $4, $5, 'payment_pending', $6, $7)
+        VALUES ($1, $2, $3, $4, $5, 'payment_pending', $6, $7, $8, $9)
         RETURNING
           id,
           code,
@@ -947,6 +950,8 @@ export async function createBookingDraft(input: CreateBookingInput, customer: Cu
         input.addressId,
         input.scheduledAt,
         service.price_thb,
+        input.partnerClinicId ?? null,
+        input.partnerClinicId ? "partner_clinic" : "home_service",
       ],
     );
 

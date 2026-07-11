@@ -12,6 +12,7 @@ const state = {
   signupPhone: "",
   signupPasscode: "",
   serviceId: "massage",
+  clinicId: "",
   date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
   time: "19:30",
   address: "The Line Sathorn, Tower A",
@@ -37,8 +38,13 @@ function selectedService() {
   return services.find((service) => service.id === state.serviceId) || services[0];
 }
 
+function selectedClinic() {
+  return partnerClinics.find((clinic) => clinic.id === state.clinicId);
+}
+
 function progressWidth() {
-  return `${Math.max(25, state.step * 25)}%`;
+  const maxSteps = selectedClinic() ? 5 : 4;
+  return `${Math.max(100 / maxSteps, state.step * (100 / maxSteps))}%`;
 }
 
 function loginScreen() {
@@ -172,7 +178,22 @@ function homeScreen() {
 
 function bookingScreen() {
   const service = selectedService();
+  const clinic = selectedClinic();
   const safeAddress = escapeHtml(state.address);
+  const tabs = clinic
+    ? [
+        [1, "คลินิก"],
+        [2, "หน้าคลินิก"],
+        [3, "วัน/เวลา"],
+        [4, "ยืนยัน"],
+        [5, "ชำระเงิน"],
+      ]
+    : [
+        [1, "บริการ"],
+        [2, "เวลา"],
+        [3, "ยืนยัน"],
+        [4, "ชำระเงิน"],
+      ];
   return `
     <section class="bookingScreen">
       <header class="appHeader compact">
@@ -185,10 +206,7 @@ function bookingScreen() {
       <div class="progressPanel">
         <div class="progressTrack"><span style="width:${progressWidth()}"></span></div>
         <div class="stepTabs">
-          <button class="${state.step === 1 ? "active" : ""}" data-action="step" data-step="1">บริการ</button>
-          <button class="${state.step === 2 ? "active" : ""}" data-action="step" data-step="2">เวลา</button>
-          <button class="${state.step === 3 ? "active" : ""}" data-action="step" data-step="3">ยืนยัน</button>
-          <button class="${state.step === 4 ? "active" : ""}" data-action="step" data-step="4">ติดตาม</button>
+          ${tabs.map(([step, label]) => `<button class="${state.step === step ? "active" : ""}" data-action="step" data-step="${step}">${label}</button>`).join("")}
         </div>
       </div>
 
@@ -200,18 +218,45 @@ function bookingScreen() {
         </div>
       ` : ""}
 
-      ${state.step === 2 ? `
+      ${clinic && state.step === 2 ? `
         <div class="screenBlock">
-          <h2>วัน เวลา และสถานที่</h2>
+          <h2>${clinic.name}</h2>
+          <article class="clinicDetailPanel">
+            <div class="clinicLogo">${clinic.name.slice(0, 1)}</div>
+            <div>
+              <strong>${clinic.headline}</strong>
+              <p>${clinic.address} · ${clinic.area}</p>
+            </div>
+          </article>
+          <article class="clinicPromoPanel">
+            <span>โปรโมชั่นคลินิก</span>
+            <strong>${clinic.promoTitle}</strong>
+            <p>${clinic.promoBody}</p>
+          </article>
+          <div class="clinicPackageList">
+            ${clinic.packages.map((item) => `
+              <button class="clinicPackage ${state.serviceId === item.serviceId ? "selected" : ""}" data-action="select-clinic-package" data-service="${item.serviceId}">
+                <strong>${item.name}</strong>
+                <span>${item.duration} · ${currency(item.price)}</span>
+              </button>
+            `).join("")}
+          </div>
+          <button class="primaryButton" data-action="step" data-step="3">เลือกวันเวลา</button>
+        </div>
+      ` : ""}
+
+      ${state.step === (clinic ? 3 : 2) ? `
+        <div class="screenBlock">
+          <h2>${clinic ? "วัน เวลา และคลินิก" : "วัน เวลา และสถานที่"}</h2>
           <div class="formGrid">
             <label class="fieldLabel">วันที่<input type="date" data-field="date" value="${state.date}" /></label>
             <label class="fieldLabel">เวลา<input type="time" data-field="time" value="${state.time}" /></label>
-            <label class="fieldLabel wide">คอนโด / ที่อยู่<input data-field="address" value="${safeAddress}" /></label>
+            <label class="fieldLabel wide">${clinic ? "คลินิก" : "คอนโด / ที่อยู่"}<input data-field="address" value="${clinic ? clinic.address : safeAddress}" /></label>
           </div>
           <div class="mapCard">
             <div class="pin"></div>
             <div>
-              <strong>${safeAddress}</strong>
+              <strong>${clinic ? clinic.name : safeAddress}</strong>
               <p>${state.placeConfirmed ? "ยืนยันสถานที่แล้ว" : "กดยืนยันหลังตรวจตำแหน่ง"}</p>
             </div>
           </div>
@@ -219,38 +264,33 @@ function bookingScreen() {
             <button class="secondaryButton" data-action="open-maps">ค้นหา Google Maps</button>
             <button class="secondaryButton ${state.placeConfirmed ? "confirmed" : ""}" data-action="confirm-place">ยืนยันพื้นที่</button>
           </div>
-          <button class="primaryButton" data-action="step" data-step="3">ตรวจสอบรายการ</button>
+          <button class="primaryButton" data-action="step" data-step="${clinic ? 4 : 3}">ตรวจสอบรายการ</button>
         </div>
       ` : ""}
 
-      ${state.step === 3 ? `
+      ${state.step === (clinic ? 4 : 3) ? `
         <div class="screenBlock">
           <h2>ตรวจสอบก่อนชำระเงิน</h2>
           <div class="summaryList">
             <div><span>บริการ</span><strong>${service.name}</strong></div>
+            ${clinic ? `<div><span>คลินิก</span><strong>${clinic.name}</strong></div>` : ""}
             <div><span>วันเวลา</span><strong>${state.date} · ${state.time}</strong></div>
-            <div><span>สถานที่</span><strong>${safeAddress}</strong></div>
-            <div><span>ผู้ให้บริการ</span><strong>Mina · 18 นาที</strong></div>
+            <div><span>สถานที่</span><strong>${clinic ? clinic.address : safeAddress}</strong></div>
+            <div><span>${clinic ? "รอบคลินิก" : "ผู้ให้บริการ"}</span><strong>${clinic ? "รอยืนยันจากคลินิก" : "Mina · 18 นาที"}</strong></div>
             <div><span>ยอดชำระ</span><strong>${currency(service.price)}</strong></div>
           </div>
+          <button class="primaryButton" data-action="step" data-step="${clinic ? 5 : 4}">ไปชำระเงิน</button>
+        </div>
+      ` : ""}
+
+      ${state.step === (clinic ? 5 : 4) ? `
+        <div class="screenBlock">
+          <h2>ชำระเงิน</h2>
           <div class="paymentSwitch">
             <button class="${state.payment === "promptpay" ? "active" : ""}" data-action="payment" data-payment="promptpay">PromptPay / QR</button>
             <button class="${state.payment === "card" ? "active" : ""}" data-action="payment" data-payment="card">บัตรเครดิต</button>
           </div>
           <button class="primaryButton" data-action="pay">${state.payment === "promptpay" ? "สร้าง QR ชำระเงิน" : "ชำระด้วยบัตร"}</button>
-        </div>
-      ` : ""}
-
-      ${state.step === 4 ? `
-        <div class="screenBlock">
-          <h2>ติดตามผู้ให้บริการ</h2>
-          <div class="trackingCard">
-            <div class="routeLine"><span></span><span></span><span></span></div>
-            <strong>${state.bookingCode || "WN-45821"}</strong>
-            <p>Mina กำลังเดินทางไปยัง ${safeAddress}</p>
-            <mark>ETA 18 นาที</mark>
-          </div>
-          <button class="secondaryButton" data-action="go-home">กลับหน้า Home</button>
         </div>
       ` : ""}
     </section>
@@ -271,7 +311,7 @@ function serviceCard(service) {
 
 function clinicCard(clinic) {
   return `
-    <button class="clinicCard" data-action="select-clinic" data-service="${clinic.serviceId}">
+    <button class="clinicCard" data-action="select-clinic" data-clinic="${clinic.id}" data-service="${clinic.serviceId}">
       <div class="clinicLogo">${clinic.name.slice(0, 1)}</div>
       <div>
         <strong>${clinic.name}</strong>
@@ -347,14 +387,22 @@ function bindEvents() {
   document.querySelectorAll("[data-action='select-service']").forEach((button) => {
     button.addEventListener("click", () => {
       state.serviceId = button.dataset.service;
+      state.clinicId = "";
       render();
     });
   });
   document.querySelectorAll("[data-action='select-clinic']").forEach((button) => {
     button.addEventListener("click", () => {
+      state.clinicId = button.dataset.clinic;
       state.serviceId = button.dataset.service;
       state.screen = "booking";
-      state.step = 1;
+      state.step = 2;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-action='select-clinic-package']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.serviceId = button.dataset.service;
       render();
     });
   });
@@ -367,6 +415,7 @@ function bindEvents() {
   });
   document.querySelectorAll("[data-action='start-booking']").forEach((button) => {
     button.addEventListener("click", () => {
+      state.clinicId = "";
       state.screen = "booking";
       state.step = 1;
       render();
@@ -396,7 +445,7 @@ function bindEvents() {
   });
   document.querySelector("[data-action='pay']")?.addEventListener("click", () => {
     state.bookingCode = `WN-${Math.floor(10000 + Math.random() * 89999)}`;
-    state.step = 4;
+    state.screen = "home";
     render();
   });
   document.querySelectorAll("[data-action='nav']").forEach((button) => {

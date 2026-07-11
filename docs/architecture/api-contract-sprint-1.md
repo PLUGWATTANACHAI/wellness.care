@@ -33,12 +33,39 @@ GET /services
 
 Returns active service catalog.
 
+## Partner Clinics
+
+```text
+GET /partner-clinics
+GET /partner-clinics/:id
+GET /partner-clinics/:id/slots
+```
+
+Customer app use:
+- Show partner clinic cards on Home.
+- Open a clinic detail page before date/time selection.
+- Show clinic promotions and clinic-specific service packages.
+- Load available clinic slots before confirmation.
+
 ## Bookings
 
 ```text
 POST /bookings
 GET /bookings/:id
 ```
+
+Partner clinic booking can include:
+
+```json
+{
+  "serviceId": "svc_beauty_90",
+  "addressId": "addr_river_001",
+  "scheduledAt": "2026-07-12T11:00:00.000Z",
+  "partnerClinicId": "clinic_sathorn_wellness"
+}
+```
+
+When `partnerClinicId` is present, backend stores `booking_channel = partner_clinic`.
 
 Access:
 - Customer: own booking only
@@ -98,4 +125,3 @@ Admin exact location access body:
   "reasonNote": "Customer requested support"
 }
 ```
-

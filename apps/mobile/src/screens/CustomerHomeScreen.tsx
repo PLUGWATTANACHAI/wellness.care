@@ -8,6 +8,8 @@ import {
   createBookingCommunication,
   createBookingSupportRequest,
   createPaymentIntent,
+  getPartnerClinics,
+  getPartnerClinicSlots,
   getCustomerProfile,
   getBookingCommunications,
   getBookingSupportCases,
@@ -22,6 +24,8 @@ import {
   type BookingSlotHoldDto,
   type BookingTimelineDto,
   type CustomerProfileDto,
+  type PartnerClinicDto,
+  type PartnerClinicSlotDto,
   type PaymentIntentDto,
   type PriceBreakdownDto,
   type ProviderAvailabilityDto,
@@ -41,29 +45,43 @@ const awCampaign = {
   body: "พื้นที่ AW สำหรับ artwork โปรโมชันหลัก ส่วนลดสมาชิก หรือแคมเปญพาร์ทเนอร์",
 };
 
-const partnerClinics = [
+const fallbackPartnerClinics: PartnerClinicDto[] = [
   {
-    id: "clinic-sathorn",
+    id: "clinic_sathorn_wellness",
     name: "Sathorn Wellness Clinic",
-    type: "Aroma recovery · Office stretch",
+    category: "Recovery clinic",
     area: "Sathorn · 1.8 km",
     address: "Empire Tower, Sathorn",
-    note: "รับ booking หลังเลิกงาน",
-    serviceId: "svc_beauty_90",
+    headline: "Aroma recovery และ office stretch หลังเลิกงาน",
+    description: "เหมาะกับลูกค้าที่ต้องการเข้าคลินิกพาร์ทเนอร์ใกล้ออฟฟิศหรือคอนโด",
+    promotionTitle: "After-work recovery",
+    promotionBody: "รับส่วนลดเปิดตัวสำหรับรอบ 18:00-21:00 ในวันธรรมดา",
+    services: [
+      { serviceId: "svc_beauty_90", name: "Aroma Recovery Session", priceTHB: 1590, durationMinutes: 90 },
+      { serviceId: "svc_massage_90", name: "Neck & Shoulder Recovery", priceTHB: 1290, durationMinutes: 90 },
+    ],
   },
   {
-    id: "clinic-langsuan",
+    id: "clinic_langsuan_recovery",
     name: "Langsuan Recovery Studio",
-    type: "Therapy room · Wellness kit",
+    category: "Recovery studio",
     area: "Langsuan · 2.4 km",
     address: "Langsuan Village, Chidlom",
-    note: "เหมาะกับแพ็กเกจฟื้นฟู",
-    serviceId: "svc_product_sleep",
+    headline: "Therapy room และ wellness kit สำหรับการฟื้นฟู",
+    description: "เหมาะกับแพ็กเกจดูแลตัวเองที่ต้องใช้ห้องบริการของคลินิก",
+    promotionTitle: "Studio care bundle",
+    promotionBody: "จอง service bundle พร้อม wellness kit ได้ในรอบเดียว",
+    services: [
+      { serviceId: "svc_product_sleep", name: "Wellness Kit Consultation", priceTHB: 690, durationMinutes: 0 },
+      { serviceId: "svc_beauty_90", name: "Recovery Studio Session", priceTHB: 1590, durationMinutes: 90 },
+    ],
   },
 ];
 
 export function CustomerHomeScreen() {
   const [services, setServices] = useState<ServiceItemDto[]>([]);
+  const [partnerClinics, setPartnerClinics] = useState<PartnerClinicDto[]>(fallbackPartnerClinics);
+  const [clinicSlots, setClinicSlots] = useState<PartnerClinicSlotDto[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>();
   const [selectedClinicId, setSelectedClinicId] = useState<string | undefined>();
   const [selectedSlotId, setSelectedSlotId] = useState(bookingSlots[0].id);
@@ -90,16 +108,32 @@ export function CustomerHomeScreen() {
   const [supportCases, setSupportCases] = useState<BookingSupportCaseDto[]>([]);
 
   useEffect(() => {
-    Promise.all([getServices(), getCustomerProfile()])
-      .then(([items, profile]) => {
+    Promise.all([
+      getServices(),
+      getCustomerProfile(),
+      getPartnerClinics().catch(() => fallbackPartnerClinics),
+    ])
+      .then(([items, profile, clinics]) => {
         setServices(items);
         setSelectedServiceId(items[0]?.id);
         setCustomerProfile(profile);
+        setPartnerClinics(clinics.length ? clinics : fallbackPartnerClinics);
         setAddressConfirmed(Boolean(profile.address?.id && profile.address.googlePlaceId));
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
   }, []);
+
+  useEffect(() => {
+    if (!selectedClinicId) {
+      setClinicSlots([]);
+      return;
+    }
+
+    getPartnerClinicSlots(selectedClinicId)
+      .then(setClinicSlots)
+      .catch(() => setClinicSlots([]));
+  }, [selectedClinicId]);
 
   async function handleCreateBooking() {
     if (!selectedServiceId || !customerProfile?.address?.id || !addressConfirmed || !availability?.available) return;
@@ -110,6 +144,7 @@ export function CustomerHomeScreen() {
         serviceId: selectedServiceId,
         addressId: customerProfile.address.id,
         scheduledAt: getSelectedScheduledAt(),
+        partnerClinicId: selectedClinicId,
       });
       const breakdown = await getPriceBreakdown(booking.id);
       const hold = await getBookingSlotHold(booking.id);
@@ -130,7 +165,23 @@ export function CustomerHomeScreen() {
 
   const selectedService = services.find((service) => service.id === selectedServiceId);
   const selectedClinic = partnerClinics.find((clinic) => clinic.id === selectedClinicId);
+  const selectedClinicService = selectedClinic?.services.find((service) => service.serviceId === selectedServiceId);
+  const clinicBookingSlots = clinicSlots.length
+    ? clinicSlots.map((slot) => ({
+        id: slot.id,
+        label: formatClinicSlot(slot.startsAt),
+        scheduledAt: slot.startsAt,
+        serviceId: slot.serviceId,
+      }))
+    : bookingSlots.map((slot) => ({
+        id: `clinic_${slot.id}`,
+        label: slot.label,
+        scheduledAt: new Date(Date.now() + slot.offsetHours * 60 * 60 * 1000).toISOString(),
+        serviceId: selectedClinicService?.serviceId ?? selectedClinic?.services[0]?.serviceId,
+      }));
+  const visibleBookingSlots = selectedClinic ? clinicBookingSlots : bookingSlots;
   const selectedSlot = bookingSlots.find((slot) => slot.id === selectedSlotId) || bookingSlots[0];
+  const selectedClinicSlot = clinicBookingSlots.find((slot) => slot.id === selectedSlotId) || clinicBookingSlots[0];
   const customerAddress = customerProfile?.address;
   const canCheckAvailability = Boolean(selectedServiceId && customerAddress?.id && addressConfirmed);
   const canCreateBooking = Boolean(canCheckAvailability && availability?.available);
@@ -146,6 +197,7 @@ export function CustomerHomeScreen() {
   const trackingBookingId = latestBooking?.id ?? "book_mqn1ex1f_05qxp01u";
 
   function getSelectedScheduledAt() {
+    if (selectedClinic && selectedClinicSlot?.scheduledAt) return selectedClinicSlot.scheduledAt;
     return new Date(Date.now() + selectedSlot.offsetHours * 60 * 60 * 1000).toISOString();
   }
 
@@ -311,7 +363,8 @@ export function CustomerHomeScreen() {
   const bookingProgress = selectedClinic
     ? [
         { label: "คลินิก", done: true, active: !latestBooking },
-        { label: "เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
+        { label: "หน้าคลินิก", done: Boolean(selectedClinicService), active: !selectedClinicService },
+        { label: "วัน/เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
         { label: "ยืนยัน", done: addressConfirmed, active: !addressConfirmed },
         { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: Boolean(latestBooking) },
       ]
@@ -419,9 +472,10 @@ export function CustomerHomeScreen() {
             accessibilityRole="button"
             key={clinic.id}
             onPress={() => {
-              setSelectedServiceId(clinic.serviceId);
+              setSelectedServiceId(clinic.services[0]?.serviceId);
               setSelectedClinicId(clinic.id);
-              setAddressConfirmed(true);
+              setSelectedSlotId(`clinic_${bookingSlots[0].id}`);
+              setAddressConfirmed(false);
               resetAvailability();
             }}
             style={({ pressed }) => [
@@ -433,8 +487,8 @@ export function CustomerHomeScreen() {
             <Text style={styles.clinicLogo}>{clinic.name.slice(0, 1)}</Text>
             <View style={styles.clinicCopy}>
               <Text style={styles.clinicName}>{clinic.name}</Text>
-              <Text style={styles.clinicType}>{clinic.type}</Text>
-              <Text style={styles.clinicMeta}>{clinic.area} · {clinic.note}</Text>
+              <Text style={styles.clinicType}>{clinic.category}</Text>
+              <Text style={styles.clinicMeta}>{clinic.area} · {clinic.headline}</Text>
             </View>
             <Text style={styles.clinicCta}>{selectedClinicId === clinic.id ? "เลือกแล้ว" : "จอง"}</Text>
           </Pressable>
@@ -446,9 +500,55 @@ export function CustomerHomeScreen() {
       </View>
       {selectedClinic ? (
         <View style={styles.selectedClinicCard}>
-          <Text style={styles.selectedClinicLabel}>จองผ่านคลินิกพาร์ทเนอร์</Text>
+          <Text style={styles.selectedClinicLabel}>คลินิกที่เลือก</Text>
           <Text style={styles.selectedClinicName}>{selectedClinic.name}</Text>
-          <Text style={styles.selectedClinicMeta}>{selectedClinic.area} · ระบบจะใช้บริการที่เหมาะกับคลินิกนี้</Text>
+          <Text style={styles.selectedClinicMeta}>{selectedClinic.area} · {selectedClinic.address}</Text>
+        </View>
+      ) : null}
+      {selectedClinic ? (
+        <View style={styles.clinicDetailCard}>
+          <View style={styles.clinicHeroRow}>
+            <Text style={styles.clinicDetailMark}>{selectedClinic.name.slice(0, 1)}</Text>
+            <View style={styles.clinicDetailCopy}>
+              <Text style={styles.selectedClinicLabel}>หน้าคลินิกพาร์ทเนอร์</Text>
+              <Text style={styles.clinicDetailTitle}>{selectedClinic.headline}</Text>
+              <Text style={styles.clinicDetailMeta}>{selectedClinic.description}</Text>
+            </View>
+          </View>
+          <View style={styles.clinicPromoCard}>
+            <Text style={styles.clinicPromoLabel}>โปรโมชั่นคลินิก</Text>
+            <Text style={styles.clinicPromoTitle}>{selectedClinic.promotionTitle}</Text>
+            <Text style={styles.clinicPromoBody}>{selectedClinic.promotionBody}</Text>
+          </View>
+          <Text style={styles.clinicPackageTitle}>รายการที่จองได้</Text>
+          {selectedClinic.services.map((service) => {
+            const active = service.serviceId === selectedServiceId;
+
+            return (
+              <Pressable
+                accessibilityRole="button"
+                key={service.serviceId}
+                onPress={() => {
+                  setSelectedServiceId(service.serviceId);
+                  setSelectedSlotId(clinicBookingSlots.find((slot) => slot.serviceId === service.serviceId)?.id ?? clinicBookingSlots[0]?.id ?? `clinic_${bookingSlots[0].id}`);
+                  resetAvailability();
+                }}
+                style={({ pressed }) => [
+                  styles.clinicPackageCard,
+                  active ? styles.clinicPackageCardActive : null,
+                  pressed ? styles.buttonPressed : null,
+                ]}
+              >
+                <View style={styles.clinicPackageCopy}>
+                  <Text style={styles.clinicPackageName}>{service.name}</Text>
+                  <Text style={styles.clinicPackageMeta}>
+                    {service.durationMinutes || "delivery"} min · ฿{service.priceTHB.toLocaleString("th-TH")}
+                  </Text>
+                </View>
+                <Text style={styles.clinicPackageCta}>{active ? "เลือกแล้ว" : "เลือก"}</Text>
+              </Pressable>
+            );
+          })}
         </View>
       ) : null}
       <View style={styles.bookingProgressCard}>
@@ -480,7 +580,7 @@ export function CustomerHomeScreen() {
           </View>
         </View>
         <View style={styles.slotList}>
-          {bookingSlots.map((slot) => {
+          {visibleBookingSlots.map((slot) => {
             const active = slot.id === selectedSlotId;
 
             return (
@@ -489,6 +589,7 @@ export function CustomerHomeScreen() {
                 key={slot.id}
                 onPress={() => {
                   setSelectedSlotId(slot.id);
+                  if ("serviceId" in slot && slot.serviceId) setSelectedServiceId(slot.serviceId);
                   resetAvailability();
                 }}
                 style={({ pressed }) => [
@@ -497,7 +598,7 @@ export function CustomerHomeScreen() {
                   pressed ? styles.buttonPressed : null,
                 ]}
               >
-                <Text style={[styles.slotText, active ? styles.slotTextActive : null]}>{slot.label}</Text>
+              <Text style={[styles.slotText, active ? styles.slotTextActive : null]}>{slot.label}</Text>
               </Pressable>
             );
           })}
@@ -619,7 +720,7 @@ export function CustomerHomeScreen() {
             <Text style={styles.confirmedPillText}>{formatBookingStatus(latestBooking.status)}</Text>
           </View>
           <Text style={styles.confirmedMeta}>
-            {selectedClinic ? `${selectedClinic.name} · ` : ""}{selectedSlot.label} · {selectedService?.name ?? latestBooking.serviceId}
+            {selectedClinic ? `${selectedClinic.name} · ` : ""}{selectedClinic ? selectedClinicSlot?.label : selectedSlot.label} · {selectedClinicService?.name ?? selectedService?.name ?? latestBooking.serviceId}
           </Text>
           <Text style={styles.confirmedMeta}>
             {slotHold?.held ? `คิวถูกล็อกไว้ · เหลือ ${holdCountdownText}` : "คิวหมดเวลา กรุณาตรวจผู้ให้บริการอีกครั้ง"}
@@ -631,7 +732,7 @@ export function CustomerHomeScreen() {
           <Text style={styles.trackingTitle}>ตรวจสอบก่อนชำระเงิน</Text>
           <View style={styles.reviewRow}>
             <Text style={styles.reviewLabel}>บริการ</Text>
-            <Text style={styles.reviewValue}>{selectedService?.name ?? latestBooking.serviceId}</Text>
+            <Text style={styles.reviewValue}>{selectedClinicService?.name ?? selectedService?.name ?? latestBooking.serviceId}</Text>
           </View>
           {selectedClinic ? (
             <View style={styles.reviewRow}>
@@ -641,7 +742,7 @@ export function CustomerHomeScreen() {
           ) : null}
           <View style={styles.reviewRow}>
             <Text style={styles.reviewLabel}>วันและเวลา</Text>
-            <Text style={styles.reviewValue}>{selectedSlot.label}</Text>
+            <Text style={styles.reviewValue}>{selectedClinic ? selectedClinicSlot?.label : selectedSlot.label}</Text>
           </View>
           <View style={styles.reviewRow}>
             <Text style={styles.reviewLabel}>{selectedClinic ? "สถานที่" : "ที่อยู่"}</Text>
@@ -990,6 +1091,14 @@ function describeAvailabilityReason(reason?: ProviderAvailabilityDto["reason"]) 
   return descriptions[reason || ""] || "No provider is available for this time and address.";
 }
 
+function formatClinicSlot(startsAt: string) {
+  return new Intl.DateTimeFormat("th-TH", {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(startsAt));
+}
+
 const styles = StyleSheet.create({
   card: {
     gap: 10,
@@ -1063,7 +1172,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     flexDirection: "row",
-    gap: 6,
+    gap: 4,
   },
   progressItem: {
     flex: 1,
@@ -1072,8 +1181,8 @@ const styles = StyleSheet.create({
   },
   progressDot: {
     overflow: "hidden",
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     borderRadius: 8,
@@ -1081,7 +1190,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     fontWeight: "900",
-    lineHeight: 24,
+    lineHeight: 22,
     textAlign: "center",
   },
   progressDotDone: {
@@ -1096,8 +1205,9 @@ const styles = StyleSheet.create({
   },
   progressLabel: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "800",
+    textAlign: "center",
   },
   progressLabelActive: {
     color: colors.primaryDark,
@@ -1322,6 +1432,104 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: colors.surface,
     padding: 12,
+  },
+  clinicDetailCard: {
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    padding: 12,
+  },
+  clinicHeroRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  clinicDetailMark: {
+    overflow: "hidden",
+    width: 46,
+    height: 46,
+    borderRadius: 8,
+    backgroundColor: colors.primaryDark,
+    color: colors.gold,
+    fontSize: 17,
+    fontWeight: "900",
+    lineHeight: 46,
+    textAlign: "center",
+  },
+  clinicDetailCopy: {
+    flex: 1,
+    gap: 3,
+  },
+  clinicDetailTitle: {
+    color: colors.text,
+    fontWeight: "900",
+    lineHeight: 19,
+  },
+  clinicDetailMeta: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  clinicPromoCard: {
+    gap: 3,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    padding: 10,
+  },
+  clinicPromoLabel: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  clinicPromoTitle: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  clinicPromoBody: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  clinicPackageTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  clinicPackageCard: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    padding: 10,
+  },
+  clinicPackageCardActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceMuted,
+  },
+  clinicPackageCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  clinicPackageName: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  clinicPackageMeta: {
+    color: colors.textMuted,
+    fontSize: 12,
+  },
+  clinicPackageCta: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
   },
   stepCard: {
     gap: 9,

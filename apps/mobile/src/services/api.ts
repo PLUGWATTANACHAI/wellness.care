@@ -36,6 +36,37 @@ export interface ServiceItemDto {
   active: boolean;
 }
 
+export interface PartnerClinicServiceDto {
+  serviceId: string;
+  name: string;
+  priceTHB: number;
+  durationMinutes: number;
+}
+
+export interface PartnerClinicDto {
+  id: string;
+  name: string;
+  category: string;
+  area: string;
+  address: string;
+  lat?: number;
+  lng?: number;
+  headline: string;
+  description: string;
+  promotionTitle: string;
+  promotionBody: string;
+  services: PartnerClinicServiceDto[];
+}
+
+export interface PartnerClinicSlotDto {
+  id: string;
+  clinicId: string;
+  serviceId: string;
+  startsAt: string;
+  capacity: number;
+  availableCount: number;
+}
+
 export interface BookingListItemDto {
   id: string;
   code: string;
@@ -378,7 +409,27 @@ export async function getServices() {
   return response.json() as Promise<ServiceItemDto[]>;
 }
 
-export async function createBooking(input: { serviceId: string; addressId: string; scheduledAt: string }) {
+export async function getPartnerClinics() {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/partner-clinics`);
+  if (!response.ok) {
+    throw new Error("Failed to load partner clinics");
+  }
+  return response.json() as Promise<PartnerClinicDto[]>;
+}
+
+export async function getPartnerClinicSlots(clinicId: string) {
+  const response = await fetchWithTimeout(`${API_BASE_URL}/partner-clinics/${encodeURIComponent(clinicId)}/slots`, {
+    headers: authHeaders("customer"),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load partner clinic slots");
+  }
+
+  return response.json() as Promise<PartnerClinicSlotDto[]>;
+}
+
+export async function createBooking(input: { serviceId: string; addressId: string; scheduledAt: string; partnerClinicId?: string }) {
   const response = await fetchWithTimeout(`${API_BASE_URL}/bookings`, {
     method: "POST",
     headers: authHeaders("customer", {
