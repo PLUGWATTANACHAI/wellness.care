@@ -1,8 +1,8 @@
 # Wellnest TestFlight Next Steps
 
-Status date: 2026-07-10
+Status date: 2026-07-12
 
-Apple Developer Program purchase is complete, the Apple Developer Account is no longer pending, and the Wellnest App Store Connect app record has been created, based on พี่ปลั๊ก's update on 2026-07-10.
+Apple Developer Program purchase is complete, the Apple Developer Account is active, the Wellnest App Store Connect app record has been created, and TestFlight build `0.1.7 (11)` has been uploaded and processed successfully.
 
 ## App Store Connect App Record Status
 
@@ -15,12 +15,16 @@ Created / confirmed:
    - Primary language: `Thai` if available, otherwise `English (U.S.)`
    - User access: Full Access
 
+Current TestFlight status:
+
+1. iOS build `0.1.7 (11)` is available in TestFlight.
+2. Internal group `Wellnest Internal Pilot` is linked to build `11`.
+3. Internal group `Wellnest Team Internal` is linked to build `11`.
+4. Initial internal testers have been invited and can install through TestFlight.
+
 Next:
 
-1. Create the iOS preview build with EAS.
-2. Upload or attach the build to TestFlight.
-3. Add พี่ปลั๊ก as the first internal tester.
-4. Test these flows on iPhone:
+1. Test these flows on iPhone:
    - OTP login and session persistence.
    - Location permission popup.
    - Current location save.
@@ -28,6 +32,8 @@ Next:
    - PromptPay payment path.
    - Provider tracking display.
    - Profile edit and support/privacy screens.
+2. Record tester feedback before inviting a wider external group.
+3. Keep live payment, SMS OTP, and production Google Maps keys off until the MVP launch checklist is signed off.
 
 ## Draft App Store Metadata
 
@@ -110,7 +116,6 @@ Do not claim:
 
 ## Blockers Before Public Store Release
 
-- Apple Developer membership must finish activation.
 - Support URL and Privacy Policy URL must be published.
 - Omise/Opn live payment must be approved and tested.
 - SMS OTP provider must be connected for real users.

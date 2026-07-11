@@ -106,6 +106,7 @@ export function CustomerHomeScreen() {
   const [supportRequestText, setSupportRequestText] = useState("");
   const [supportStatus, setSupportStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [supportCases, setSupportCases] = useState<BookingSupportCaseDto[]>([]);
+  const [bookingFlow, setBookingFlow] = useState<"home" | "service" | "clinic">("home");
 
   useEffect(() => {
     Promise.all([
@@ -166,6 +167,7 @@ export function CustomerHomeScreen() {
   const selectedService = services.find((service) => service.id === selectedServiceId);
   const selectedClinic = partnerClinics.find((clinic) => clinic.id === selectedClinicId);
   const selectedClinicService = selectedClinic?.services.find((service) => service.serviceId === selectedServiceId);
+  const isBookingFlowActive = bookingFlow !== "home";
   const clinicBookingSlots = clinicSlots.length
     ? clinicSlots.map((slot) => ({
         id: slot.id,
@@ -443,6 +445,7 @@ export function CustomerHomeScreen() {
               onPress={() => {
                 setSelectedServiceId(service.id);
                 setSelectedClinicId(undefined);
+                setBookingFlow("service");
                 setAddressConfirmed(Boolean(customerProfile?.address?.id && customerProfile.address.googlePlaceId));
                 resetAvailability();
               }}
@@ -474,6 +477,7 @@ export function CustomerHomeScreen() {
             onPress={() => {
               setSelectedServiceId(clinic.services[0]?.serviceId);
               setSelectedClinicId(clinic.id);
+              setBookingFlow("clinic");
               setSelectedSlotId(`clinic_${bookingSlots[0].id}`);
               setAddressConfirmed(false);
               resetAvailability();
@@ -494,9 +498,37 @@ export function CustomerHomeScreen() {
           </Pressable>
         ))}
       </View>
+      {!isBookingFlowActive ? (
+        <View style={styles.homeReadyCard}>
+          <Text style={styles.homeReadyTitle}>เลือกบริการหรือคลินิกเพื่อเริ่มจอง</Text>
+          <Text style={styles.homeReadyCopy}>
+            หน้า Home จะเก็บเฉพาะบริการ โปรโมชัน และพาร์ทเนอร์คลินิก ส่วนรายละเอียดวันเวลา ยืนยัน และชำระเงินจะเปิดหลังพี่เลือกสิ่งที่ต้องการ
+          </Text>
+        </View>
+      ) : null}
+      {isBookingFlowActive ? (
+        <>
       <View style={styles.sectionTitleRow}>
         <Text style={styles.sectionTitle}>เริ่มจองบริการ</Text>
-        <Text style={styles.sectionAction}>{selectedClinic?.name ?? selectedService?.name ?? "เลือกบริการ"}</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => {
+            setBookingFlow("home");
+            setSelectedClinicId(undefined);
+            resetAvailability();
+          }}
+        >
+          <Text style={styles.sectionAction}>กลับหน้า Home</Text>
+        </Pressable>
+      </View>
+      <View style={styles.flowModeCard}>
+        <Text style={styles.flowModeLabel}>{selectedClinic ? "Clinic booking flow" : "At-home service flow"}</Text>
+        <Text style={styles.flowModeTitle}>{selectedClinic?.name ?? selectedService?.name ?? "เลือกบริการ"}</Text>
+        <Text style={styles.flowModeCopy}>
+          {selectedClinic
+            ? "ลำดับ: คลินิก > หน้าคลินิกนั้น > วัน/เวลา > ยืนยัน > ชำระเงิน"
+            : "ลำดับ: บริการ > วัน/เวลา > ที่อยู่ > ตรวจผู้ให้บริการ > ชำระเงิน"}
+        </Text>
       </View>
       {selectedClinic ? (
         <View style={styles.selectedClinicCard}>
@@ -1033,6 +1065,8 @@ export function CustomerHomeScreen() {
           </View>
         </View>
       ) : null}
+        </>
+      ) : null}
       <Text style={styles.note}>Wellnest จะใช้ข้อมูลนี้เพื่อจัดคิวบริการและดูแลความปลอดภัยของการจองเท่านั้น</Text>
     </View>
   );
@@ -1162,6 +1196,47 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 12,
     fontWeight: "900",
+  },
+  homeReadyCard: {
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceSoft,
+    padding: 14,
+  },
+  homeReadyTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  homeReadyCopy: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  flowModeCard: {
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceSoft,
+    padding: 14,
+  },
+  flowModeLabel: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  flowModeTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "900",
+  },
+  flowModeCopy: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
   },
   bookingProgressCard: {
     borderWidth: 1,

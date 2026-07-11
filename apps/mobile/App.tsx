@@ -120,22 +120,34 @@ export default function App() {
         </View> : null}
         <View style={styles.heroCard}>
           <View style={styles.heroCopy}>
-            <Text style={styles.heroKicker}>{isSignedIn ? "พร้อมให้บริการวันนี้" : "เข้าสู่ระบบเพื่อเริ่มดูแลตัวเอง"}</Text>
-            <Text style={styles.heroTitle}>{isSignedIn ? "จองบริการดูแลตัวเองถึงคอนโด" : "Wellness service ที่มาหาพี่ถึงคอนโด"}</Text>
+            <Text style={styles.heroKicker}>{isSignedIn ? "Private wellness" : "เข้าสู่ระบบเพื่อเริ่มดูแลตัวเอง"}</Text>
+            <Text style={styles.heroTitle}>{isSignedIn ? "จองบริการดูแลตัวเองแบบส่วนตัว" : "Wellness service ที่มาหาพี่ถึงคอนโด"}</Text>
             <Text style={styles.heroBody}>{getSessionCopy(session, sessionStatus, activeLoginRole)}</Text>
           </View>
-          <View style={styles.heroProviderCard}>
-            <Text style={styles.heroProviderAvatar}>WN</Text>
-            <Text style={styles.heroProviderName}>ผู้ให้บริการใกล้พี่</Text>
-            <Text style={styles.heroProviderMeta}>4.9 คะแนน · 18 นาที</Text>
+          <View style={styles.heroTrustCard}>
+            <Text style={styles.heroTrustMark}>AW</Text>
+            <Text style={styles.heroTrustName}>Verified care</Text>
+            <Text style={styles.heroTrustMeta}>ยืนยันพื้นที่ · ชำระเงินปลอดภัย · ติดตามสถานะ</Text>
           </View>
         </View>
-        {isSignedIn ? <View style={styles.promoBand}>
-          <View>
-            <Text style={styles.promoTitle}>โปรสำหรับการจองครั้งแรก</Text>
-            <Text style={styles.promoCopy}>บันทึกที่อยู่ครั้งเดียว แล้วจองครั้งถัดไปได้เร็วขึ้น</Text>
+        {isSignedIn ? <View style={styles.awBand}>
+          <View style={styles.awMiniMark}>
+            <Text style={styles.awMiniMarkText}>AW</Text>
           </View>
-          <Text style={styles.promoBadge}>New</Text>
+          <View>
+            <Text style={styles.awBandEyebrow}>Featured campaign</Text>
+            <Text style={styles.awBandTitle}>Wellness Week Privilege</Text>
+            <Text style={styles.awBandCopy}>พื้นที่สำหรับ artwork โปรโมชันหลัก แพ็กเกจช่วงเย็น หรือแบรนด์พาร์ทเนอร์</Text>
+          </View>
+        </View> : null}
+        {isSignedIn ? <View style={styles.clinicTeaserBand}>
+          <View>
+            <Text style={styles.promoTitle}>Partner Clinics</Text>
+            <Text style={styles.promoCopy}>เลือกคลินิกพาร์ทเนอร์ ดูโปรโมชันและรายการ แล้วจองรอบได้จากหน้า Home</Text>
+          </View>
+          <Pressable accessibilityRole="button" onPress={() => setRole("customer")} style={({ pressed }) => [styles.teaserButton, pressed ? styles.tabPressed : null]}>
+            <Text style={styles.teaserButtonText}>จอง</Text>
+          </Pressable>
         </View> : null}
         {isSignedIn ? <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} /> : null}
         {isSignedIn ? <View style={styles.demoPanel}>
@@ -657,8 +669,8 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
     borderWidth: 1,
-    borderColor: "#dce8e5",
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: 12,
     backgroundColor: colors.surface,
     paddingHorizontal: 10,
     paddingVertical: 9,
@@ -679,9 +691,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
     overflow: "hidden",
-    borderRadius: 8,
-    backgroundColor: colors.teal,
+    borderRadius: 18,
+    backgroundColor: colors.primaryDark,
     padding: 18,
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 12 },
   },
   heroCopy: {
     flex: 1,
@@ -702,17 +718,19 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.84)",
     lineHeight: 20,
   },
-  heroProviderCard: {
+  heroTrustCard: {
     width: 112,
     gap: 6,
     alignItems: "center",
-    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    borderRadius: 14,
     backgroundColor: "rgba(255,255,255,0.16)",
     padding: 10,
   },
-  heroProviderAvatar: {
+  heroTrustMark: {
     overflow: "hidden",
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: colors.gold,
     color: colors.text,
     fontSize: 18,
@@ -720,26 +738,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  heroProviderName: {
+  heroTrustName: {
     color: "#fff",
     fontSize: 11,
     fontWeight: "900",
     textAlign: "center",
   },
-  heroProviderMeta: {
+  heroTrustMeta: {
     color: "rgba(255,255,255,0.78)",
     fontSize: 10,
+    lineHeight: 14,
     textAlign: "center",
   },
-  promoBand: {
+  awBand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceSoft,
+    padding: 14,
+  },
+  awMiniMark: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 58,
+    height: 72,
+    borderRadius: 14,
+    backgroundColor: colors.primaryDark,
+  },
+  awMiniMarkText: {
+    color: colors.gold,
+    fontSize: 20,
+    fontWeight: "900",
+  },
+  awBandEyebrow: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  awBandTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  awBandCopy: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  clinicTeaserBand: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 10,
+    gap: 12,
     borderWidth: 1,
-    borderColor: "#f1dfb0",
-    borderRadius: 8,
-    backgroundColor: "#fff9ea",
+    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
     padding: 12,
   },
   promoTitle: {
@@ -751,15 +808,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  promoBadge: {
-    overflow: "hidden",
-    borderRadius: 8,
-    backgroundColor: colors.gold,
-    color: colors.text,
-    fontSize: 12,
+  teaserButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 58,
+    minHeight: 38,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+  },
+  teaserButtonText: {
+    color: "#fff",
     fontWeight: "900",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
   },
   locationCard: {
     gap: 4,

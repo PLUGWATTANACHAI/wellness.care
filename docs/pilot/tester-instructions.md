@@ -18,10 +18,10 @@
 
 ## iPhone Testers
 
-1. Open https://wellnest-pilot.onrender.com/ in Safari.
-2. Tap Share.
-3. Tap Add to Home Screen.
-4. Open Wellnest from the home screen icon.
+1. Install TestFlight from the App Store if it is not already installed.
+2. Open the TestFlight invitation from Apple.
+3. Accept the Wellnest test invite.
+4. Install Wellnest from TestFlight.
 5. Login with your phone number and the closed tester OTP code from the operator.
 6. Test these actions:
    - Open Account and save condo/address details before booking.

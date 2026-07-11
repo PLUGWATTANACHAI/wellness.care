@@ -2,7 +2,7 @@
 
 This checklist prepares Wellnest for real user download through TestFlight, App Store, and Google Play.
 
-Official Apple references checked on 2026-07-10:
+Official Apple references checked on 2026-07-10. Project status updated on 2026-07-12.
 
 - Apple Developer Program: https://developer.apple.com/programs/
 - TestFlight: https://developer.apple.com/testflight/
@@ -25,15 +25,15 @@ Official Apple references checked on 2026-07-10:
 
 ## iOS / App Store Status
 
-Wellnest does not have an App Store or TestFlight release yet.
+Wellnest has an App Store Connect app record and an internal TestFlight build.
 
-Current account status as of 2026-07-10:
+Current account and build status as of 2026-07-12:
 
-- Apple Developer Program purchase was completed through Apple Thailand.
-- Order confirmation page showed order number `W1880180783`.
-- Apple Developer Account still shows `wattanachai payungwong (Pending)`.
-- Apple says the purchase may take up to 48 hours to process.
-- Next action after activation: open App Store Connect and create the Wellnest app record.
+- Apple Developer Program membership is active.
+- App Store Connect app record exists for `Wellnest`.
+- Bundle identifier is `com.plugwattanachai.wellnest`.
+- TestFlight build `0.1.7 (11)` has uploaded, processed, and become available for internal testing.
+- Internal TestFlight groups `Wellnest Internal Pilot` and `Wellnest Team Internal` are linked to build `11`.
 
 Apple allows a free Apple developer account to test apps on your own devices with Xcode, but TestFlight and App Store distribution require Apple Developer Program membership. Apple currently lists the Apple Developer Program at `$99 annual membership`.
 
@@ -51,9 +51,9 @@ TestFlight is the correct first iPhone testing path after enrollment:
 4. Add app name, SKU, category, support URL, privacy policy URL, and contact email.
 5. Prepare iPhone screenshots from the real booking, address, payment, tracking, and profile flows.
 6. Fill App Privacy details for account data, phone number, location, payment, support messages, analytics, and crash logs.
-7. Create the first iOS preview build with EAS Build.
-8. Upload to TestFlight.
-9. Add internal testers first, then external testers after beta review.
+7. Continue internal TestFlight QA on build `0.1.7 (11)`.
+8. Fix UI/UX and flow issues through Expo OTA when runtime-compatible.
+9. Add external testers only after TestFlight beta review details and public pilot rules are ready.
 10. Move to App Store public review only after payment, OTP, privacy, support, and provider operations pass QA.
 
 ## Update Policy After Users Install
