@@ -15,6 +15,7 @@ coverage
 *.pem
 *.key
 *.p12
+*.p8
 *.mobileprovision
 *.orig
 *.bak
