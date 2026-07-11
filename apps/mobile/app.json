@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "updates": {
+      "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/4906aa38-22b3-4b14-a430-4aba3cd2e0b8"
     },
@@ -15,7 +16,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.plugwattanachai.wellnest",
-      "buildNumber": "11",
+      "buildNumber": "12",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Wellnest uses your location to pin your service address and show provider ETA for active bookings only."
