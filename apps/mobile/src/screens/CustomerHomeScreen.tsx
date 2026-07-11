@@ -35,6 +35,16 @@ const bookingSlots = [
   { id: "next_day_1000", label: "วันถัดไป · 10:00", offsetHours: 50 },
 ];
 
+const promoItems = [
+  { title: "First booking", body: "ลด 120 บาทสำหรับการจองครั้งแรก" },
+  { title: "After work care", body: "ช่วง 18:00-21:00 มี provider เพิ่ม" },
+];
+
+const nearbyProviders = [
+  { name: "Mina", meta: "4.92 · 18 นาที" },
+  { name: "Narin", meta: "4.88 · 24 นาที" },
+];
+
 export function CustomerHomeScreen() {
   const [services, setServices] = useState<ServiceItemDto[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>();
@@ -279,35 +289,46 @@ export function CustomerHomeScreen() {
   const holdMinutes = Math.floor(holdSecondsRemaining / 60);
   const holdSeconds = holdSecondsRemaining % 60;
   const holdCountdownText = `${holdMinutes}:${holdSeconds.toString().padStart(2, "0")}`;
-  const selectedServicePrice = selectedService ? `฿${selectedService.priceTHB.toLocaleString("th-TH")}` : "เลือกบริการ";
-  const activeProviderName = availability?.nearestProvider?.name ?? "กำลังรอจับคู่";
-  const activeProviderMeta =
-    availability?.available && availability.nearestProvider
-      ? `ใกล้พี่ ${(availability.nearestProvider.distanceMeters / 1000).toFixed(2)} กม.`
-      : "ตรวจผู้ให้บริการก่อนยืนยัน";
-
   return (
     <View style={styles.card}>
       <View style={styles.screenHeader}>
         <View>
-          <Text style={styles.label}>บริการถึงคอนโด</Text>
-          <Text style={styles.title}>เลือกบริการที่ต้องการ</Text>
+          <Text style={styles.label}>พร้อมดูแลพี่วันนี้</Text>
+          <Text style={styles.title}>Wellnest Home</Text>
         </View>
         <View style={styles.liveBadge}>
           <Text style={styles.liveBadgeText}>{status === "error" ? "Offline" : "Online"}</Text>
         </View>
       </View>
+      <View style={styles.walletStrip}>
+        <View style={styles.walletTile}>
+          <Text style={styles.walletLabel}>Coins</Text>
+          <Text style={styles.walletValue}>{customerProfile?.coins.toLocaleString("th-TH") ?? "0"}</Text>
+        </View>
+        <View style={styles.walletTile}>
+          <Text style={styles.walletLabel}>Points</Text>
+          <Text style={styles.walletValue}>{customerProfile?.points.toLocaleString("th-TH") ?? "0"}</Text>
+        </View>
+        <View style={styles.walletTile}>
+          <Text style={styles.walletLabel}>Tier</Text>
+          <Text style={styles.walletValue}>{customerProfile?.tier ?? "Member"}</Text>
+        </View>
+      </View>
       <View style={styles.bookingSummaryCard}>
         <View>
-          <Text style={styles.summaryLabel}>บริการที่เลือก</Text>
-          <Text style={styles.summaryTitle}>{selectedService?.name ?? "Wellness service"}</Text>
-          <Text style={styles.summaryMeta}>{selectedSlot.label} · {selectedServicePrice}</Text>
+          <Text style={styles.summaryLabel}>Available tonight</Text>
+          <Text style={styles.summaryTitle}>บริการ wellness ส่วนตัวถึงคอนโด</Text>
+          <Text style={styles.summaryMeta}>เลือกบริการ เวลาที่สะดวก และยืนยันพื้นที่ ระบบจะจับคู่ผู้ให้บริการใกล้พี่</Text>
         </View>
         <View style={styles.providerMiniCard}>
-          <Text style={styles.providerAvatar}>W</Text>
-          <Text style={styles.providerMiniName}>{activeProviderName}</Text>
-          <Text style={styles.providerMiniMeta}>{activeProviderMeta}</Text>
+          <Text style={styles.providerAvatar}>M</Text>
+          <Text style={styles.providerMiniName}>Mina</Text>
+          <Text style={styles.providerMiniMeta}>4.92 · 18 นาที</Text>
         </View>
+      </View>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>บริการ</Text>
+        <Text style={styles.sectionAction}>ดูทั้งหมด</Text>
       </View>
       <View style={styles.serviceList}>
         {services.map((service) => {
@@ -336,6 +357,35 @@ export function CustomerHomeScreen() {
             </Pressable>
           );
         })}
+      </View>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>โปรวันนี้</Text>
+      </View>
+      <View style={styles.promoList}>
+        {promoItems.map((promo) => (
+          <View key={promo.title} style={styles.promoCard}>
+            <Text style={styles.promoTitle}>{promo.title}</Text>
+            <Text style={styles.promoBody}>{promo.body}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>ผู้ให้บริการใกล้พี่</Text>
+      </View>
+      <View style={styles.nearbyProviderList}>
+        {nearbyProviders.map((provider) => (
+          <View key={provider.name} style={styles.nearbyProviderCard}>
+            <Text style={styles.nearbyAvatar}>{provider.name.slice(0, 1)}</Text>
+            <View style={styles.nearbyProviderCopy}>
+              <Text style={styles.nearbyProviderName}>{provider.name}</Text>
+              <Text style={styles.nearbyProviderMeta}>{provider.meta}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+      <View style={styles.sectionTitleRow}>
+        <Text style={styles.sectionTitle}>เริ่มจองบริการ</Text>
+        <Text style={styles.sectionAction}>{selectedService?.name ?? "เลือกบริการ"}</Text>
       </View>
       <View style={styles.stepCard}>
         <View style={styles.stepHeader}>
@@ -828,6 +878,47 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "800",
   },
+  walletStrip: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  walletTile: {
+    flex: 1,
+    gap: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+  },
+  walletLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  walletValue: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  sectionTitleRow: {
+    minHeight: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "900",
+  },
+  sectionAction: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
+  },
   row: {
     color: colors.text,
     lineHeight: 20,
@@ -847,13 +938,73 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
+  promoList: {
+    gap: 8,
+  },
+  promoCard: {
+    gap: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  promoTitle: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  promoBody: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  nearbyProviderList: {
+    gap: 8,
+  },
+  nearbyProviderCard: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  nearbyAvatar: {
+    overflow: "hidden",
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: colors.gold,
+    color: colors.text,
+    fontWeight: "900",
+    lineHeight: 34,
+    textAlign: "center",
+  },
+  nearbyProviderCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  nearbyProviderName: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  nearbyProviderMeta: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 17,
+  },
   bookingSummaryCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 12,
     overflow: "hidden",
     borderRadius: 8,
-    backgroundColor: "#163b38",
+    backgroundColor: colors.primaryDark,
     padding: 14,
   },
   summaryLabel: {
@@ -906,14 +1057,14 @@ const styles = StyleSheet.create({
   serviceChip: {
     gap: 3,
     borderWidth: 1,
-    borderColor: "#e1ebe8",
+    borderColor: colors.border,
     borderRadius: 8,
     backgroundColor: colors.surfaceMuted,
     padding: 12,
   },
   serviceChipActive: {
     borderColor: colors.primary,
-    backgroundColor: "#e8f7f8",
+    backgroundColor: colors.surfaceSoft,
   },
   serviceChipText: {
     color: colors.text,

@@ -17,6 +17,7 @@ declare const require: (moduleName: string) => unknown;
 
 export default function App() {
   const [role, setRole] = useState<AppSection>("customer");
+  const [authMode, setAuthMode] = useState<"sign_in" | "create_account">("sign_in");
   const [session, setSession] = useState<LoginResultDto | undefined>();
   const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("loading");
   const [startupLocationStatus, setStartupLocationStatus] = useState<"checking" | "permission_ready" | "denied" | "error">("checking");
@@ -154,12 +155,25 @@ export default function App() {
           <RoleTab active={role === "privacy"} label="Safety" onPress={() => setRole("privacy")} />
           <RoleTab active={role === "provider"} label="Provider" onPress={() => setRole("provider")} />
         </View> : null}
-        {sessionStatus === "auth_required" ? (
+        {sessionStatus === "auth_required" && authMode === "sign_in" ? (
           <TesterLoginCard
             role={activeLoginRole}
+            onCreateAccount={() => setAuthMode("create_account")}
             onSignedIn={(result) => {
               setSession(result);
               setSessionStatus("ready");
+              setAuthMode("sign_in");
+            }}
+          />
+        ) : null}
+        {sessionStatus === "auth_required" && authMode === "create_account" ? (
+          <CreateAccountCard
+            role={activeLoginRole}
+            onShowSignIn={() => setAuthMode("sign_in")}
+            onSignedIn={(result) => {
+              setSession(result);
+              setSessionStatus("ready");
+              setAuthMode("sign_in");
             }}
           />
         ) : null}
@@ -299,7 +313,15 @@ function PilotSetupCard({
   );
 }
 
-function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; onSignedIn: (result: LoginResultDto) => void }) {
+function TesterLoginCard({
+  role,
+  onCreateAccount,
+  onSignedIn,
+}: {
+  role: "customer" | "provider";
+  onCreateAccount: () => void;
+  onSignedIn: (result: LoginResultDto) => void;
+}) {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [challenge, setChallenge] = useState<OtpRequestDto | undefined>();
@@ -336,16 +358,6 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
         phone: trimmedPhone,
         otp: otp.trim(),
       });
-      onSignedIn(result);
-    } catch {
-      setStatus("error");
-    }
-  }
-
-  async function handleCreateAccountPreview() {
-    setStatus("verifying");
-    try {
-      const result = await loginDemoRole(role);
       onSignedIn(result);
     } catch {
       setStatus("error");
@@ -397,7 +409,7 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
       <Pressable
         accessibilityRole="button"
         disabled={status === "verifying"}
-        onPress={handleCreateAccountPreview}
+        onPress={onCreateAccount}
         style={({ pressed }) => [styles.createAccountButton, pressed ? styles.tabPressed : null]}
       >
         <Text style={styles.createAccountText}>Create account</Text>
@@ -418,6 +430,77 @@ function TesterLoginCard({ role, onSignedIn }: { role: "customer" | "provider"; 
       ) : null}
       {status === "sent" && challenge?.deliveryChannel === "sms" ? <Text style={styles.loginHint}>ส่งรหัสแล้ว กรุณาใส่รหัสเพื่อดำเนินการต่อ</Text> : null}
       {status === "error" ? <Text style={styles.errorText}>เข้าสู่ระบบไม่สำเร็จ กรุณาตรวจเบอร์หรือรหัสอีกครั้ง</Text> : null}
+    </View>
+  );
+}
+
+function CreateAccountCard({
+  role,
+  onShowSignIn,
+  onSignedIn,
+}: {
+  role: "customer" | "provider";
+  onShowSignIn: () => void;
+  onSignedIn: (result: LoginResultDto) => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [passcode, setPasscode] = useState("");
+  const [status, setStatus] = useState<"idle" | "creating" | "error">("idle");
+  const canCreate = name.trim().length >= 2 && email.trim().includes("@") && phone.trim().length >= 8 && passcode.trim().length >= 6;
+
+  async function handleCreateAccount() {
+    if (!canCreate) return;
+
+    setStatus("creating");
+    try {
+      const result = await loginDemoRole(role);
+      onSignedIn(result);
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  return (
+    <View style={styles.loginCard}>
+      <Text style={styles.demoTitle}>สร้างบัญชี Wellnest</Text>
+      <Text style={styles.demoCopy}>กรอกข้อมูลพื้นฐานเพื่อจองบริการ รับแจ้งเตือน และดูแลความปลอดภัยระหว่างให้บริการ</Text>
+      <Text style={styles.inputLabel}>ชื่อที่ใช้เรียก</Text>
+      <TextInput onChangeText={setName} placeholder="เช่น Plug" style={styles.loginInput} value={name} />
+      <Text style={styles.inputLabel}>อีเมล</Text>
+      <TextInput
+        autoCapitalize="none"
+        keyboardType="email-address"
+        onChangeText={setEmail}
+        placeholder="plug@example.com"
+        style={styles.loginInput}
+        value={email}
+      />
+      <Text style={styles.inputLabel}>เบอร์โทรศัพท์</Text>
+      <TextInput keyboardType="phone-pad" onChangeText={setPhone} placeholder="0812345678" style={styles.loginInput} value={phone} />
+      <Text style={styles.inputLabel}>ตั้งรหัสเข้าใช้งาน</Text>
+      <TextInput
+        maxLength={16}
+        onChangeText={setPasscode}
+        placeholder="อย่างน้อย 6 ตัว"
+        secureTextEntry
+        style={styles.loginInput}
+        value={passcode}
+      />
+      <Pressable
+        accessibilityRole="button"
+        disabled={!canCreate || status === "creating"}
+        onPress={handleCreateAccount}
+        style={({ pressed }) => [styles.loginButton, !canCreate || status === "creating" ? styles.loginButtonDisabled : null, pressed ? styles.tabPressed : null]}
+      >
+        <Text style={styles.loginButtonText}>{status === "creating" ? "กำลังสร้างบัญชี..." : "Create account"}</Text>
+      </Pressable>
+      <Pressable accessibilityRole="button" onPress={onShowSignIn} style={({ pressed }) => [styles.createAccountButton, pressed ? styles.tabPressed : null]}>
+        <Text style={styles.createAccountText}>มีบัญชีแล้ว? Sign in</Text>
+      </Pressable>
+      <Text style={styles.loginHint}>รอบ production จะเพิ่ม OTP/Email verification และ consent ก่อนเปิดใช้งานจริง</Text>
+      {status === "error" ? <Text style={styles.errorText}>สร้างบัญชีไม่สำเร็จ กรุณาลองอีกครั้ง</Text> : null}
     </View>
   );
 }
