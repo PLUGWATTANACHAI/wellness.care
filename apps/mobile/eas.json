@@ -24,7 +24,8 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://wellnest-api-staging.onrender.com"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "image": "latest"
       },
       "android": {
         "buildType": "apk"
@@ -38,7 +39,8 @@
         "EXPO_PUBLIC_API_BASE_URL": "https://wellnest-api-staging.onrender.com"
       },
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "image": "latest"
       },
       "channel": "preview"
     },
