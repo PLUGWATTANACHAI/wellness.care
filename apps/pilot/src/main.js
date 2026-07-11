@@ -274,7 +274,6 @@ function activeScreen() {
   if (state.screen === "activity") return activityScreen();
   if (state.screen === "profile") return profileScreen();
   if (state.screen === "safety") return safetyScreen();
-  if (state.screen === "provider") return providerScreen();
   return homeScreen();
 }
 
@@ -444,10 +443,9 @@ function render() {
 function bottomNav() {
   const items = [
     ["home", "Home"],
-    ["activity", "Activity"],
+    ["activity", "Bookings"],
     ["profile", "Profile"],
     ["safety", "Safety"],
-    ["provider", "Provider"],
   ];
   return `
     <nav class="bottomNav">

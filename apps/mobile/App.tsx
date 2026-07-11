@@ -11,7 +11,7 @@ import {
   type OtpRequestDto,
 } from "./src/services/api";
 
-type AppSection = "customer" | "provider" | "account" | "notifications" | "privacy";
+type AppSection = "customer" | "account" | "notifications" | "privacy";
 
 declare const require: (moduleName: string) => unknown;
 
@@ -22,7 +22,7 @@ export default function App() {
   const [sessionStatus, setSessionStatus] = useState<"loading" | "ready" | "auth_required" | "error">("loading");
   const [startupLocationStatus, setStartupLocationStatus] = useState<"checking" | "permission_ready" | "denied" | "error">("checking");
 
-  const activeLoginRole = getLoginRole(role);
+  const activeLoginRole = "customer" as const;
   const isSignedIn = sessionStatus === "ready";
 
   useEffect(() => {
@@ -139,11 +139,7 @@ export default function App() {
             }}
           />
         ) : null}
-        {sessionStatus === "ready" && role === "customer" ? (
-          <PilotSetupCard currentRole={role} onGoAccount={() => setRole("account")} onGoBooking={() => setRole("customer")} />
-        ) : null}
         {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy /> : null}
-        {sessionStatus === "ready" && role === "provider" ? <ProviderJobScreenLazy /> : null}
         {sessionStatus === "ready" && role === "account" ? <AccountProfileScreenLazy /> : null}
         {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreenLazy /> : null}
         {isSignedIn && role === "privacy" ? <PrivacyCenterScreenLazy /> : null}
@@ -152,11 +148,10 @@ export default function App() {
         </ScrollView>
         {isSignedIn ? (
           <View style={styles.bottomNav}>
-            <RoleTab active={role === "customer"} label="Home" onPress={() => setRole("customer")} />
-            <RoleTab active={role === "notifications"} label="Activity" onPress={() => setRole("notifications")} />
-            <RoleTab active={role === "account"} label="Profile" onPress={() => setRole("account")} />
-            <RoleTab active={role === "privacy"} label="Safety" onPress={() => setRole("privacy")} />
-            <RoleTab active={role === "provider"} label="Provider" onPress={() => setRole("provider")} />
+            <RoleTab active={role === "customer"} icon="H" label="Home" onPress={() => setRole("customer")} />
+            <RoleTab active={role === "notifications"} icon="B" label="Bookings" onPress={() => setRole("notifications")} />
+            <RoleTab active={role === "account"} icon="P" label="Profile" onPress={() => setRole("account")} />
+            <RoleTab active={role === "privacy"} icon="S" label="Safety" onPress={() => setRole("privacy")} />
           </View>
         ) : null}
       </SafeAreaView>
@@ -195,11 +190,6 @@ async function requestStartupLocationPermission() {
 function CustomerHomeScreenLazy() {
   const { CustomerHomeScreen } = require("./src/screens/CustomerHomeScreen") as typeof import("./src/screens/CustomerHomeScreen");
   return <CustomerHomeScreen />;
-}
-
-function ProviderJobScreenLazy() {
-  const { ProviderJobScreen } = require("./src/screens/ProviderJobScreen") as typeof import("./src/screens/ProviderJobScreen");
-  return <ProviderJobScreen />;
 }
 
 function AccountProfileScreenLazy() {
@@ -241,47 +231,6 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
 
     return this.props.children;
   }
-}
-
-function PilotSetupCard({
-  currentRole,
-  onGoAccount,
-  onGoBooking,
-}: {
-  currentRole: AppSection;
-  onGoAccount: () => void;
-  onGoBooking: () => void;
-}) {
-  return (
-    <View style={styles.setupCard}>
-      <Text style={styles.demoTitle}>เริ่มจองได้ในไม่กี่ขั้นตอน</Text>
-      <Text style={styles.demoCopy}>อนุญาตตำแหน่ง แล้วบันทึกที่อยู่บริการเพื่อให้ผู้ให้บริการเดินทางได้ถูกต้อง</Text>
-      <View style={styles.setupActions}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onGoAccount}
-          style={({ pressed }) => [
-            styles.setupButton,
-            currentRole === "account" ? styles.setupButtonActive : null,
-            pressed ? styles.tabPressed : null,
-          ]}
-        >
-          <Text style={[styles.setupButtonText, currentRole === "account" ? styles.setupButtonTextActive : null]}>บันทึกที่อยู่</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={onGoBooking}
-          style={({ pressed }) => [
-            styles.setupButton,
-            currentRole === "customer" ? styles.setupButtonActive : null,
-            pressed ? styles.tabPressed : null,
-          ]}
-        >
-          <Text style={[styles.setupButtonText, currentRole === "customer" ? styles.setupButtonTextActive : null]}>เลือกบริการ</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
 }
 
 function TesterLoginCard({
@@ -503,32 +452,17 @@ function AuthOptionButton({ disabled, label, tone }: { disabled?: boolean; label
   );
 }
 
-function DemoStep({ active, label, onPress }: { active: boolean; label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.demoStep, active ? styles.demoStepActive : null, pressed ? styles.tabPressed : null]}
-    >
-      <Text style={[styles.demoStepText, active ? styles.demoStepTextActive : null]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-function RoleTab({ active, label, onPress }: { active: boolean; label: string; onPress: () => void }) {
+function RoleTab({ active, icon, label, onPress }: { active: boolean; icon: string; label: string; onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.tab, active ? styles.tabActive : null, pressed ? styles.tabPressed : null]}
     >
+      <Text style={[styles.tabIcon, active ? styles.tabTextActive : null]}>{icon}</Text>
       <Text style={[styles.tabText, active ? styles.tabTextActive : null]}>{label}</Text>
     </Pressable>
   );
-}
-
-function getLoginRole(role: AppSection): "customer" | "provider" {
-  return role === "provider" ? "provider" : "customer";
 }
 
 function getSessionCopy(
@@ -545,7 +479,6 @@ function getSessionCopy(
 function getDemoHint(role: AppSection) {
   const hints: Record<typeof role, string> = {
     customer: "เลือกบริการ วันเวลา ที่อยู่ แล้วตรวจผู้ให้บริการก่อนยืนยันจอง",
-    provider: "มุมมองผู้ให้บริการสำหรับรับงาน เดินทาง และอัปเดตสถานะ",
     account: "จัดการข้อมูลลูกค้า ที่อยู่ Coins และ Points",
     notifications: "ดูข้อความและสถานะการจองล่าสุด",
     privacy: "จัดการสิทธิ์ตำแหน่งและความเป็นส่วนตัว",
@@ -875,6 +808,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    gap: 3,
     minHeight: 48,
     borderRadius: 12,
     backgroundColor: "transparent",
@@ -891,6 +825,18 @@ const styles = StyleSheet.create({
     color: colors.textSoft,
     fontSize: 11,
     fontWeight: "900",
+  },
+  tabIcon: {
+    width: 22,
+    height: 22,
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: colors.surfaceSoft,
+    color: colors.textSoft,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 22,
+    textAlign: "center",
   },
   tabTextActive: {
     color: colors.primary,

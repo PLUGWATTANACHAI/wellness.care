@@ -16,7 +16,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.plugwattanachai.wellnest",
-      "buildNumber": "12",
+      "buildNumber": "13",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Wellnest uses your location to pin your service address and show provider ETA for active bookings only."
@@ -24,7 +24,7 @@
     },
     "android": {
       "package": "com.wellnest.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",

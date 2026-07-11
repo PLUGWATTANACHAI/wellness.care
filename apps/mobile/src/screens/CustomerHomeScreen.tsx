@@ -190,6 +190,14 @@ export function CustomerHomeScreen() {
   const selectedSlot = bookingSlots.find((slot) => slot.id === selectedSlotId) || bookingSlots[0];
   const selectedClinicSlot = clinicBookingSlots.find((slot) => slot.id === selectedSlotId) || clinicBookingSlots[0];
   const customerAddress = customerProfile?.address;
+  const hasCustomerMapLocation = hasMapCoordinates(customerAddress?.lat, customerAddress?.lng);
+  const customerPlaceSource = formatPlaceSource(customerAddress?.addressSource, customerAddress?.googlePlaceId);
+  const customerCoordinateText = hasCustomerMapLocation
+    ? `${customerAddress?.lat?.toFixed(5)}, ${customerAddress?.lng?.toFixed(5)}`
+    : "ยังไม่มี coordinate";
+  const clinicCoordinateText = hasMapCoordinates(selectedClinic?.lat, selectedClinic?.lng)
+    ? `${selectedClinic?.lat?.toFixed(5)}, ${selectedClinic?.lng?.toFixed(5)}`
+    : "รอ clinic coordinate";
   const canCheckAvailability = Boolean(selectedServiceId && customerAddress?.id && addressConfirmed);
   const canCreateBooking = Boolean(canCheckAvailability && availability?.available);
   const canCreatePaymentIntent = Boolean(
@@ -251,6 +259,27 @@ export function CustomerHomeScreen() {
     } catch {
       setTrackingStatus("error");
     }
+  }
+
+  async function handleOpenCustomerAddressInMaps() {
+    const url = buildGoogleMapsSearchUrl({
+      label: customerAddress?.formattedAddress || customerAddress?.condoName,
+      lat: customerAddress?.lat,
+      lng: customerAddress?.lng,
+      placeId: customerAddress?.googlePlaceId,
+    });
+
+    await Linking.openURL(url);
+  }
+
+  async function handleOpenClinicInMaps() {
+    const url = buildGoogleMapsSearchUrl({
+      label: selectedClinic ? `${selectedClinic.name}, ${selectedClinic.address}` : undefined,
+      lat: selectedClinic?.lat,
+      lng: selectedClinic?.lng,
+    });
+
+    await Linking.openURL(url);
   }
 
   async function handleCreatePaymentIntent() {
@@ -674,28 +703,111 @@ export function CustomerHomeScreen() {
             <Text style={styles.selectedClinicLabel}>Partner clinic</Text>
             <Text style={styles.selectedClinicName}>{selectedClinic.name}</Text>
             <Text style={styles.selectedClinicMeta}>{selectedClinic.address} · {selectedClinic.area}</Text>
+            <View style={styles.mapCard}>
+              <View style={styles.mapCanvas}>
+                <View style={[styles.mapRoad, styles.mapRoadPrimary]} />
+                <View style={[styles.mapRoad, styles.mapRoadSecondary]} />
+                <View style={[styles.mapRoad, styles.mapRoadTertiary]} />
+                <View style={[styles.mapBlock, styles.mapBlockOne]} />
+                <View style={[styles.mapBlock, styles.mapBlockTwo]} />
+                <View style={[styles.mapBlock, styles.mapBlockThree]} />
+                <View style={styles.mapPinWrap}>
+                  <Text style={styles.mapPin}>●</Text>
+                </View>
+                <View style={styles.googleMapBadge}>
+                  <Text style={styles.googleMapBadgeText}>Google Maps</Text>
+                </View>
+              </View>
+              <View style={styles.mapDetails}>
+                <View style={styles.mapDetailRow}>
+                  <Text style={styles.mapDetailLabel}>Place source</Text>
+                  <Text style={styles.mapDetailValue}>Partner clinic directory</Text>
+                </View>
+                <View style={styles.mapDetailRow}>
+                  <Text style={styles.mapDetailLabel}>Coordinate</Text>
+                  <Text style={styles.mapDetailValue}>{clinicCoordinateText}</Text>
+                </View>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleOpenClinicInMaps}
+                style={({ pressed }) => [styles.mapSearchButton, pressed ? styles.buttonPressed : null]}
+              >
+                <Text style={styles.mapSearchButtonText}>ค้นหาใน Google Maps</Text>
+              </Pressable>
+            </View>
             <Text style={styles.policyText}>รอบ production จะบันทึก clinic location เป็นข้อมูลแยกจากที่อยู่คอนโดของลูกค้า</Text>
           </View>
         ) : (
           <>
-            <Text style={styles.row}>
-              {customerAddress
-                ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}`
-                : "ยังไม่มีที่อยู่บริการ"}
-            </Text>
-            {customerAddress?.formattedAddress ? <Text style={styles.addressText}>{customerAddress.formattedAddress}</Text> : null}
-            {customerAddress?.lat && customerAddress.lng ? (
-              <Text style={styles.mapText}>
-                ยืนยันจากแผนที่แล้ว · {customerAddress.lat.toFixed(5)}, {customerAddress.lng.toFixed(5)}
-              </Text>
-            ) : (
-              <Text style={styles.warning}>กรุณาบันทึกที่อยู่จากแผนที่ในหน้าโปรไฟล์ก่อนจอง</Text>
-            )}
+            <View style={styles.mapCard}>
+              <View style={styles.mapHeaderRow}>
+                <View>
+                  <Text style={styles.mapTitle}>
+                    {customerAddress ? customerAddress.condoName : "ยังไม่มีที่อยู่บริการ"}
+                  </Text>
+                  <Text style={styles.mapSubtitle}>
+                    {customerAddress?.meetingPoint || "Meeting point not set"}
+                  </Text>
+                </View>
+                <Text style={[styles.mapStatusPill, addressConfirmed ? styles.mapStatusPillReady : null]}>
+                  {addressConfirmed ? "Confirmed" : "Needs confirm"}
+                </Text>
+              </View>
+              <View style={styles.mapCanvas}>
+                <View style={[styles.mapRoad, styles.mapRoadPrimary]} />
+                <View style={[styles.mapRoad, styles.mapRoadSecondary]} />
+                <View style={[styles.mapRoad, styles.mapRoadTertiary]} />
+                <View style={[styles.mapBlock, styles.mapBlockOne]} />
+                <View style={[styles.mapBlock, styles.mapBlockTwo]} />
+                <View style={[styles.mapBlock, styles.mapBlockThree]} />
+                <View style={styles.mapPinWrap}>
+                  <Text style={styles.mapPin}>●</Text>
+                </View>
+                <View style={styles.googleMapBadge}>
+                  <Text style={styles.googleMapBadgeText}>Google Maps</Text>
+                </View>
+              </View>
+              {customerAddress?.formattedAddress ? <Text style={styles.addressText}>{customerAddress.formattedAddress}</Text> : null}
+              <View style={styles.mapDetails}>
+                <View style={styles.mapDetailRow}>
+                  <Text style={styles.mapDetailLabel}>Place source</Text>
+                  <Text style={styles.mapDetailValue}>{customerPlaceSource}</Text>
+                </View>
+                <View style={styles.mapDetailRow}>
+                  <Text style={styles.mapDetailLabel}>Coordinate</Text>
+                  <Text style={styles.mapDetailValue}>{customerCoordinateText}</Text>
+                </View>
+                <View style={styles.mapDetailRow}>
+                  <Text style={styles.mapDetailLabel}>Place ID</Text>
+                  <Text style={styles.mapDetailValue}>
+                    {customerAddress?.googlePlaceId ? shortenPlaceId(customerAddress.googlePlaceId) : "ยังไม่มี place id"}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.mapActionRow}>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={!customerAddress}
+                  onPress={handleOpenCustomerAddressInMaps}
+                  style={({ pressed }) => [
+                    styles.mapSearchButton,
+                    !customerAddress ? styles.buttonDisabled : null,
+                    pressed ? styles.buttonPressed : null,
+                  ]}
+                >
+                  <Text style={styles.mapSearchButtonText}>ค้นหาใน Google Maps</Text>
+                </Pressable>
+              </View>
+              {!hasCustomerMapLocation ? (
+                <Text style={styles.warning}>กรุณาบันทึกที่อยู่จากแผนที่ในหน้าโปรไฟล์ก่อนจอง</Text>
+              ) : null}
+            </View>
           </>
         )}
         <Pressable
           accessibilityRole="button"
-          disabled={!selectedClinic && !customerAddress?.googlePlaceId}
+          disabled={!selectedClinic && !hasCustomerMapLocation}
           onPress={() => {
             setAddressConfirmed((confirmed) => !confirmed);
             resetAvailability();
@@ -703,7 +815,7 @@ export function CustomerHomeScreen() {
           style={({ pressed }) => [
             styles.confirmButton,
             addressConfirmed ? styles.confirmButtonActive : null,
-            !selectedClinic && !customerAddress?.googlePlaceId ? styles.buttonDisabled : null,
+            !selectedClinic && !hasCustomerMapLocation ? styles.buttonDisabled : null,
             pressed ? styles.buttonPressed : null,
           ]}
         >
@@ -1099,6 +1211,43 @@ function formatCommunicationActor(actorRole: string) {
   if (actorRole === "provider") return "ผู้ให้บริการ";
   if (actorRole === "admin") return "ทีมดูแล";
   return "พี่";
+}
+
+function hasMapCoordinates(lat?: number, lng?: number) {
+  return typeof lat === "number" && Number.isFinite(lat) && typeof lng === "number" && Number.isFinite(lng);
+}
+
+function formatPlaceSource(source?: "manual" | "google_places" | "google_places_demo", placeId?: string) {
+  if (source === "google_places") return "Google Places";
+  if (source === "google_places_demo") return "Google Places demo";
+  if (source === "manual") return placeId ? "Manual pin with place id" : "Manual pin";
+  return placeId ? "Saved Google place" : "ยังไม่มี source";
+}
+
+function shortenPlaceId(placeId: string) {
+  if (placeId.length <= 18) return placeId;
+  return `${placeId.slice(0, 10)}...${placeId.slice(-6)}`;
+}
+
+function buildGoogleMapsSearchUrl({
+  label,
+  lat,
+  lng,
+  placeId,
+}: {
+  label?: string;
+  lat?: number;
+  lng?: number;
+  placeId?: string;
+}) {
+  const query = hasMapCoordinates(lat, lng) ? `${lat},${lng}` : label || "Bangkok";
+  const params = [`api=1`, `query=${encodeURIComponent(query)}`];
+
+  if (placeId && !placeId.startsWith("current_location_")) {
+    params.push(`query_place_id=${encodeURIComponent(placeId)}`);
+  }
+
+  return `https://www.google.com/maps/search/?${params.join("&")}`;
 }
 
 function formatSupportReason(reasonCode: BookingSupportCaseDto["reasonCode"]) {
@@ -1812,6 +1961,176 @@ const styles = StyleSheet.create({
   },
   slotTextActive: {
     color: colors.primary,
+  },
+  mapCard: {
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    padding: 10,
+  },
+  mapHeaderRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  mapTitle: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  mapSubtitle: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  mapStatusPill: {
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: colors.surfaceMuted,
+    color: colors.textSoft,
+    fontSize: 10,
+    fontWeight: "900",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  mapStatusPillReady: {
+    backgroundColor: colors.gold,
+    color: colors.text,
+  },
+  mapCanvas: {
+    position: "relative",
+    minHeight: 148,
+    overflow: "hidden",
+    borderRadius: 12,
+    backgroundColor: "#eaf1e7",
+  },
+  mapRoad: {
+    position: "absolute",
+    borderRadius: 999,
+    backgroundColor: "#ffffff",
+  },
+  mapRoadPrimary: {
+    left: -22,
+    right: -18,
+    top: 70,
+    height: 16,
+    transform: [{ rotate: "-13deg" }],
+  },
+  mapRoadSecondary: {
+    left: 92,
+    top: -28,
+    width: 16,
+    bottom: -24,
+    transform: [{ rotate: "18deg" }],
+  },
+  mapRoadTertiary: {
+    left: -18,
+    right: 40,
+    top: 112,
+    height: 10,
+    opacity: 0.86,
+    transform: [{ rotate: "9deg" }],
+  },
+  mapBlock: {
+    position: "absolute",
+    borderRadius: 10,
+    backgroundColor: "rgba(109,76,47,0.10)",
+  },
+  mapBlockOne: {
+    left: 18,
+    top: 18,
+    width: 70,
+    height: 38,
+  },
+  mapBlockTwo: {
+    right: 18,
+    top: 24,
+    width: 86,
+    height: 52,
+  },
+  mapBlockThree: {
+    left: 34,
+    bottom: 16,
+    width: 102,
+    height: 38,
+  },
+  mapPinWrap: {
+    position: "absolute",
+    left: "50%",
+    top: "50%",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 42,
+    height: 42,
+    marginLeft: -21,
+    marginTop: -30,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+  },
+  mapPin: {
+    color: colors.gold,
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 22,
+  },
+  googleMapBadge: {
+    position: "absolute",
+    left: 10,
+    bottom: 10,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  googleMapBadgeText: {
+    color: colors.primaryDark,
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  mapDetails: {
+    gap: 7,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceSoft,
+    padding: 10,
+  },
+  mapDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  mapDetailLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  mapDetailValue: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    textAlign: "right",
+  },
+  mapActionRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  mapSearchButton: {
+    flex: 1,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    paddingVertical: 10,
+  },
+  mapSearchButtonText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: "900",
   },
   addressText: {
     color: colors.textSoft,
