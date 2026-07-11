@@ -107,6 +107,7 @@ export function CustomerHomeScreen() {
   const [supportStatus, setSupportStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [supportCases, setSupportCases] = useState<BookingSupportCaseDto[]>([]);
   const [bookingFlow, setBookingFlow] = useState<"home" | "service" | "clinic">("home");
+  const [bookingStep, setBookingStep] = useState(1);
 
   useEffect(() => {
     Promise.all([
@@ -158,6 +159,7 @@ export function CustomerHomeScreen() {
       setPaymentIntent(undefined);
       setPaymentStatus("idle");
       setReviewAccepted(false);
+      setBookingStep(selectedClinicId ? 5 : 4);
       setStatus("ready");
     } catch {
       setStatus("error");
@@ -168,6 +170,9 @@ export function CustomerHomeScreen() {
   const selectedClinic = partnerClinics.find((clinic) => clinic.id === selectedClinicId);
   const selectedClinicService = selectedClinic?.services.find((service) => service.serviceId === selectedServiceId);
   const isBookingFlowActive = bookingFlow !== "home";
+  const dateTimeStep = selectedClinic ? 3 : 2;
+  const confirmStep = selectedClinic ? 4 : 3;
+  const paymentStep = selectedClinic ? 5 : 4;
   const clinicBookingSlots = clinicSlots.length
     ? clinicSlots.map((slot) => ({
         id: slot.id,
@@ -364,17 +369,17 @@ export function CustomerHomeScreen() {
   const holdCountdownText = `${holdMinutes}:${holdSeconds.toString().padStart(2, "0")}`;
   const bookingProgress = selectedClinic
     ? [
-        { label: "คลินิก", done: true, active: !latestBooking },
-        { label: "หน้าคลินิก", done: Boolean(selectedClinicService), active: !selectedClinicService },
-        { label: "วัน/เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
-        { label: "ยืนยัน", done: addressConfirmed, active: !addressConfirmed },
-        { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: Boolean(latestBooking) },
+        { label: "คลินิก", done: bookingStep > 1, active: bookingStep === 1 },
+        { label: "หน้าคลินิก", done: bookingStep > 2, active: bookingStep === 2 },
+        { label: "วัน/เวลา", done: bookingStep > 3, active: bookingStep === 3 },
+        { label: "ยืนยัน", done: bookingStep > 4, active: bookingStep === 4 },
+        { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: bookingStep === 5 },
       ]
     : [
-        { label: "บริการ", done: Boolean(selectedServiceId), active: !latestBooking },
-        { label: "เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
-        { label: "ที่อยู่", done: addressConfirmed, active: !addressConfirmed },
-        { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: Boolean(latestBooking) },
+        { label: "บริการ", done: bookingStep > 1, active: bookingStep === 1 },
+        { label: "เวลา", done: bookingStep > 2, active: bookingStep === 2 },
+        { label: "ที่อยู่", done: bookingStep > 3, active: bookingStep === 3 },
+        { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: bookingStep === 4 },
       ];
   const paymentReadyText = latestBooking
     ? reviewAccepted
@@ -446,6 +451,7 @@ export function CustomerHomeScreen() {
                 setSelectedServiceId(service.id);
                 setSelectedClinicId(undefined);
                 setBookingFlow("service");
+                setBookingStep(2);
                 setAddressConfirmed(Boolean(customerProfile?.address?.id && customerProfile.address.googlePlaceId));
                 resetAvailability();
               }}
@@ -478,6 +484,7 @@ export function CustomerHomeScreen() {
               setSelectedServiceId(clinic.services[0]?.serviceId);
               setSelectedClinicId(clinic.id);
               setBookingFlow("clinic");
+              setBookingStep(2);
               setSelectedSlotId(`clinic_${bookingSlots[0].id}`);
               setAddressConfirmed(false);
               resetAvailability();
@@ -530,14 +537,14 @@ export function CustomerHomeScreen() {
             : "ลำดับ: บริการ > วัน/เวลา > ที่อยู่ > ตรวจผู้ให้บริการ > ชำระเงิน"}
         </Text>
       </View>
-      {selectedClinic ? (
+      {selectedClinic && bookingStep === 2 ? (
         <View style={styles.selectedClinicCard}>
           <Text style={styles.selectedClinicLabel}>คลินิกที่เลือก</Text>
           <Text style={styles.selectedClinicName}>{selectedClinic.name}</Text>
           <Text style={styles.selectedClinicMeta}>{selectedClinic.area} · {selectedClinic.address}</Text>
         </View>
       ) : null}
-      {selectedClinic ? (
+      {selectedClinic && bookingStep === 2 ? (
         <View style={styles.clinicDetailCard}>
           <View style={styles.clinicHeroRow}>
             <Text style={styles.clinicDetailMark}>{selectedClinic.name.slice(0, 1)}</Text>
@@ -581,6 +588,13 @@ export function CustomerHomeScreen() {
               </Pressable>
             );
           })}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setBookingStep(3)}
+            style={({ pressed }) => [styles.button, pressed ? styles.buttonPressed : null]}
+          >
+            <Text style={styles.buttonText}>เลือกวันและเวลา</Text>
+          </Pressable>
         </View>
       ) : null}
       <View style={styles.bookingProgressCard}>
@@ -601,9 +615,9 @@ export function CustomerHomeScreen() {
           ))}
         </View>
       </View>
-      <View style={styles.stepCard}>
+      {bookingStep === dateTimeStep ? <View style={styles.stepCard}>
         <View style={styles.stepHeader}>
-          <Text style={styles.stepNumber}>1</Text>
+          <Text style={styles.stepNumber}>{selectedClinic ? "3" : "2"}</Text>
           <View>
             <Text style={styles.trackingTitle}>{selectedClinic ? "เลือกเวลาที่คลินิก" : "เลือกวันและเวลา"}</Text>
             <Text style={styles.stepCaption}>
@@ -635,10 +649,17 @@ export function CustomerHomeScreen() {
             );
           })}
         </View>
-      </View>
-      <View style={styles.stepCard}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setBookingStep(confirmStep)}
+          style={({ pressed }) => [styles.buttonSecondary, pressed ? styles.buttonPressed : null]}
+        >
+          <Text style={styles.buttonSecondaryText}>{selectedClinic ? "ยืนยันรอบคลินิก" : "ยืนยันวันเวลา"}</Text>
+        </Pressable>
+      </View> : null}
+      {bookingStep === confirmStep ? <View style={styles.stepCard}>
         <View style={styles.stepHeader}>
-          <Text style={styles.stepNumber}>2</Text>
+          <Text style={styles.stepNumber}>{selectedClinic ? "4" : "3"}</Text>
           <View>
             <Text style={styles.trackingTitle}>{selectedClinic ? "ยืนยันคลินิกพาร์ทเนอร์" : "ยืนยันที่อยู่บริการ"}</Text>
             <Text style={styles.stepCaption}>
@@ -690,10 +711,10 @@ export function CustomerHomeScreen() {
               : addressConfirmed ? "ยืนยันที่อยู่นี้แล้ว" : "ยืนยันที่อยู่นี้"}
           </Text>
         </Pressable>
-      </View>
-      <View style={styles.stepCard}>
+      </View> : null}
+      {bookingStep === confirmStep ? <View style={styles.stepCard}>
         <View style={styles.stepHeader}>
-          <Text style={styles.stepNumber}>3</Text>
+          <Text style={styles.stepNumber}>{selectedClinic ? "4" : "3"}</Text>
           <View>
             <Text style={styles.trackingTitle}>{selectedClinic ? "ตรวจรอบว่างของคลินิก" : "ตรวจผู้ให้บริการ"}</Text>
             <Text style={styles.stepCaption}>
@@ -729,8 +750,8 @@ export function CustomerHomeScreen() {
                 : selectedClinic ? "ตรวจรอบว่างคลินิก" : "ตรวจผู้ให้บริการ"}
           </Text>
         </Pressable>
-      </View>
-      <Pressable
+      </View> : null}
+      {bookingStep === confirmStep ? <Pressable
         accessibilityRole="button"
         disabled={status === "loading" || status === "creating" || !canCreateBooking}
         onPress={handleCreateBooking}
@@ -741,8 +762,8 @@ export function CustomerHomeScreen() {
         ]}
       >
         <Text style={styles.buttonText}>{status === "creating" ? "กำลังสร้างการจอง..." : "ยืนยันการจอง"}</Text>
-      </Pressable>
-      {latestBooking ? (
+      </Pressable> : null}
+      {latestBooking && bookingStep === paymentStep ? (
         <View style={styles.bookingConfirmedCard}>
           <View>
             <Text style={styles.confirmedLabel}>Booking confirmed</Text>
@@ -759,7 +780,7 @@ export function CustomerHomeScreen() {
           </Text>
         </View>
       ) : null}
-      {latestBooking ? (
+      {latestBooking && bookingStep === paymentStep ? (
         <View style={styles.reviewBox}>
           <Text style={styles.trackingTitle}>ตรวจสอบก่อนชำระเงิน</Text>
           <View style={styles.reviewRow}>
@@ -835,7 +856,7 @@ export function CustomerHomeScreen() {
           </Pressable>
         </View>
       ) : null}
-      {latestBooking ? <View style={styles.paymentBox}>
+      {latestBooking && bookingStep === paymentStep ? <View style={styles.paymentBox}>
         <View style={styles.paymentHeader}>
           <View>
             <Text style={styles.trackingTitle}>ชำระเงิน</Text>
@@ -931,7 +952,7 @@ export function CustomerHomeScreen() {
         {paymentIntent?.checkoutUrl ? <Text style={styles.note}>ชำระเงินในหน้า Omise/QR ที่เปิดขึ้น ระบบจะยืนยันการจองหลังได้รับสถานะชำระเงิน</Text> : null}
         {paymentStatus === "error" ? <Text style={styles.error}>ชำระเงินไม่สำเร็จ กรุณาลองอีกครั้ง</Text> : null}
       </View> : null}
-      <View style={styles.trackingBox}>
+      {latestBooking && bookingStep === paymentStep ? <View style={styles.trackingBox}>
         <Text style={styles.trackingTitle}>ติดตามผู้ให้บริการ</Text>
         <Text style={styles.row}>จะแสดงเมื่อผู้ให้บริการรับงานและเริ่มเดินทาง</Text>
         {trackedLocation ? (
@@ -954,8 +975,8 @@ export function CustomerHomeScreen() {
             {trackingStatus === "loading" ? "กำลังอัปเดต..." : "อัปเดตตำแหน่ง"}
           </Text>
         </Pressable>
-      </View>
-      {timeline.length > 0 ? (
+      </View> : null}
+      {timeline.length > 0 && bookingStep === paymentStep ? (
         <View style={styles.timelineBox}>
           <Text style={styles.trackingTitle}>สถานะการจอง</Text>
           {timeline.map((event) => (
