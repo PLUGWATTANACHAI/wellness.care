@@ -47,6 +47,7 @@ const partnerClinics = [
     name: "Sathorn Wellness Clinic",
     type: "Aroma recovery · Office stretch",
     area: "Sathorn · 1.8 km",
+    address: "Empire Tower, Sathorn",
     note: "รับ booking หลังเลิกงาน",
     serviceId: "svc_beauty_90",
   },
@@ -55,6 +56,7 @@ const partnerClinics = [
     name: "Langsuan Recovery Studio",
     type: "Therapy room · Wellness kit",
     area: "Langsuan · 2.4 km",
+    address: "Langsuan Village, Chidlom",
     note: "เหมาะกับแพ็กเกจฟื้นฟู",
     serviceId: "svc_product_sleep",
   },
@@ -306,12 +308,19 @@ export function CustomerHomeScreen() {
   const holdMinutes = Math.floor(holdSecondsRemaining / 60);
   const holdSeconds = holdSecondsRemaining % 60;
   const holdCountdownText = `${holdMinutes}:${holdSeconds.toString().padStart(2, "0")}`;
-  const bookingProgress = [
-    { label: "บริการ", done: Boolean(selectedServiceId), active: !latestBooking },
-    { label: "เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
-    { label: "ที่อยู่", done: addressConfirmed, active: !addressConfirmed },
-    { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: Boolean(latestBooking) },
-  ];
+  const bookingProgress = selectedClinic
+    ? [
+        { label: "คลินิก", done: true, active: !latestBooking },
+        { label: "เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
+        { label: "ยืนยัน", done: addressConfirmed, active: !addressConfirmed },
+        { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: Boolean(latestBooking) },
+      ]
+    : [
+        { label: "บริการ", done: Boolean(selectedServiceId), active: !latestBooking },
+        { label: "เวลา", done: Boolean(selectedSlotId), active: !latestBooking },
+        { label: "ที่อยู่", done: addressConfirmed, active: !addressConfirmed },
+        { label: "ชำระเงิน", done: paymentIntent?.status === "succeeded", active: Boolean(latestBooking) },
+      ];
   const paymentReadyText = latestBooking
     ? reviewAccepted
       ? priceBreakdown && slotHold?.held
@@ -381,6 +390,7 @@ export function CustomerHomeScreen() {
               onPress={() => {
                 setSelectedServiceId(service.id);
                 setSelectedClinicId(undefined);
+                setAddressConfirmed(Boolean(customerProfile?.address?.id && customerProfile.address.googlePlaceId));
                 resetAvailability();
               }}
               style={({ pressed }) => [
@@ -411,6 +421,7 @@ export function CustomerHomeScreen() {
             onPress={() => {
               setSelectedServiceId(clinic.serviceId);
               setSelectedClinicId(clinic.id);
+              setAddressConfirmed(true);
               resetAvailability();
             }}
             style={({ pressed }) => [
@@ -462,8 +473,10 @@ export function CustomerHomeScreen() {
         <View style={styles.stepHeader}>
           <Text style={styles.stepNumber}>1</Text>
           <View>
-            <Text style={styles.trackingTitle}>เลือกวันและเวลา</Text>
-            <Text style={styles.stepCaption}>เวลาที่ผู้ให้บริการสามารถเตรียมงานได้</Text>
+            <Text style={styles.trackingTitle}>{selectedClinic ? "เลือกเวลาที่คลินิก" : "เลือกวันและเวลา"}</Text>
+            <Text style={styles.stepCaption}>
+              {selectedClinic ? "ช่วงเวลาที่คลินิกพาร์ทเนอร์รับ booking" : "เวลาที่ผู้ให้บริการสามารถเตรียมงานได้"}
+            </Text>
           </View>
         </View>
         <View style={styles.slotList}>
@@ -494,26 +507,39 @@ export function CustomerHomeScreen() {
         <View style={styles.stepHeader}>
           <Text style={styles.stepNumber}>2</Text>
           <View>
-            <Text style={styles.trackingTitle}>ยืนยันที่อยู่บริการ</Text>
-            <Text style={styles.stepCaption}>ใช้ตำแหน่งจากแผนที่เพื่อให้ผู้ให้บริการเดินทางถูกต้อง</Text>
+            <Text style={styles.trackingTitle}>{selectedClinic ? "ยืนยันคลินิกพาร์ทเนอร์" : "ยืนยันที่อยู่บริการ"}</Text>
+            <Text style={styles.stepCaption}>
+              {selectedClinic ? "ระบบจะส่งคำขอจองไปยังคลินิกนี้ และยืนยันรายละเอียดก่อนชำระเงิน" : "ใช้ตำแหน่งจากแผนที่เพื่อให้ผู้ให้บริการเดินทางถูกต้อง"}
+            </Text>
           </View>
         </View>
-        <Text style={styles.row}>
-          {customerAddress
-            ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}`
-            : "ยังไม่มีที่อยู่บริการ"}
-        </Text>
-        {customerAddress?.formattedAddress ? <Text style={styles.addressText}>{customerAddress.formattedAddress}</Text> : null}
-        {customerAddress?.lat && customerAddress.lng ? (
-          <Text style={styles.mapText}>
-            ยืนยันจากแผนที่แล้ว · {customerAddress.lat.toFixed(5)}, {customerAddress.lng.toFixed(5)}
-          </Text>
+        {selectedClinic ? (
+          <View style={styles.clinicBookingCard}>
+            <Text style={styles.selectedClinicLabel}>Partner clinic</Text>
+            <Text style={styles.selectedClinicName}>{selectedClinic.name}</Text>
+            <Text style={styles.selectedClinicMeta}>{selectedClinic.address} · {selectedClinic.area}</Text>
+            <Text style={styles.policyText}>รอบ production จะบันทึก clinic location เป็นข้อมูลแยกจากที่อยู่คอนโดของลูกค้า</Text>
+          </View>
         ) : (
-          <Text style={styles.warning}>กรุณาบันทึกที่อยู่จากแผนที่ในหน้าโปรไฟล์ก่อนจอง</Text>
+          <>
+            <Text style={styles.row}>
+              {customerAddress
+                ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}`
+                : "ยังไม่มีที่อยู่บริการ"}
+            </Text>
+            {customerAddress?.formattedAddress ? <Text style={styles.addressText}>{customerAddress.formattedAddress}</Text> : null}
+            {customerAddress?.lat && customerAddress.lng ? (
+              <Text style={styles.mapText}>
+                ยืนยันจากแผนที่แล้ว · {customerAddress.lat.toFixed(5)}, {customerAddress.lng.toFixed(5)}
+              </Text>
+            ) : (
+              <Text style={styles.warning}>กรุณาบันทึกที่อยู่จากแผนที่ในหน้าโปรไฟล์ก่อนจอง</Text>
+            )}
+          </>
         )}
         <Pressable
           accessibilityRole="button"
-          disabled={!customerAddress?.googlePlaceId}
+          disabled={!selectedClinic && !customerAddress?.googlePlaceId}
           onPress={() => {
             setAddressConfirmed((confirmed) => !confirmed);
             resetAvailability();
@@ -521,12 +547,14 @@ export function CustomerHomeScreen() {
           style={({ pressed }) => [
             styles.confirmButton,
             addressConfirmed ? styles.confirmButtonActive : null,
-            !customerAddress?.googlePlaceId ? styles.buttonDisabled : null,
+            !selectedClinic && !customerAddress?.googlePlaceId ? styles.buttonDisabled : null,
             pressed ? styles.buttonPressed : null,
           ]}
         >
           <Text style={[styles.confirmButtonText, addressConfirmed ? styles.confirmButtonTextActive : null]}>
-            {addressConfirmed ? "ยืนยันที่อยู่นี้แล้ว" : "ยืนยันที่อยู่นี้"}
+            {selectedClinic
+              ? addressConfirmed ? "ยืนยันคลินิกนี้แล้ว" : "ยืนยันคลินิกนี้"
+              : addressConfirmed ? "ยืนยันที่อยู่นี้แล้ว" : "ยืนยันที่อยู่นี้"}
           </Text>
         </Pressable>
       </View>
@@ -534,16 +562,20 @@ export function CustomerHomeScreen() {
         <View style={styles.stepHeader}>
           <Text style={styles.stepNumber}>3</Text>
           <View>
-            <Text style={styles.trackingTitle}>ตรวจผู้ให้บริการ</Text>
-            <Text style={styles.stepCaption}>ระบบจะจับคู่จากบริการ เวลา และพื้นที่ของพี่</Text>
+            <Text style={styles.trackingTitle}>{selectedClinic ? "ตรวจรอบว่างของคลินิก" : "ตรวจผู้ให้บริการ"}</Text>
+            <Text style={styles.stepCaption}>
+              {selectedClinic ? "รอบนี้ยังใช้ availability pipeline เดิม และเตรียมต่อ clinic slots ใน production" : "ระบบจะจับคู่จากบริการ เวลา และพื้นที่ของพี่"}
+            </Text>
           </View>
         </View>
         <Text style={styles.row}>
           {availability?.available && availability.nearestProvider
-            ? `${availability.nearestProvider.name} พร้อมให้บริการ · ${(availability.nearestProvider.distanceMeters / 1000).toFixed(2)} กม.`
+            ? selectedClinic
+              ? `${selectedClinic.name} รับคำขอจองได้ · ใช้บริการ ${selectedService?.name ?? "ที่เลือก"}`
+              : `${availability.nearestProvider.name} พร้อมให้บริการ · ${(availability.nearestProvider.distanceMeters / 1000).toFixed(2)} กม.`
             : availabilityStatus === "unavailable"
               ? describeAvailabilityReason(availability?.reason)
-              : "กดตรวจผู้ให้บริการก่อนยืนยันการจอง"}
+              : selectedClinic ? "กดตรวจรอบว่างของคลินิกก่อนยืนยันการจอง" : "กดตรวจผู้ให้บริการก่อนยืนยันการจอง"}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -560,8 +592,8 @@ export function CustomerHomeScreen() {
             {availabilityStatus === "checking"
               ? "กำลังตรวจ..."
               : availability?.available
-                ? "มีผู้ให้บริการพร้อม"
-                : "ตรวจผู้ให้บริการ"}
+                ? selectedClinic ? "คลินิกพร้อมรับจอง" : "มีผู้ให้บริการพร้อม"
+                : selectedClinic ? "ตรวจรอบว่างคลินิก" : "ตรวจผู้ให้บริการ"}
           </Text>
         </Pressable>
       </View>
@@ -586,7 +618,9 @@ export function CustomerHomeScreen() {
           <View style={styles.confirmedPill}>
             <Text style={styles.confirmedPillText}>{formatBookingStatus(latestBooking.status)}</Text>
           </View>
-          <Text style={styles.confirmedMeta}>{selectedSlot.label} · {selectedService?.name ?? latestBooking.serviceId}</Text>
+          <Text style={styles.confirmedMeta}>
+            {selectedClinic ? `${selectedClinic.name} · ` : ""}{selectedSlot.label} · {selectedService?.name ?? latestBooking.serviceId}
+          </Text>
           <Text style={styles.confirmedMeta}>
             {slotHold?.held ? `คิวถูกล็อกไว้ · เหลือ ${holdCountdownText}` : "คิวหมดเวลา กรุณาตรวจผู้ให้บริการอีกครั้ง"}
           </Text>
@@ -599,14 +633,22 @@ export function CustomerHomeScreen() {
             <Text style={styles.reviewLabel}>บริการ</Text>
             <Text style={styles.reviewValue}>{selectedService?.name ?? latestBooking.serviceId}</Text>
           </View>
+          {selectedClinic ? (
+            <View style={styles.reviewRow}>
+              <Text style={styles.reviewLabel}>คลินิก</Text>
+              <Text style={styles.reviewValue}>{selectedClinic.name}</Text>
+            </View>
+          ) : null}
           <View style={styles.reviewRow}>
             <Text style={styles.reviewLabel}>วันและเวลา</Text>
             <Text style={styles.reviewValue}>{selectedSlot.label}</Text>
           </View>
           <View style={styles.reviewRow}>
-            <Text style={styles.reviewLabel}>ที่อยู่</Text>
+            <Text style={styles.reviewLabel}>{selectedClinic ? "สถานที่" : "ที่อยู่"}</Text>
             <Text style={styles.reviewValue}>
-              {customerAddress ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}` : latestBooking.addressId}
+              {selectedClinic
+                ? selectedClinic.address
+                : customerAddress ? `${customerAddress.condoName} · ${customerAddress.meetingPoint || "meeting point not set"}` : latestBooking.addressId}
             </Text>
           </View>
           <View style={styles.reviewRow}>
@@ -653,7 +695,9 @@ export function CustomerHomeScreen() {
           >
             <Text style={[styles.reviewCheckbox, reviewAccepted ? styles.reviewCheckboxActive : null]}>{reviewAccepted ? "✓" : ""}</Text>
             <Text style={[styles.reviewConsentText, reviewAccepted ? styles.reviewConsentTextActive : null]}>
-              ตรวจสอบบริการ เวลา ที่อยู่ ยอดชำระ และเงื่อนไขการยกเลิกแล้ว
+              {selectedClinic
+                ? "ตรวจสอบบริการ เวลา คลินิก ยอดชำระ และเงื่อนไขการยกเลิกแล้ว"
+                : "ตรวจสอบบริการ เวลา ที่อยู่ ยอดชำระ และเงื่อนไขการยกเลิกแล้ว"}
             </Text>
           </Pressable>
         </View>
@@ -1270,6 +1314,14 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     lineHeight: 18,
+  },
+  clinicBookingCard: {
+    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    padding: 12,
   },
   stepCard: {
     gap: 9,
