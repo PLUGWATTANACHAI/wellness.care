@@ -176,6 +176,108 @@ function homeScreen() {
   `;
 }
 
+function activityScreen() {
+  return `
+    <section class="tabScreen">
+      <header class="appHeader">
+        <div>
+          <p>Activity</p>
+          <h1>สถานะการจอง</h1>
+        </div>
+      </header>
+      <article class="recentCard">
+        <span>${state.bookingCode || "ยังไม่มีรายการใหม่"}</span>
+        <strong>${state.bookingCode ? "รอชำระเงิน / รอตรวจสอบ" : "เริ่มจองบริการจากหน้า Home"}</strong>
+        <p>${state.bookingCode ? "รายการล่าสุดจะใช้สำหรับติดตามสถานะ ผู้ให้บริการ และข้อความจากทีมดูแล" : "เมื่อมี booking แล้ว รายการล่าสุดและ timeline จะแสดงที่หน้านี้"}</p>
+      </article>
+      <article class="trackingCard">
+        <mark>Tracking</mark>
+        <strong>ตำแหน่งผู้ให้บริการจะแสดงเมื่อรับงานแล้ว</strong>
+        <div class="routeLine"><span></span><span></span><span></span></div>
+        <p>รอบ production จะแสดง ETA และตำแหน่งแบบ real-time เฉพาะ booking ที่กำลังให้บริการ</p>
+      </article>
+    </section>
+  `;
+}
+
+function profileScreen() {
+  return `
+    <section class="tabScreen">
+      <header class="appHeader">
+        <div>
+          <p>Profile</p>
+          <h1>ข้อมูลลูกค้า</h1>
+        </div>
+      </header>
+      <div class="screenBlock">
+        <label class="fieldLabel">ชื่อ นามสกุล<input value="Plug Wattanachai" /></label>
+        <label class="fieldLabel">อีเมล<input value="plug@example.com" /></label>
+        <label class="fieldLabel">เบอร์โทร<input value="0812345678" /></label>
+        <label class="fieldLabel">ที่อยู่หลัก<input value="${escapeHtml(state.address)}" /></label>
+        <button class="primaryButton" data-action="go-home">บันทึกข้อมูล</button>
+      </div>
+    </section>
+  `;
+}
+
+function safetyScreen() {
+  return `
+    <section class="tabScreen">
+      <header class="appHeader">
+        <div>
+          <p>Safety</p>
+          <h1>ความปลอดภัย</h1>
+        </div>
+      </header>
+      <div class="screenBlock">
+        <article class="policyCard">
+          <strong>Location consent</strong>
+          <p>ขออนุญาตตำแหน่งเพื่อยืนยันพื้นที่บริการและติดตามเฉพาะ booking ที่กำลังดำเนินการ</p>
+        </article>
+        <article class="policyCard">
+          <strong>PDPA & privacy</strong>
+          <p>ลูกค้าสามารถดูสิทธิ์ ข้อมูลที่เก็บ และช่องทางลบหรือแก้ไขข้อมูลได้จากหน้านี้</p>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function providerScreen() {
+  return `
+    <section class="tabScreen">
+      <header class="appHeader">
+        <div>
+          <p>Provider</p>
+          <h1>ฝั่งผู้ให้บริการ</h1>
+        </div>
+      </header>
+      <article class="providerCard">
+        <div class="avatar">M</div>
+        <div>
+          <strong>Mina Wellness</strong>
+          <p>พร้อมรับงาน · Sathorn zone</p>
+        </div>
+        <span>Online</span>
+      </article>
+      <div class="screenBlock">
+        <h2>งานใหม่</h2>
+        <p class="finePrint">หน้านี้จะใช้สำหรับรับงาน อัปเดตสถานะเดินทาง และแชร์ตำแหน่งเมื่อผู้ให้บริการกดยินยอม</p>
+      </div>
+    </section>
+  `;
+}
+
+function activeScreen() {
+  if (!state.signedIn) return state.screen === "signup" ? signupScreen() : loginScreen();
+  if (state.screen === "booking") return bookingScreen();
+  if (state.screen === "activity") return activityScreen();
+  if (state.screen === "profile") return profileScreen();
+  if (state.screen === "safety") return safetyScreen();
+  if (state.screen === "provider") return providerScreen();
+  return homeScreen();
+}
+
 function bookingScreen() {
   const service = selectedService();
   const clinic = selectedClinic();
@@ -331,7 +433,7 @@ function render() {
         <span>${appContent.preview.sizeLabel}</span>
       </div>
       <div class="phoneFrame" aria-label="Wellnest mobile app preview">
-        ${state.signedIn ? (state.screen === "booking" ? bookingScreen() : homeScreen()) : state.screen === "signup" ? signupScreen() : loginScreen()}
+        ${activeScreen()}
         ${state.signedIn ? bottomNav() : ""}
       </div>
     </main>
@@ -343,8 +445,9 @@ function bottomNav() {
   const items = [
     ["home", "Home"],
     ["activity", "Activity"],
-    ["wallet", "Wallet"],
     ["profile", "Profile"],
+    ["safety", "Safety"],
+    ["provider", "Provider"],
   ];
   return `
     <nav class="bottomNav">
@@ -388,6 +491,10 @@ function bindEvents() {
     button.addEventListener("click", () => {
       state.serviceId = button.dataset.service;
       state.clinicId = "";
+      if (state.screen === "home") {
+        state.screen = "booking";
+        state.step = 2;
+      }
       render();
     });
   });
@@ -451,7 +558,6 @@ function bindEvents() {
   document.querySelectorAll("[data-action='nav']").forEach((button) => {
     button.addEventListener("click", () => {
       state.screen = button.dataset.screen;
-      if (state.screen !== "home") state.screen = "home";
       render();
     });
   });

@@ -94,7 +94,7 @@ export default function App() {
     <AppErrorBoundary>
       <SafeAreaView style={styles.safe}>
         <StatusBar barStyle="dark-content" />
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView contentContainerStyle={[styles.container, isSignedIn ? styles.containerWithBottomNav : null]}>
         <View style={styles.topBar}>
           <View>
             <Text style={styles.memberLine}>{session ? "พร้อมดูแลพี่วันนี้" : "Condo wellness, on demand"}</Text>
@@ -104,21 +104,7 @@ export default function App() {
             <Text style={styles.profileBadgeText}>{session?.user.name?.slice(0, 1) || "W"}</Text>
           </View>
         </View>
-        {isSignedIn ? <View style={styles.walletRow}>
-          <View style={styles.walletTile}>
-            <Text style={styles.walletLabel}>Coins</Text>
-            <Text style={styles.walletValue}>0</Text>
-          </View>
-          <View style={styles.walletTile}>
-            <Text style={styles.walletLabel}>Points</Text>
-            <Text style={styles.walletValue}>0</Text>
-          </View>
-          <View style={styles.walletTile}>
-            <Text style={styles.walletLabel}>Tier</Text>
-            <Text style={styles.walletValue}>Member</Text>
-          </View>
-        </View> : null}
-        <View style={styles.heroCard}>
+        {!isSignedIn ? <View style={styles.heroCard}>
           <View style={styles.heroCopy}>
             <Text style={styles.heroKicker}>{isSignedIn ? "Private wellness" : "เข้าสู่ระบบเพื่อเริ่มดูแลตัวเอง"}</Text>
             <Text style={styles.heroTitle}>{isSignedIn ? "จองบริการดูแลตัวเองแบบส่วนตัว" : "Wellness service ที่มาหาพี่ถึงคอนโด"}</Text>
@@ -129,44 +115,8 @@ export default function App() {
             <Text style={styles.heroTrustName}>Verified care</Text>
             <Text style={styles.heroTrustMeta}>ยืนยันพื้นที่ · ชำระเงินปลอดภัย · ติดตามสถานะ</Text>
           </View>
-        </View>
-        {isSignedIn ? <View style={styles.awBand}>
-          <View style={styles.awMiniMark}>
-            <Text style={styles.awMiniMarkText}>AW</Text>
-          </View>
-          <View>
-            <Text style={styles.awBandEyebrow}>Featured campaign</Text>
-            <Text style={styles.awBandTitle}>Wellness Week Privilege</Text>
-            <Text style={styles.awBandCopy}>พื้นที่สำหรับ artwork โปรโมชันหลัก แพ็กเกจช่วงเย็น หรือแบรนด์พาร์ทเนอร์</Text>
-          </View>
-        </View> : null}
-        {isSignedIn ? <View style={styles.clinicTeaserBand}>
-          <View>
-            <Text style={styles.promoTitle}>Partner Clinics</Text>
-            <Text style={styles.promoCopy}>เลือกคลินิกพาร์ทเนอร์ ดูโปรโมชันและรายการ แล้วจองรอบได้จากหน้า Home</Text>
-          </View>
-          <Pressable accessibilityRole="button" onPress={() => setRole("customer")} style={({ pressed }) => [styles.teaserButton, pressed ? styles.tabPressed : null]}>
-            <Text style={styles.teaserButtonText}>จอง</Text>
-          </Pressable>
         </View> : null}
         {isSignedIn ? <StartupLocationStatusCard onRetry={handleRetryStartupLocation} status={startupLocationStatus} /> : null}
-        {isSignedIn ? <View style={styles.demoPanel}>
-          <Text style={styles.demoTitle}>เส้นทางการจอง</Text>
-          <View style={styles.demoSteps}>
-            <DemoStep active={role === "customer"} label="เลือกบริการ" onPress={() => setRole("customer")} />
-            <DemoStep active={role === "account"} label="ที่อยู่" onPress={() => setRole("account")} />
-            <DemoStep active={role === "notifications"} label="สถานะ" onPress={() => setRole("notifications")} />
-            <DemoStep active={role === "privacy"} label="ความปลอดภัย" onPress={() => setRole("privacy")} />
-          </View>
-          <Text style={styles.demoCopy}>{getDemoHint(role)}</Text>
-        </View> : null}
-        {isSignedIn ? <View style={styles.tabs}>
-          <RoleTab active={role === "customer"} label="Home" onPress={() => setRole("customer")} />
-          <RoleTab active={role === "notifications"} label="Activity" onPress={() => setRole("notifications")} />
-          <RoleTab active={role === "account"} label="Profile" onPress={() => setRole("account")} />
-          <RoleTab active={role === "privacy"} label="Safety" onPress={() => setRole("privacy")} />
-          <RoleTab active={role === "provider"} label="Provider" onPress={() => setRole("provider")} />
-        </View> : null}
         {sessionStatus === "auth_required" && authMode === "sign_in" ? (
           <TesterLoginCard
             role={activeLoginRole}
@@ -189,7 +139,7 @@ export default function App() {
             }}
           />
         ) : null}
-        {sessionStatus === "ready" && activeLoginRole === "customer" ? (
+        {sessionStatus === "ready" && role === "customer" ? (
           <PilotSetupCard currentRole={role} onGoAccount={() => setRole("account")} onGoBooking={() => setRole("customer")} />
         ) : null}
         {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy /> : null}
@@ -200,6 +150,15 @@ export default function App() {
         {sessionStatus === "loading" ? <Text style={styles.loadingText}>Checking secure session...</Text> : null}
         {sessionStatus === "error" ? <Text style={styles.errorText}>Could not start a secure session. Please retry.</Text> : null}
         </ScrollView>
+        {isSignedIn ? (
+          <View style={styles.bottomNav}>
+            <RoleTab active={role === "customer"} label="Home" onPress={() => setRole("customer")} />
+            <RoleTab active={role === "notifications"} label="Activity" onPress={() => setRole("notifications")} />
+            <RoleTab active={role === "account"} label="Profile" onPress={() => setRole("account")} />
+            <RoleTab active={role === "privacy"} label="Safety" onPress={() => setRole("privacy")} />
+            <RoleTab active={role === "provider"} label="Provider" onPress={() => setRole("provider")} />
+          </View>
+        ) : null}
       </SafeAreaView>
     </AppErrorBoundary>
   );
@@ -630,6 +589,9 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 18,
   },
+  containerWithBottomNav: {
+    paddingBottom: 108,
+  },
   topBar: {
     minHeight: 54,
     flexDirection: "row",
@@ -848,9 +810,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "800",
   },
-  tabs: {
+  bottomNav: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 10,
+    minHeight: 68,
     flexDirection: "row",
-    gap: 8,
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    shadowColor: colors.primaryDark,
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
   },
   demoPanel: {
     gap: 10,
@@ -896,14 +874,14 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    paddingVertical: 10,
+    justifyContent: "center",
+    minHeight: 48,
+    borderRadius: 12,
+    backgroundColor: "transparent",
+    paddingHorizontal: 4,
+    paddingVertical: 8,
   },
   tabActive: {
-    borderColor: colors.primary,
     backgroundColor: colors.surfaceMuted,
   },
   tabPressed: {
@@ -911,7 +889,8 @@ const styles = StyleSheet.create({
   },
   tabText: {
     color: colors.textSoft,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "900",
   },
   tabTextActive: {
     color: colors.primary,

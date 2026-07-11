@@ -400,6 +400,8 @@ export function CustomerHomeScreen() {
           <Text style={styles.liveBadgeText}>{status === "error" ? "Offline" : "Online"}</Text>
         </View>
       </View>
+      {!isBookingFlowActive ? (
+        <>
       <View style={styles.walletStrip}>
         <View style={styles.walletTile}>
           <Text style={styles.walletLabel}>Coins</Text>
@@ -505,13 +507,13 @@ export function CustomerHomeScreen() {
           </Pressable>
         ))}
       </View>
-      {!isBookingFlowActive ? (
-        <View style={styles.homeReadyCard}>
+      <View style={styles.homeReadyCard}>
           <Text style={styles.homeReadyTitle}>เลือกบริการหรือคลินิกเพื่อเริ่มจอง</Text>
           <Text style={styles.homeReadyCopy}>
             หน้า Home จะเก็บเฉพาะบริการ โปรโมชัน และพาร์ทเนอร์คลินิก ส่วนรายละเอียดวันเวลา ยืนยัน และชำระเงินจะเปิดหลังพี่เลือกสิ่งที่ต้องการ
           </Text>
         </View>
+        </>
       ) : null}
       {isBookingFlowActive ? (
         <>

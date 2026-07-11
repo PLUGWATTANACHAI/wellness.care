@@ -71,13 +71,16 @@ button {
 
 .loginScreen,
 .homeScreen,
-.bookingScreen {
+.bookingScreen,
+.tabScreen {
   flex: 1;
   overflow: auto;
   padding: var(--screen-padding);
 }
 
-.homeScreen {
+.homeScreen,
+.bookingScreen,
+.tabScreen {
   padding-bottom: 86px;
 }
 
@@ -632,6 +635,7 @@ input {
 .promoCard,
 .providerCard,
 .recentCard,
+.policyCard,
 .screenBlock,
 .progressPanel,
 .mapCard,
@@ -674,6 +678,26 @@ input {
   gap: 10px;
   align-items: center;
   padding: 10px;
+}
+
+.tabScreen {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.policyCard {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.policyCard p,
+.trackingCard p,
+.screenBlock p {
+  margin: 0;
+  color: var(--text-soft);
+  line-height: 1.45;
 }
 
 .avatar {
@@ -909,7 +933,7 @@ input {
 
 .bottomNav {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
   border-top: 1px solid #d8c8b6;
   background: rgba(255, 255, 255, 0.96);
@@ -917,11 +941,14 @@ input {
 }
 
 .bottomNav button {
+  min-width: 0;
   min-height: 42px;
   border: 0;
   background: transparent;
   color: #7d6d5c;
-  font-size: 12px;
+  font-size: 10px;
+  padding: 0 2px;
+  white-space: nowrap;
 }
 
 .bottomNav .active {
