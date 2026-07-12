@@ -47,6 +47,20 @@ const locationSuggestions = [
   },
 ];
 
+const dateOptions = Array.from({ length: 7 }, (_, index) => {
+  const date = new Date(Date.now() + (index + 1) * 86400000);
+  const value = date.toISOString().slice(0, 10);
+  return {
+    value,
+    weekday: new Intl.DateTimeFormat("th-TH", { weekday: "short" }).format(date),
+    day: new Intl.DateTimeFormat("th-TH", { day: "2-digit" }).format(date),
+    month: new Intl.DateTimeFormat("th-TH", { month: "short" }).format(date),
+    year: new Intl.DateTimeFormat("th-TH", { year: "numeric" }).format(date),
+  };
+});
+
+const timeOptions = ["10:00", "13:30", "16:00", "18:30", "20:00"];
+
 function currency(value) {
   return value.toLocaleString("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 });
 }
@@ -110,10 +124,10 @@ function loginScreen() {
       </div>
       <div class="divider"><span>${copy.socialDivider}</span></div>
       <div class="loginOptions" aria-label="Social login options">
-        <button class="authLogoButton apple" data-action="social-login" data-provider="apple" aria-label="Sign in with Apple"><span></span></button>
-        <button class="authLogoButton facebook" data-action="social-login" data-provider="facebook" aria-label="Sign in with Facebook"><span>f</span></button>
+        <button class="authLogoButton apple" data-action="social-login" data-provider="apple" aria-label="Sign in with Apple"><span></span><small>Apple</small></button>
+        <button class="authLogoButton facebook" data-action="social-login" data-provider="facebook" aria-label="Sign in with Facebook"><span>f</span><small>Facebook</small></button>
         <button class="authLogoButton gmail" data-action="social-login" data-provider="gmail" aria-label="Sign in with Gmail">
-          <span class="gmailMark">G</span>
+          <span class="gmailMark">G</span><small>Gmail</small>
         </button>
       </div>
       <p class="finePrint">${copy.note}</p>
@@ -360,8 +374,6 @@ function bookingScreen() {
   const service = selectedService();
   const clinic = selectedClinic();
   const safeAddress = escapeHtml(state.address);
-  const date = dateParts();
-  const locationPicker = state.locationPickerOpen ? locationPickerModal() : "";
   const tabs = clinic
     ? [
         [1, "คลินิก"],
@@ -431,12 +443,26 @@ function bookingScreen() {
         <div class="screenBlock">
           <h2>${clinic ? "วัน เวลา และคลินิก" : "วัน เวลา และสถานที่"}</h2>
           <div class="dateTimePanel">
-            <div class="datePickerRow" aria-label="Service date">
-              <label class="fieldLabel">วัน<input data-date-part="day" inputmode="numeric" maxlength="2" value="${date.day}" /></label>
-              <label class="fieldLabel">เดือน<input data-date-part="month" inputmode="numeric" maxlength="2" value="${date.month}" /></label>
-              <label class="fieldLabel">ปี<input data-date-part="year" inputmode="numeric" maxlength="4" value="${date.year}" /></label>
+            <div>
+              <span class="pickerLabel">เลือกวัน / เดือน / ปี</span>
+              <div class="dateOptionGrid" aria-label="Service date">
+                ${dateOptions.map((option) => `
+                  <button class="${state.date === option.value ? "selected" : ""}" data-action="select-date" data-date="${option.value}">
+                    <small>${option.weekday}</small>
+                    <strong>${option.day}</strong>
+                    <span>${option.month} ${option.year}</span>
+                  </button>
+                `).join("")}
+              </div>
             </div>
-            <label class="fieldLabel timeField">เวลา<input type="time" data-field="time" value="${state.time}" /></label>
+            <div>
+              <span class="pickerLabel">เลือกเวลา</span>
+              <div class="timeOptionGrid" aria-label="Service time">
+                ${timeOptions.map((time) => `
+                  <button class="${state.time === time ? "selected" : ""}" data-action="select-time" data-time="${time}">${time}</button>
+                `).join("")}
+              </div>
+            </div>
             <p>เลือกวันที่ ${displayDate()} เวลา ${state.time} ระบบจะตรวจสอบ provider/clinic slot ให้อีกครั้งก่อนจ่ายเงิน</p>
           </div>
           <div class="locationSelectCard">
@@ -485,7 +511,6 @@ function bookingScreen() {
           <button class="primaryButton" data-action="pay">${state.payment === "promptpay" ? "สร้าง QR ชำระเงิน" : "ชำระด้วยบัตร"}</button>
         </div>
       ` : ""}
-      ${locationPicker}
     </section>
   `;
 }
@@ -563,6 +588,7 @@ function render() {
       <div class="phoneFrame" aria-label="Wellnest mobile app preview">
         ${activeScreen()}
         ${state.signedIn ? bottomNav() : ""}
+        ${state.locationPickerOpen ? locationPickerModal() : ""}
       </div>
     </main>
   `;
@@ -692,11 +718,15 @@ function bindEvents() {
       render();
     });
   });
-  document.querySelectorAll("[data-date-part]").forEach((input) => {
-    input.addEventListener("input", (event) => {
-      const current = dateParts();
-      const next = { ...current, [input.dataset.datePart]: event.target.value };
-      state.date = `${next.year.padStart(4, "0")}-${next.month.padStart(2, "0")}-${next.day.padStart(2, "0")}`;
+  document.querySelectorAll("[data-action='select-date']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.date = button.dataset.date;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-action='select-time']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.time = button.dataset.time;
       render();
     });
   });

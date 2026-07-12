@@ -902,14 +902,14 @@ export function CustomerHomeScreen() {
                 <Pressable
                   accessibilityRole="button"
                   disabled={!customerAddress}
-                  onPress={handleOpenCustomerAddressInMaps}
+                  onPress={() => setLocationPickerOpen(true)}
                   style={({ pressed }) => [
                     styles.mapSearchButton,
                     !customerAddress ? styles.buttonDisabled : null,
                     pressed ? styles.buttonPressed : null,
                   ]}
                 >
-                  <Text style={styles.mapSearchButtonText}>ค้นหาใน Google Maps</Text>
+                  <Text style={styles.mapSearchButtonText}>เลือกจาก Google Places</Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"

@@ -354,9 +354,9 @@ function TesterLoginCard({
         <Text style={styles.createAccountText}>Create account</Text>
       </Pressable>
       <View style={styles.socialLoginGrid}>
-        <AuthOptionButton disabled={status === "verifying"} label="" tone="dark" onPress={() => handlePilotSignIn("apple")} />
-        <AuthOptionButton disabled={status === "verifying"} label="f" tone="light" onPress={() => handlePilotSignIn("facebook")} />
-        <AuthOptionButton disabled={status === "verifying"} label="G" tone="gmail" onPress={() => handlePilotSignIn("gmail")} />
+        <AuthOptionButton caption="Apple" disabled={status === "verifying"} label="" tone="dark" onPress={() => handlePilotSignIn("apple")} />
+        <AuthOptionButton caption="Facebook" disabled={status === "verifying"} label="f" tone="light" onPress={() => handlePilotSignIn("facebook")} />
+        <AuthOptionButton caption="Gmail" disabled={status === "verifying"} label="G" tone="gmail" onPress={() => handlePilotSignIn("gmail")} />
       </View>
       <Text style={styles.loginHint}>Apple ID, Facebook และ Gmail เปิดเป็น pilot sign-in แล้ว ส่วน OAuth จริงจะต่อกับ native provider ตอน production</Text>
       {challenge ? (
@@ -445,11 +445,13 @@ function CreateAccountCard({
 }
 
 function AuthOptionButton({
+  caption,
   disabled,
   label,
   onPress,
   tone,
 }: {
+  caption: string;
   disabled?: boolean;
   label: string;
   onPress: () => void;
@@ -478,6 +480,7 @@ function AuthOptionButton({
       >
         {label}
       </Text>
+      <Text style={[styles.authOptionCaption, tone === "dark" ? styles.authOptionTextInverted : null]}>{caption}</Text>
     </Pressable>
   );
 }
@@ -904,9 +907,10 @@ const styles = StyleSheet.create({
   },
   authOption: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 48,
     alignItems: "center",
     justifyContent: "center",
+    gap: 3,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 8,
@@ -937,6 +941,11 @@ const styles = StyleSheet.create({
   },
   authOptionTextGmail: {
     color: "#d64b3c",
+  },
+  authOptionCaption: {
+    color: colors.textSoft,
+    fontSize: 10,
+    fontWeight: "900",
   },
   setupCard: {
     gap: 10,
