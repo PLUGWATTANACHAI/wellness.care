@@ -35,6 +35,16 @@ interface ProviderJob {
   locationConsentAccepted: boolean;
 }
 
+interface SupportMessage {
+  id: string;
+  jobId: string;
+  author: "provider" | "customer" | "support";
+  authorName: string;
+  body: string;
+  createdAt: string;
+  deliveryState: "sent" | "seen";
+}
+
 const providerSession: ProviderSession = {
   id: "provider_demo_01",
   name: "Nira Wellness",
@@ -70,6 +80,40 @@ const initialJobs: ProviderJob[] = [
   },
 ];
 
+const initialMessages: Record<string, SupportMessage[]> = {
+  booking_1042: [
+    {
+      id: "msg_1042_01",
+      jobId: "booking_1042",
+      author: "support",
+      authorName: "Wellnest Care",
+      body: "Customer confirmed the lobby meeting point. Please accept the job before exact address is shown.",
+      createdAt: "2026-07-12T14:20:00+07:00",
+      deliveryState: "seen",
+    },
+    {
+      id: "msg_1042_02",
+      jobId: "booking_1042",
+      author: "customer",
+      authorName: "K. Mali",
+      body: "I will wait near the reception desk.",
+      createdAt: "2026-07-12T14:24:00+07:00",
+      deliveryState: "seen",
+    },
+  ],
+  booking_1043: [
+    {
+      id: "msg_1043_01",
+      jobId: "booking_1043",
+      author: "support",
+      authorName: "Wellnest Care",
+      body: "Office security requires provider name at check-in. Use support status if access is delayed.",
+      createdAt: "2026-07-12T15:05:00+07:00",
+      deliveryState: "seen",
+    },
+  ],
+};
+
 const providerStatusSteps: ProviderJobStatus[] = [
   "provider_accepted",
   "provider_preparing",
@@ -89,6 +133,8 @@ const statusLabels: Record<ProviderJobStatus, string> = {
   completed: "Completed",
 };
 
+const quickReplies = ["On my way", "Arrived at lobby", "Need support"];
+
 function formatTime(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
@@ -101,12 +147,15 @@ function formatTime(value: string) {
 
 function ProviderPilotApp() {
   const [jobs, setJobs] = useState(initialJobs);
+  const [messagesByJobId, setMessagesByJobId] = useState(initialMessages);
   const [selectedJobId, setSelectedJobId] = useState(initialJobs[0]?.id ?? "");
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0],
     [jobs, selectedJobId],
   );
+
+  const selectedMessages = selectedJob ? (messagesByJobId[selectedJob.id] ?? []) : [];
 
   function updateJob(jobId: string, changes: Partial<ProviderJob>) {
     setJobs((currentJobs) => currentJobs.map((job) => (job.id === jobId ? { ...job, ...changes } : job)));
@@ -128,6 +177,27 @@ function ProviderPilotApp() {
     updateJob(jobId, { status });
   }
 
+  function appendProviderMessage(jobId: string, body: string) {
+    const message: SupportMessage = {
+      id: `msg_${jobId}_${Date.now()}`,
+      jobId,
+      author: "provider",
+      authorName: providerSession.name,
+      body,
+      createdAt: new Date().toISOString(),
+      deliveryState: "sent",
+    };
+
+    setMessagesByJobId((currentMessages) => ({
+      ...currentMessages,
+      [jobId]: [...(currentMessages[jobId] ?? []), message],
+    }));
+  }
+
+  function requestSupport(job: ProviderJob) {
+    appendProviderMessage(job.id, `Support requested for ${job.code}: provider needs help with this booking.`);
+  }
+
   return (
     <main className="app-shell">
       <section className="top-bar" aria-label="Provider session">
@@ -147,6 +217,10 @@ function ProviderPilotApp() {
             <p className="eyebrow">Job inbox</p>
             <h2>{jobs.length} jobs</h2>
           </div>
+          <nav className="provider-menu" aria-label="Provider pilot sections">
+            <a href="#job-detail">Job detail</a>
+            <a href="#support-messages">Support Messages</a>
+          </nav>
           <div className="job-list">
             {jobs.map((job) => (
               <button
@@ -170,7 +244,7 @@ function ProviderPilotApp() {
           </div>
         </aside>
 
-        <section className="panel detail-panel" aria-label="Provider job detail">
+        <section className="panel detail-panel" id="job-detail" aria-label="Provider job detail">
           {selectedJob ? (
             <>
               <div className="panel-heading split">
@@ -256,6 +330,52 @@ function ProviderPilotApp() {
                   </section>
                 </div>
               )}
+
+              <section className="support-panel" id="support-messages" aria-label="Support messages">
+                <div className="panel-heading split">
+                  <div>
+                    <p className="eyebrow">Chat foundation</p>
+                    <h2>Support Messages</h2>
+                  </div>
+                  <span className="status-chip">{selectedMessages.length} messages</span>
+                </div>
+
+                <div className="message-list">
+                  {selectedMessages.map((message) => (
+                    <article className={`message-bubble ${message.author}`} key={message.id}>
+                      <div>
+                        <strong>{message.authorName}</strong>
+                        <time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time>
+                      </div>
+                      <p>{message.body}</p>
+                      <small>{message.deliveryState}</small>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="quick-reply-panel" aria-label="Quick reply actions">
+                  <p className="eyebrow">Quick reply</p>
+                  <div className="quick-reply-grid">
+                    {quickReplies.map((reply) => (
+                      <button
+                        className="secondary-button"
+                        key={reply}
+                        onClick={() => {
+                          if (reply === "Need support") {
+                            requestSupport(selectedJob);
+                            return;
+                          }
+
+                          appendProviderMessage(selectedJob.id, reply);
+                        }}
+                        type="button"
+                      >
+                        {reply}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
             </>
           ) : (
             <div className="empty-state wide">

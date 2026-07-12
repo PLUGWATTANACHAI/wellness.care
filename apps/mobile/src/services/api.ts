@@ -8,6 +8,90 @@ export type DemoLoginRole = "customer" | "provider" | "admin";
 
 const accessTokens: Partial<Record<DemoLoginRole, string>> = {};
 
+const fallbackServices: ServiceItemDto[] = [
+  { id: "svc_massage_90", category: "Massage", name: "นวดคอ บ่า ไหล่ 90 นาที", durationMinutes: 90, priceTHB: 1290, active: true },
+  { id: "svc_beauty_90", category: "Beauty & Relax", name: "สปาเท้า + ทำเล็บ 90 นาที", durationMinutes: 90, priceTHB: 1590, active: true },
+  { id: "svc_product_sleep", category: "Wellness Products", name: "Aroma Sleep Set พร้อมจัดส่ง", durationMinutes: 0, priceTHB: 690, active: true },
+];
+
+const fallbackCustomerProfile: CustomerProfileDto = {
+  id: "usr_customer_001",
+  name: "พี่ปลั๊ก ปภาวิน",
+  phone: "0812345678",
+  email: "plug@example.com",
+  phoneVerified: true,
+  tier: "Gold",
+  coins: 2450,
+  points: 860,
+  address: {
+    id: "addr_river_001",
+    condoName: "The River Residence, Bangkok",
+    meetingPoint: "Lobby A",
+    note: "รอที่โซฟาหน้า concierge",
+    googlePlaceId: "demo_google_place_river_bangkok",
+    formattedAddress: "The River Residence, Charoen Nakhon Road, Bangkok",
+    lat: 13.7214,
+    lng: 100.5131,
+    addressSource: "google_places_demo",
+  },
+};
+
+const fallbackPartnerClinics: PartnerClinicDto[] = [
+  {
+    id: "clinic-sathorn",
+    name: "Sathorn Wellness Clinic",
+    category: "Aroma recovery",
+    area: "Sathorn · 1.8 km",
+    address: "Empire Tower, Sathorn, Bangkok",
+    lat: 13.7207,
+    lng: 100.5294,
+    headline: "Recovery หลังเลิกงานใกล้คอนโดและออฟฟิศ",
+    description: "Partner clinic สำหรับแพ็กเกจฟื้นฟู นวดผ่อนคลาย และ office stretch",
+    promotionTitle: "After-work recovery",
+    promotionBody: "รับส่วนลดเปิดตัวสำหรับรอบ 18:00-21:00 ในวันธรรมดา",
+    services: [
+      { serviceId: "svc_massage_90", name: "Neck & Shoulder Recovery", priceTHB: 1290, durationMinutes: 90 },
+      { serviceId: "svc_aroma_120", name: "Aroma Recovery Session", priceTHB: 1890, durationMinutes: 120 },
+    ],
+  },
+  {
+    id: "clinic-langsuan",
+    name: "Langsuan Recovery Studio",
+    category: "Therapy room",
+    area: "Langsuan · 2.4 km",
+    address: "Langsuan Village, Chidlom, Bangkok",
+    lat: 13.7429,
+    lng: 100.5424,
+    headline: "Studio care สำหรับแพ็กเกจฟื้นฟู",
+    description: "คลินิกพาร์ทเนอร์สำหรับ recovery bundle และ wellness kit consultation",
+    promotionTitle: "Studio care bundle",
+    promotionBody: "จอง service bundle พร้อม wellness kit ได้ในรอบเดียว",
+    services: [
+      { serviceId: "svc_stretch_60", name: "Recovery Studio Session", priceTHB: 990, durationMinutes: 60 },
+      { serviceId: "svc_product_sleep", name: "Wellness Kit Consultation", priceTHB: 690, durationMinutes: 0 },
+    ],
+  },
+];
+
+const fallbackClinicSlots: PartnerClinicSlotDto[] = [
+  {
+    id: "slot_sathorn_evening",
+    clinicId: "clinic-sathorn",
+    serviceId: "svc_massage_90",
+    startsAt: new Date(Date.now() + 30 * 60 * 60 * 1000).toISOString(),
+    capacity: 4,
+    availableCount: 2,
+  },
+  {
+    id: "slot_langsuan_late",
+    clinicId: "clinic-langsuan",
+    serviceId: "svc_stretch_60",
+    startsAt: new Date(Date.now() + 36 * 60 * 60 * 1000).toISOString(),
+    capacity: 3,
+    availableCount: 1,
+  },
+];
+
 interface StoredLoginResult {
   savedAt: number;
   result: LoginResultDto;
@@ -308,6 +392,26 @@ export async function loginDemoRole(role: DemoLoginRole) {
   return result;
 }
 
+export async function loginPilotRole(role: DemoLoginRole, provider: "demo" | "apple" | "facebook" | "gmail" = "demo") {
+  try {
+    return await loginDemoRole(role);
+  } catch {
+    const result: LoginResultDto = {
+      accessToken: `pilot_${provider}_${role}_${Date.now()}`,
+      tokenType: "Bearer",
+      expiresInSeconds: 60 * 60 * 8,
+      user: {
+        id: role === "provider" ? "usr_provider_001" : "usr_customer_001",
+        role,
+        name: role === "provider" ? "นิดา สุขสบาย" : "พี่ปลั๊ก ปภาวิน",
+        phoneVerified: true,
+      },
+    };
+    await storeLoginResult(result);
+    return result;
+  }
+}
+
 export async function requestOtpLogin(input: { phone: string; role: "customer" | "provider" }) {
   const response = await fetchWithTimeout(`${API_BASE_URL}/auth/otp/request`, {
     method: "POST",
@@ -402,31 +506,43 @@ function authHeaders(role: DemoLoginRole, extraHeaders: Record<string, string> =
 }
 
 export async function getServices() {
-  const response = await fetchWithTimeout(`${API_BASE_URL}/services`);
-  if (!response.ok) {
-    throw new Error("Failed to load services");
+  try {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/services`);
+    if (!response.ok) {
+      throw new Error("Failed to load services");
+    }
+    return response.json() as Promise<ServiceItemDto[]>;
+  } catch {
+    return fallbackServices;
   }
-  return response.json() as Promise<ServiceItemDto[]>;
 }
 
 export async function getPartnerClinics() {
-  const response = await fetchWithTimeout(`${API_BASE_URL}/partner-clinics`);
-  if (!response.ok) {
-    throw new Error("Failed to load partner clinics");
+  try {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/partner-clinics`);
+    if (!response.ok) {
+      throw new Error("Failed to load partner clinics");
+    }
+    return response.json() as Promise<PartnerClinicDto[]>;
+  } catch {
+    return fallbackPartnerClinics;
   }
-  return response.json() as Promise<PartnerClinicDto[]>;
 }
 
 export async function getPartnerClinicSlots(clinicId: string) {
-  const response = await fetchWithTimeout(`${API_BASE_URL}/partner-clinics/${encodeURIComponent(clinicId)}/slots`, {
-    headers: authHeaders("customer"),
-  });
+  try {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/partner-clinics/${encodeURIComponent(clinicId)}/slots`, {
+      headers: authHeaders("customer"),
+    });
 
-  if (!response.ok) {
-    throw new Error("Failed to load partner clinic slots");
+    if (!response.ok) {
+      throw new Error("Failed to load partner clinic slots");
+    }
+
+    return response.json() as Promise<PartnerClinicSlotDto[]>;
+  } catch {
+    return fallbackClinicSlots.filter((slot) => slot.clinicId === clinicId);
   }
-
-  return response.json() as Promise<PartnerClinicSlotDto[]>;
 }
 
 export async function createBooking(input: { serviceId: string; addressId: string; scheduledAt: string; partnerClinicId?: string }) {
@@ -626,15 +742,19 @@ export async function confirmSandboxPayment(paymentId: string) {
 }
 
 export async function getCustomerProfile() {
-  const response = await fetchWithTimeout(`${API_BASE_URL}/profile/customer`, {
-    headers: authHeaders("customer"),
-  });
+  try {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/profile/customer`, {
+      headers: authHeaders("customer"),
+    });
 
-  if (!response.ok) {
-    throw new Error("Failed to load customer profile");
+    if (!response.ok) {
+      throw new Error("Failed to load customer profile");
+    }
+
+    return response.json() as Promise<CustomerProfileDto>;
+  } catch {
+    return fallbackCustomerProfile;
   }
-
-  return response.json() as Promise<CustomerProfileDto>;
 }
 
 export async function updateCustomerProfile(input: { name?: string; phone?: string; email?: string }) {

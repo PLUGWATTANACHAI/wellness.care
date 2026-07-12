@@ -49,6 +49,9 @@ Recommended API surface:
 - `POST /provider/jobs/:bookingId/status`
 - `POST /provider/jobs/:bookingId/location-consent`
 - `POST /provider/jobs/:bookingId/location-events`
+- `GET /provider/jobs/:bookingId/messages`
+- `POST /provider/jobs/:bookingId/messages`
+- `POST /provider/jobs/:bookingId/support-status`
 
 ## Provider Job Inbox
 
@@ -144,6 +147,36 @@ Rules:
 - Invalid transitions return an actionable API error.
 - Customer-facing notifications should be triggered by server-side events, not directly by Provider UI.
 
+## Chat And Support Messages
+
+Provider app needs a job-scoped chat/support foundation for active operational issues, not a general customer inbox.
+
+Minimum pilot behavior:
+
+- Provider sees a `Support Messages` section for the selected job.
+- Messages are scoped by booking id and can include provider, customer, and authorized support/admin authors.
+- Quick replies allow common operational updates such as `On my way`, `Arrived at lobby`, and `Need support`.
+- Support status actions should create auditable support events, not only local UI messages.
+- Customer contact visibility should follow booking privacy rules and should not reveal exact address before acceptance.
+
+Recommended API surface:
+
+- `GET /provider/jobs/:bookingId/messages` returns job-scoped messages visible to the provider.
+- `POST /provider/jobs/:bookingId/messages` sends a provider message or quick reply.
+- `POST /provider/jobs/:bookingId/support-status` records support-needed, access-delayed, customer-unreachable, or resolved states.
+- `GET /provider/jobs/:bookingId/support-status` can be added if the app needs persistent badges or escalation state.
+
+Suggested message fields:
+
+- `id`
+- `bookingId`
+- `authorRole`: `provider`, `customer`, `support`, or `admin`
+- `authorDisplayName`
+- `body`
+- `createdAt`
+- `deliveryState`: `sent`, `delivered`, `seen`, or `failed`
+- `supportEventType` when a message is generated from a support status action
+
 ## Navigation Structure
 
 Provider app navigation should be separate from customer navigation.
@@ -171,6 +204,7 @@ For the current pilot scaffold, these are represented as sections in `apps/provi
 - Navigation action placeholder
 - Location sharing consent toggle
 - Booking status update controls
+- Job-scoped `Support Messages` section with sample conversation, quick replies, and support-needed action
 
 The scaffold intentionally avoids importing or editing customer app files. It is a foundation for product and API alignment, not final native Provider app code.
 
@@ -188,5 +222,6 @@ The scaffold intentionally avoids importing or editing customer app files. It is
 1. Add backend `provider` module routes and repository functions.
 2. Wire provider role guard into provider routes.
 3. Replace provider-pilot mock state with API calls.
-4. Add native Provider app package when app store testing begins.
-5. Add provider status transition tests and location consent audit tests.
+4. Add provider message and support-status persistence for `/provider/jobs/:bookingId/messages`.
+5. Add native Provider app package when app store testing begins.
+6. Add provider status transition tests, message visibility tests, and location consent audit tests.

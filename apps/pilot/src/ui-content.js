@@ -14,7 +14,7 @@ export const appContent = {
     signInButton: "Sign in",
     createAccountButton: "Create account",
     socialDivider: "หรือเข้าสู่ระบบด้วย",
-    note: "รอบ production จะเชื่อม Apple ID, Facebook และ Gmail จริง ส่วนตอนนี้ปุ่ม Sign in และ Create account ใช้พาเข้า flow เพื่อดูหน้าตาแอพก่อน",
+    note: "รอบ pilot ปุ่ม Apple ID, Facebook และ Gmail จะพาเข้าแอพเพื่อทดสอบ flow ก่อน ส่วน production จะต่อ OAuth/native provider จริง",
   },
   signup: {
     brand: "Wellnest",

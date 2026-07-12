@@ -636,6 +636,7 @@ input {
 .providerCard,
 .recentCard,
 .policyCard,
+.chatContextCard,
 .screenBlock,
 .progressPanel,
 .mapCard,
@@ -690,6 +691,102 @@ input {
   display: grid;
   gap: 6px;
   padding: 12px;
+}
+
+.chatContextCard {
+  display: grid;
+  gap: 5px;
+  background: #fffaf2;
+  padding: 12px;
+}
+
+.chatContextCard span {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--brand-brown);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 4px 8px;
+}
+
+.chatContextCard strong {
+  color: var(--text-main);
+}
+
+.chatContextCard p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.chatThread {
+  display: grid;
+  gap: 8px;
+}
+
+.messageBubble {
+  width: min(92%, 292px);
+  display: grid;
+  gap: 4px;
+  border: 1px solid #d8c8b6;
+  border-radius: 15px;
+  background: #fff;
+  padding: 10px;
+}
+
+.messageBubble.provider {
+  background: #fffaf2;
+}
+
+.messageBubble.mine {
+  justify-self: end;
+  border-color: var(--brand-brown);
+  background: var(--brand-brown);
+  color: #fff;
+}
+
+.messageBubble span {
+  color: var(--brand-brown);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.messageBubble.mine span,
+.messageBubble.mine small {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.messageBubble p {
+  margin: 0;
+  color: inherit;
+  font-size: 13px;
+  line-height: 1.42;
+}
+
+.messageBubble small {
+  color: var(--text-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.chatComposer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  gap: 8px;
+}
+
+.chatComposer input {
+  min-height: 42px;
+}
+
+.chatComposer button {
+  border: 0;
+  border-radius: 12px;
+  background: var(--brand-brown);
+  color: #fff;
+  font-weight: 900;
 }
 
 .policyCard p,

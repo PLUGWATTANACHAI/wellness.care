@@ -106,6 +106,25 @@ h2 {
   margin-bottom: 16px;
 }
 
+.provider-menu {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.provider-menu a {
+  background: #eef5ef;
+  border: 1px solid #dce5dd;
+  border-radius: 8px;
+  color: #18332c;
+  font-size: 13px;
+  font-weight: 720;
+  padding: 10px;
+  text-align: center;
+  text-decoration: none;
+}
+
 .split {
   align-items: center;
   display: flex;
@@ -210,6 +229,8 @@ h2 {
 
 .operation-band,
 .status-panel,
+.support-panel,
+.quick-reply-panel,
 .empty-state {
   background: #f8faf7;
   border: 1px solid #e5ece6;
@@ -259,6 +280,66 @@ h2 {
   color: #ffffff;
 }
 
+.support-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.message-list {
+  display: grid;
+  gap: 10px;
+}
+
+.message-bubble {
+  background: #ffffff;
+  border: 1px solid #dce5dd;
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  max-width: 78%;
+  padding: 12px;
+}
+
+.message-bubble.provider {
+  background: #e8f3ee;
+  border-color: #bad4c8;
+  justify-self: end;
+}
+
+.message-bubble.customer,
+.message-bubble.support {
+  justify-self: start;
+}
+
+.message-bubble div {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.message-bubble p {
+  line-height: 1.45;
+}
+
+.message-bubble time,
+.message-bubble small {
+  color: #66756b;
+  font-size: 12px;
+}
+
+.quick-reply-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.quick-reply-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .empty-state {
   display: grid;
   gap: 6px;
@@ -285,8 +366,20 @@ h2 {
   .layout-grid,
   .job-facts,
   .action-row,
-  .status-grid {
+  .status-grid,
+  .quick-reply-grid,
+  .provider-menu {
     grid-template-columns: 1fr;
+  }
+
+  .message-bubble {
+    max-width: 100%;
+  }
+
+  .message-bubble div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
   }
 
   h1 {

@@ -2,7 +2,7 @@ import { Component, type ReactNode, useEffect, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "./src/design/theme";
 import {
-  loginDemoRole,
+  loginPilotRole,
   loadStoredLogin,
   requestOtpLogin,
   verifyOtpLogin,
@@ -11,7 +11,7 @@ import {
   type OtpRequestDto,
 } from "./src/services/api";
 
-type AppSection = "customer" | "account" | "notifications" | "privacy";
+type AppSection = "customer" | "account" | "notifications" | "chat";
 
 declare const require: (moduleName: string) => unknown;
 
@@ -142,7 +142,7 @@ export default function App() {
         {sessionStatus === "ready" && role === "customer" ? <CustomerHomeScreenLazy /> : null}
         {sessionStatus === "ready" && role === "account" ? <AccountProfileScreenLazy /> : null}
         {sessionStatus === "ready" && role === "notifications" ? <NotificationCenterScreenLazy /> : null}
-        {isSignedIn && role === "privacy" ? <PrivacyCenterScreenLazy /> : null}
+        {isSignedIn && role === "chat" ? <ChatCenterScreenLazy /> : null}
         {sessionStatus === "loading" ? <Text style={styles.loadingText}>Checking secure session...</Text> : null}
         {sessionStatus === "error" ? <Text style={styles.errorText}>Could not start a secure session. Please retry.</Text> : null}
         </ScrollView>
@@ -151,7 +151,7 @@ export default function App() {
             <RoleTab active={role === "customer"} icon="H" label="Home" onPress={() => setRole("customer")} />
             <RoleTab active={role === "notifications"} icon="B" label="Bookings" onPress={() => setRole("notifications")} />
             <RoleTab active={role === "account"} icon="P" label="Profile" onPress={() => setRole("account")} />
-            <RoleTab active={role === "privacy"} icon="S" label="Safety" onPress={() => setRole("privacy")} />
+            <RoleTab active={role === "chat"} icon="C" label="Chat" onPress={() => setRole("chat")} />
           </View>
         ) : null}
       </SafeAreaView>
@@ -202,9 +202,9 @@ function NotificationCenterScreenLazy() {
   return <NotificationCenterScreen />;
 }
 
-function PrivacyCenterScreenLazy() {
-  const { PrivacyCenterScreen } = require("./src/screens/PrivacyCenterScreen") as typeof import("./src/screens/PrivacyCenterScreen");
-  return <PrivacyCenterScreen />;
+function ChatCenterScreenLazy() {
+  const { ChatCenterScreen } = require("./src/screens/ChatCenterScreen") as typeof import("./src/screens/ChatCenterScreen");
+  return <ChatCenterScreen />;
 }
 
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -260,11 +260,21 @@ function TesterLoginCard({
       setStatus("sent");
     } catch {
       try {
-        const result = await loginDemoRole(role);
+        const result = await loginPilotRole(role, "demo");
         onSignedIn(result);
       } catch {
         setStatus("error");
       }
+    }
+  }
+
+  async function handlePilotSignIn(provider: "demo" | "apple" | "facebook" | "gmail" = "demo") {
+    setStatus("verifying");
+    try {
+      const result = await loginPilotRole(role, provider);
+      onSignedIn(result);
+    } catch {
+      setStatus("error");
     }
   }
 
@@ -284,10 +294,21 @@ function TesterLoginCard({
     }
   }
 
+  const isEmailSignIn = trimmedPhone.includes("@");
+  const canContinue = isEmailSignIn ? trimmedPhone.length >= 6 : trimmedPhone.length >= 8 && (!challenge || otp.trim().length === 6);
+
   return (
     <View style={styles.loginCard}>
       <Text style={styles.demoTitle}>{role === "provider" ? "เข้าสู่ระบบผู้ให้บริการ" : "เข้าสู่ระบบ Wellnest"}</Text>
       <Text style={styles.demoCopy}>Sign in เพื่อดูบริการ โปรโมชัน และติดตามการจองของพี่</Text>
+      <Pressable
+        accessibilityRole="button"
+        disabled={status === "sending" || status === "verifying"}
+        onPress={() => handlePilotSignIn("demo")}
+        style={({ pressed }) => [styles.pilotButton, pressed ? styles.tabPressed : null]}
+      >
+        <Text style={styles.pilotButtonText}>{status === "verifying" && !challenge ? "กำลังเข้าสู่ระบบ..." : "ทดลองเข้าใช้งาน Wellnest"}</Text>
+      </Pressable>
       <Text style={styles.inputLabel}>อีเมล หรือ เบอร์โทรศัพท์</Text>
       <TextInput
         autoCapitalize="none"
@@ -312,18 +333,16 @@ function TesterLoginCard({
       />
       <Pressable
         accessibilityRole="button"
-        disabled={status === "sending" || status === "verifying" || trimmedPhone.length < 8 || (Boolean(challenge) && otp.trim().length !== 6)}
-        onPress={challenge ? handleVerifyOtp : handleRequestOtp}
+        disabled={status === "sending" || status === "verifying" || !canContinue}
+        onPress={isEmailSignIn ? () => handlePilotSignIn("demo") : challenge ? handleVerifyOtp : handleRequestOtp}
         style={({ pressed }) => [
           styles.loginButton,
-          status === "sending" || status === "verifying" || trimmedPhone.length < 8 || (Boolean(challenge) && otp.trim().length !== 6)
-            ? styles.loginButtonDisabled
-            : null,
+          status === "sending" || status === "verifying" || !canContinue ? styles.loginButtonDisabled : null,
           pressed ? styles.tabPressed : null,
         ]}
       >
         <Text style={styles.loginButtonText}>
-          {status === "sending" ? "กำลังส่ง..." : status === "verifying" ? "กำลังตรวจสอบ..." : challenge ? "Sign in" : "ส่งรหัสเข้าใช้งาน"}
+          {status === "sending" ? "กำลังส่ง..." : status === "verifying" ? "กำลังตรวจสอบ..." : isEmailSignIn || challenge ? "Sign in" : "ส่งรหัสเข้าใช้งาน"}
         </Text>
       </Pressable>
       <Pressable
@@ -335,11 +354,11 @@ function TesterLoginCard({
         <Text style={styles.createAccountText}>Create account</Text>
       </Pressable>
       <View style={styles.socialLoginGrid}>
-        <AuthOptionButton disabled label="" tone="dark" />
-        <AuthOptionButton disabled label="f" tone="light" />
-        <AuthOptionButton disabled label="G" tone="gmail" />
+        <AuthOptionButton disabled={status === "verifying"} label="" tone="dark" onPress={() => handlePilotSignIn("apple")} />
+        <AuthOptionButton disabled={status === "verifying"} label="f" tone="light" onPress={() => handlePilotSignIn("facebook")} />
+        <AuthOptionButton disabled={status === "verifying"} label="G" tone="gmail" onPress={() => handlePilotSignIn("gmail")} />
       </View>
-      <Text style={styles.loginHint}>Apple ID, Facebook และ Gmail จะเชื่อมต่อในรอบ production</Text>
+      <Text style={styles.loginHint}>Apple ID, Facebook และ Gmail เปิดเป็น pilot sign-in แล้ว ส่วน OAuth จริงจะต่อกับ native provider ตอน production</Text>
       {challenge ? (
         <>
           {challenge.devOtp ? <Text style={styles.loginHint}>รหัสสำหรับรอบทดสอบ: {challenge.devOtp}</Text> : null}
@@ -375,7 +394,7 @@ function CreateAccountCard({
 
     setStatus("creating");
     try {
-      const result = await loginDemoRole(role);
+      const result = await loginPilotRole(role, "demo");
       onSignedIn(result);
     } catch {
       setStatus("error");
@@ -425,11 +444,22 @@ function CreateAccountCard({
   );
 }
 
-function AuthOptionButton({ disabled, label, tone }: { disabled?: boolean; label: string; tone: "dark" | "light" | "gmail" }) {
+function AuthOptionButton({
+  disabled,
+  label,
+  onPress,
+  tone,
+}: {
+  disabled?: boolean;
+  label: string;
+  onPress: () => void;
+  tone: "dark" | "light" | "gmail";
+}) {
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.authOption,
         tone === "dark" ? styles.authOptionDark : null,
@@ -481,7 +511,7 @@ function getDemoHint(role: AppSection) {
     customer: "เลือกบริการ วันเวลา ที่อยู่ แล้วตรวจผู้ให้บริการก่อนยืนยันจอง",
     account: "จัดการข้อมูลลูกค้า ที่อยู่ Coins และ Points",
     notifications: "ดูข้อความและสถานะการจองล่าสุด",
-    privacy: "จัดการสิทธิ์ตำแหน่งและความเป็นส่วนตัว",
+    chat: "คุยกับทีมดูแลและผู้ให้บริการจากข้อมูล booking หลังบ้าน",
   };
 
   return hints[role];
@@ -859,6 +889,18 @@ const styles = StyleSheet.create({
   socialLoginGrid: {
     flexDirection: "row",
     gap: 8,
+  },
+  pilotButton: {
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceSoft,
+    paddingVertical: 11,
+  },
+  pilotButtonText: {
+    color: colors.primaryDark,
+    fontWeight: "900",
   },
   authOption: {
     flex: 1,

@@ -68,9 +68,9 @@ function loginScreen() {
       </div>
       <div class="divider"><span>${copy.socialDivider}</span></div>
       <div class="loginOptions" aria-label="Social login options">
-        <button class="authLogoButton apple" data-action="future-auth" aria-label="Continue with Apple"><span></span></button>
-        <button class="authLogoButton facebook" data-action="future-auth" aria-label="Continue with Facebook"><span>f</span></button>
-        <button class="authLogoButton gmail" data-action="future-auth" aria-label="Continue with Gmail">
+        <button class="authLogoButton apple" data-action="social-login" data-provider="apple" aria-label="Sign in with Apple"><span></span></button>
+        <button class="authLogoButton facebook" data-action="social-login" data-provider="facebook" aria-label="Sign in with Facebook"><span>f</span></button>
+        <button class="authLogoButton gmail" data-action="social-login" data-provider="gmail" aria-label="Sign in with Gmail">
           <span class="gmailMark">G</span>
         </button>
       </div>
@@ -220,23 +220,45 @@ function profileScreen() {
   `;
 }
 
-function safetyScreen() {
+function chatScreen() {
   return `
     <section class="tabScreen">
       <header class="appHeader">
         <div>
-          <p>Safety</p>
-          <h1>ความปลอดภัย</h1>
+          <p>Chat</p>
+          <h1>แชทกับทีมดูแล</h1>
         </div>
       </header>
       <div class="screenBlock">
-        <article class="policyCard">
-          <strong>Location consent</strong>
-          <p>ขออนุญาตตำแหน่งเพื่อยืนยันพื้นที่บริการและติดตามเฉพาะ booking ที่กำลังดำเนินการ</p>
+        <article class="chatContextCard">
+          <span>Active booking</span>
+          <strong>${state.bookingCode || "#WN-240618"} · นวดคอ บ่า ไหล่ 90 นาที</strong>
+          <p>ห้องแชทนี้เชื่อมกับ booking communications หลังบ้าน แยกสิทธิ์ลูกค้า ผู้ให้บริการ และทีมดูแล</p>
         </article>
+        <div class="chatThread">
+          <article class="messageBubble staff">
+            <span>ทีมดูแล</span>
+            <p>สวัสดีค่ะ พี่สามารถคุยกับทีมดูแลหรือผู้ให้บริการจาก booking นี้ได้ที่นี่</p>
+            <small>19:12</small>
+          </article>
+          <article class="messageBubble provider">
+            <span>ผู้ให้บริการ</span>
+            <p>รับทราบการจองแล้วค่ะ หากถึงคอนโดจะอัปเดตสถานะให้ค่ะ</p>
+            <small>19:18</small>
+          </article>
+          <article class="messageBubble mine">
+            <span>พี่</span>
+            <p>เดี๋ยวรอที่ Lobby A นะครับ</p>
+            <small>19:20</small>
+          </article>
+        </div>
+        <div class="chatComposer">
+          <input placeholder="พิมพ์ข้อความถึงทีมดูแลหรือผู้ให้บริการ" />
+          <button data-action="send-chat">ส่ง</button>
+        </div>
         <article class="policyCard">
-          <strong>PDPA & privacy</strong>
-          <p>ลูกค้าสามารถดูสิทธิ์ ข้อมูลที่เก็บ และช่องทางลบหรือแก้ไขข้อมูลได้จากหน้านี้</p>
+          <strong>Support request</strong>
+          <p>ปุ่มนี้จะใช้เปิดเคสให้ทีมหลังบ้านดูแลต่อ เช่น ปัญหาการเดินทาง การชำระเงิน หรือความปลอดภัย</p>
         </article>
       </div>
     </section>
@@ -273,7 +295,7 @@ function activeScreen() {
   if (state.screen === "booking") return bookingScreen();
   if (state.screen === "activity") return activityScreen();
   if (state.screen === "profile") return profileScreen();
-  if (state.screen === "safety") return safetyScreen();
+  if (state.screen === "chat") return chatScreen();
   return homeScreen();
 }
 
@@ -445,7 +467,7 @@ function bottomNav() {
     ["home", "Home"],
     ["activity", "Bookings"],
     ["profile", "Profile"],
-    ["safety", "Safety"],
+    ["chat", "Chat"],
   ];
   return `
     <nav class="bottomNav">
@@ -479,11 +501,17 @@ function bindEvents() {
     state.screen = "home";
     render();
   });
-  document.querySelectorAll("[data-action='future-auth']").forEach((button) => {
+  document.querySelectorAll("[data-action='social-login']").forEach((button) => {
     button.addEventListener("click", () => {
-      state.phone = "0812345678";
+      state.loginId = button.dataset.provider === "gmail" ? "plug@gmail.com" : `${button.dataset.provider}@wellnest.local`;
+      state.signedIn = true;
+      state.screen = "home";
       render();
     });
+  });
+  document.querySelector("[data-action='send-chat']")?.addEventListener("click", () => {
+    state.screen = "activity";
+    render();
   });
   document.querySelectorAll("[data-action='select-service']").forEach((button) => {
     button.addEventListener("click", () => {
