@@ -39,6 +39,14 @@ button {
   max-width: 1180px;
 }
 
+.top-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 h1,
 h2,
 p {
@@ -65,7 +73,8 @@ h2 {
 }
 
 .session-pill,
-.status-chip {
+.status-chip,
+.api-pill {
   align-items: center;
   background: #ffffff;
   border: 1px solid #dce5dd;
@@ -78,6 +87,39 @@ h2 {
 .session-pill strong,
 .status-chip {
   color: #0f6b52;
+}
+
+.api-pill {
+  max-width: 360px;
+}
+
+.api-pill span {
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 760;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.api-pill strong {
+  color: #17201b;
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.api-pill.loading span,
+.api-pill.saving span {
+  background: #75613f;
+}
+
+.api-pill.live span {
+  background: #0f6b52;
+}
+
+.api-pill.fallback span,
+.api-pill.error span {
+  background: #9a5f2e;
 }
 
 .layout-grid {
@@ -368,8 +410,19 @@ h2 {
   .action-row,
   .status-grid,
   .quick-reply-grid,
-  .provider-menu {
+  .provider-menu,
+  .top-actions {
     grid-template-columns: 1fr;
+  }
+
+  .top-actions {
+    align-items: stretch;
+  }
+
+  .api-pill,
+  .session-pill {
+    justify-content: center;
+    max-width: none;
   }
 
   .message-bubble {

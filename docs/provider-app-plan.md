@@ -199,11 +199,13 @@ For the current pilot scaffold, these are represented as sections in `apps/provi
 - Separate package: `@wellnest/provider-pilot`
 - Separate Vite build output under `apps/provider-pilot/dist`
 - Provider-only mock auth session with `role: "provider"`
+- Provider API bridge for `/auth/login`, `GET /provider/jobs`, accept/reject/status, and booking communications
+- Pilot fallback data when staging has no jobs or a pilot API call cannot confirm the mutation
 - Job inbox
-- Accept job action
+- Accept job action with API sync attempt
 - Navigation action placeholder
 - Location sharing consent toggle
-- Booking status update controls
+- Booking status update controls with API sync attempt
 - Job-scoped `Support Messages` section with sample conversation, quick replies, and support-needed action
 
 The scaffold intentionally avoids importing or editing customer app files. It is a foundation for product and API alignment, not final native Provider app code.
@@ -219,9 +221,8 @@ The scaffold intentionally avoids importing or editing customer app files. It is
 
 ## Next Engineering Slice
 
-1. Add backend `provider` module routes and repository functions.
-2. Wire provider role guard into provider routes.
-3. Replace provider-pilot mock state with API calls.
-4. Add provider message and support-status persistence for `/provider/jobs/:bookingId/messages`.
-5. Add native Provider app package when app store testing begins.
-6. Add provider status transition tests, message visibility tests, and location consent audit tests.
+1. Add provider-specific message aliases if operations wants `/provider/jobs/:bookingId/messages` instead of the shared `/bookings/:id/communications`.
+2. Persist provider location consent from Provider pilot to the backend consent/audit tables.
+3. Replace the remaining mock exact address/navigation data with booking address policy data from API.
+4. Add native Provider app package when app store testing begins.
+5. Add provider status transition tests, message visibility tests, and location consent audit tests.

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { BookingStatus, UserRole } from "@wellnest/types";
 import "./styles.css";
@@ -44,6 +44,33 @@ interface SupportMessage {
   createdAt: string;
   deliveryState: "sent" | "seen";
 }
+
+interface ProviderApiJob {
+  id: string;
+  code: string;
+  customer: string;
+  provider?: string;
+  service: string;
+  status: ProviderJobStatus;
+  scheduledAt: string;
+  totalTHB: number;
+  offerExpiresAt?: string;
+  offerStatus?: "offered" | "accepted" | "rejected" | "expired";
+}
+
+interface LoginResult {
+  accessToken: string;
+  user: {
+    id: string;
+    role: string;
+    name: string;
+    phoneVerified: boolean;
+  };
+}
+
+type ApiSyncStatus = "loading" | "live" | "fallback" | "saving" | "error";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://wellnest-api-staging.onrender.com";
 
 const providerSession: ProviderSession = {
   id: "provider_demo_01",
@@ -135,6 +162,8 @@ const statusLabels: Record<ProviderJobStatus, string> = {
 
 const quickReplies = ["On my way", "Arrived at lobby", "Need support"];
 
+let providerAccessToken = "";
+
 function formatTime(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
@@ -145,10 +174,91 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
+function mapApiJob(job: ProviderApiJob): ProviderJob {
+  return {
+    id: job.id,
+    code: job.code,
+    customerName: job.customer,
+    serviceName: job.service,
+    durationMinutes: 90,
+    scheduledAt: job.scheduledAt,
+    area: "Customer service area",
+    exactAddress: "Exact address appears after acceptance",
+    status: job.status,
+    offerExpiresAt: job.offerExpiresAt,
+    locationConsentAccepted: false,
+  };
+}
+
+async function apiRequest<T>(path: string, init: RequestInit = {}) {
+  const headers = new Headers(init.headers);
+  headers.set("content-type", "application/json");
+  headers.set("x-wellnest-role", "provider");
+  if (providerAccessToken) headers.set("authorization", `Bearer ${providerAccessToken}`);
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Provider API failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+async function loginProvider() {
+  const result = await apiRequest<LoginResult>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ role: "provider" }),
+  });
+  providerAccessToken = result.accessToken;
+  return result;
+}
+
+async function fetchProviderJobs() {
+  await loginProvider();
+  const jobs = await apiRequest<ProviderApiJob[]>("/provider/jobs");
+  return jobs.map(mapApiJob);
+}
+
+async function acceptProviderJob(jobId: string) {
+  return apiRequest<{ bookingId: string; status: ProviderJobStatus }>(`/provider/jobs/${encodeURIComponent(jobId)}/accept`, {
+    method: "POST",
+  });
+}
+
+async function rejectProviderJob(jobId: string) {
+  return apiRequest<{ bookingId: string; status: string }>(`/provider/jobs/${encodeURIComponent(jobId)}/reject`, {
+    method: "POST",
+  });
+}
+
+async function updateProviderJobStatus(jobId: string, status: ProviderJobStatus) {
+  return apiRequest<{ bookingId: string; status: ProviderJobStatus }>(`/provider/jobs/${encodeURIComponent(jobId)}/status`, {
+    method: "POST",
+    body: JSON.stringify({ status }),
+  });
+}
+
+async function createProviderCommunication(jobId: string, body: string) {
+  return apiRequest<SupportMessage>(`/bookings/${encodeURIComponent(jobId)}/communications`, {
+    method: "POST",
+    body: JSON.stringify({
+      body,
+      messageType: "provider_message",
+      visibility: "customer_provider",
+    }),
+  });
+}
+
 function ProviderPilotApp() {
   const [jobs, setJobs] = useState(initialJobs);
   const [messagesByJobId, setMessagesByJobId] = useState(initialMessages);
   const [selectedJobId, setSelectedJobId] = useState(initialJobs[0]?.id ?? "");
+  const [apiStatus, setApiStatus] = useState<ApiSyncStatus>("loading");
+  const [apiNote, setApiNote] = useState("Connecting to provider API");
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0],
@@ -157,27 +267,88 @@ function ProviderPilotApp() {
 
   const selectedMessages = selectedJob ? (messagesByJobId[selectedJob.id] ?? []) : [];
 
+  useEffect(() => {
+    let cancelled = false;
+    setApiStatus("loading");
+    fetchProviderJobs()
+      .then((apiJobs) => {
+        if (cancelled) return;
+        if (apiJobs.length) {
+          setJobs(apiJobs);
+          setSelectedJobId(apiJobs[0].id);
+          setMessagesByJobId((currentMessages) =>
+            apiJobs.reduce<Record<string, SupportMessage[]>>((nextMessages, job) => {
+              nextMessages[job.id] = currentMessages[job.id] ?? [];
+              return nextMessages;
+            }, {}),
+          );
+          setApiStatus("live");
+          setApiNote("Connected to provider job API");
+          return;
+        }
+
+        setApiStatus("fallback");
+        setApiNote("Provider API connected, no live jobs yet; showing pilot data");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setApiStatus("fallback");
+        setApiNote("Provider API is not ready for this session; showing pilot data");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function updateJob(jobId: string, changes: Partial<ProviderJob>) {
     setJobs((currentJobs) => currentJobs.map((job) => (job.id === jobId ? { ...job, ...changes } : job)));
   }
 
-  function acceptJob(jobId: string) {
+  async function acceptJob(jobId: string) {
+    setApiStatus("saving");
     updateJob(jobId, { status: "provider_accepted" });
+    try {
+      await acceptProviderJob(jobId);
+      setApiStatus("live");
+      setApiNote("Job accepted through provider API");
+    } catch {
+      setApiStatus("fallback");
+      setApiNote("Accept is shown locally; backend could not confirm this pilot job");
+    }
   }
 
-  function rejectJob(jobId: string) {
+  async function rejectJob(jobId: string) {
     setJobs((currentJobs) => {
       const remainingJobs = currentJobs.filter((job) => job.id !== jobId);
       setSelectedJobId(remainingJobs[0]?.id ?? "");
       return remainingJobs;
     });
+    try {
+      setApiStatus("saving");
+      await rejectProviderJob(jobId);
+      setApiStatus("live");
+      setApiNote("Job rejected through provider API");
+    } catch {
+      setApiStatus("fallback");
+      setApiNote("Reject is shown locally; backend could not confirm this pilot job");
+    }
   }
 
-  function updateStatus(jobId: string, status: ProviderJobStatus) {
+  async function updateStatus(jobId: string, status: ProviderJobStatus) {
     updateJob(jobId, { status });
+    try {
+      setApiStatus("saving");
+      await updateProviderJobStatus(jobId, status);
+      setApiStatus("live");
+      setApiNote("Status synced to provider API");
+    } catch {
+      setApiStatus("fallback");
+      setApiNote("Status is shown locally; backend could not confirm this pilot job");
+    }
   }
 
-  function appendProviderMessage(jobId: string, body: string) {
+  async function appendProviderMessage(jobId: string, body: string) {
     const message: SupportMessage = {
       id: `msg_${jobId}_${Date.now()}`,
       jobId,
@@ -192,6 +363,16 @@ function ProviderPilotApp() {
       ...currentMessages,
       [jobId]: [...(currentMessages[jobId] ?? []), message],
     }));
+
+    try {
+      setApiStatus("saving");
+      await createProviderCommunication(jobId, body);
+      setApiStatus("live");
+      setApiNote("Provider message sent to communications API");
+    } catch {
+      setApiStatus("fallback");
+      setApiNote("Message is shown locally; backend could not confirm this pilot message");
+    }
   }
 
   function requestSupport(job: ProviderJob) {
@@ -205,9 +386,15 @@ function ProviderPilotApp() {
           <p className="eyebrow">Provider app foundation</p>
           <h1>Wellnest Provider</h1>
         </div>
-        <div className="session-pill">
-          <span>{providerSession.name}</span>
-          <strong>{providerSession.role}</strong>
+        <div className="top-actions">
+          <div className={`api-pill ${apiStatus}`}>
+            <span>{apiStatus === "loading" ? "Connecting" : apiStatus === "saving" ? "Syncing" : apiStatus === "live" ? "Live API" : "Pilot fallback"}</span>
+            <strong>{apiNote}</strong>
+          </div>
+          <div className="session-pill">
+            <span>{providerSession.name}</span>
+            <strong>{providerSession.role}</strong>
+          </div>
         </div>
       </section>
 
