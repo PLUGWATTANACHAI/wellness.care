@@ -16,10 +16,36 @@ const state = {
   date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
   time: "19:30",
   address: "The Line Sathorn, Tower A",
+  locationPickerOpen: false,
+  locationQuery: "",
   placeConfirmed: false,
   payment: "promptpay",
   bookingCode: "",
 };
+
+const locationSuggestions = [
+  {
+    id: "place-line-sathorn",
+    name: "The Line Sathorn",
+    address: "The Line Sathorn, Tower A, Sathorn, Bangkok",
+    distance: "450 m",
+    source: "Google Places",
+  },
+  {
+    id: "place-river",
+    name: "The River Residence",
+    address: "Charoen Nakhon Road, Khlong San, Bangkok",
+    distance: "2.1 km",
+    source: "Google Places",
+  },
+  {
+    id: "place-empire",
+    name: "Empire Tower",
+    address: "1 South Sathorn Road, Yan Nawa, Bangkok",
+    distance: "1.3 km",
+    source: "Google Places",
+  },
+];
 
 function currency(value) {
   return value.toLocaleString("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 });
@@ -45,6 +71,22 @@ function selectedClinic() {
 function progressWidth() {
   const maxSteps = selectedClinic() ? 5 : 4;
   return `${Math.max(100 / maxSteps, state.step * (100 / maxSteps))}%`;
+}
+
+function dateParts() {
+  const [year, month, day] = state.date.split("-");
+  return { day, month, year };
+}
+
+function displayDate() {
+  const { day, month, year } = dateParts();
+  return `${day}/${month}/${year}`;
+}
+
+function filteredLocationSuggestions() {
+  const query = state.locationQuery.trim().toLowerCase();
+  if (!query) return locationSuggestions;
+  return locationSuggestions.filter((place) => `${place.name} ${place.address}`.toLowerCase().includes(query));
 }
 
 function loginScreen() {
@@ -140,6 +182,21 @@ function homeScreen() {
           <span>${copy.heroTrustBody}</span>
         </div>
       </article>
+
+      <section class="conciergePanel" aria-label="Wellnest concierge">
+        <div>
+          <span>Today plan</span>
+          <strong>เลือกบริการ · ระบุตำแหน่ง · ชำระเงิน</strong>
+          <p>ระบบจะช่วยจัดลำดับการจองแบบส่วนตัว พร้อม chat support หลังยืนยันรายการ</p>
+        </div>
+        <button data-action="start-booking">Book</button>
+      </section>
+
+      <section class="quickActionGrid" aria-label="Quick actions">
+        <button data-action="start-booking"><span>01</span><strong>Home service</strong><small>เรียกบริการถึงคอนโด</small></button>
+        <button data-action="open-location-picker"><span>02</span><strong>Set location</strong><small>เลือกตำแหน่งในแอพ</small></button>
+        <button data-action="nav" data-screen="chat"><span>03</span><strong>Care chat</strong><small>คุยกับทีมดูแล</small></button>
+      </section>
 
       <section class="homeSection">
         <article class="awPanel">
@@ -303,6 +360,8 @@ function bookingScreen() {
   const service = selectedService();
   const clinic = selectedClinic();
   const safeAddress = escapeHtml(state.address);
+  const date = dateParts();
+  const locationPicker = state.locationPickerOpen ? locationPickerModal() : "";
   const tabs = clinic
     ? [
         [1, "คลินิก"],
@@ -371,20 +430,30 @@ function bookingScreen() {
       ${state.step === (clinic ? 3 : 2) ? `
         <div class="screenBlock">
           <h2>${clinic ? "วัน เวลา และคลินิก" : "วัน เวลา และสถานที่"}</h2>
-          <div class="formGrid">
-            <label class="fieldLabel">วันที่<input type="date" data-field="date" value="${state.date}" /></label>
-            <label class="fieldLabel">เวลา<input type="time" data-field="time" value="${state.time}" /></label>
-            <label class="fieldLabel wide">${clinic ? "คลินิก" : "คอนโด / ที่อยู่"}<input data-field="address" value="${clinic ? clinic.address : safeAddress}" /></label>
+          <div class="dateTimePanel">
+            <div class="datePickerRow" aria-label="Service date">
+              <label class="fieldLabel">วัน<input data-date-part="day" inputmode="numeric" maxlength="2" value="${date.day}" /></label>
+              <label class="fieldLabel">เดือน<input data-date-part="month" inputmode="numeric" maxlength="2" value="${date.month}" /></label>
+              <label class="fieldLabel">ปี<input data-date-part="year" inputmode="numeric" maxlength="4" value="${date.year}" /></label>
+            </div>
+            <label class="fieldLabel timeField">เวลา<input type="time" data-field="time" value="${state.time}" /></label>
+            <p>เลือกวันที่ ${displayDate()} เวลา ${state.time} ระบบจะตรวจสอบ provider/clinic slot ให้อีกครั้งก่อนจ่ายเงิน</p>
           </div>
-          <div class="mapCard">
-            <div class="pin"></div>
+          <div class="locationSelectCard">
+            <div class="googleMapPreview">
+              <span class="mapRoad roadOne"></span>
+              <span class="mapRoad roadTwo"></span>
+              <span class="mapRoad roadThree"></span>
+              <span class="mapPin"></span>
+            </div>
             <div>
+              <span>Current location</span>
               <strong>${clinic ? clinic.name : safeAddress}</strong>
-              <p>${state.placeConfirmed ? "ยืนยันสถานที่แล้ว" : "กดยืนยันหลังตรวจตำแหน่ง"}</p>
+              <p>${state.placeConfirmed ? "ยืนยันตำแหน่งแล้ว" : "เลือกตำแหน่งในแอพ โดยอ้างอิง Google Places"}</p>
             </div>
           </div>
           <div class="actionRow">
-            <button class="secondaryButton" data-action="open-maps">ค้นหา Google Maps</button>
+            <button class="secondaryButton" data-action="open-location-picker">เลือกตำแหน่ง</button>
             <button class="secondaryButton ${state.placeConfirmed ? "confirmed" : ""}" data-action="confirm-place">ยืนยันพื้นที่</button>
           </div>
           <button class="primaryButton" data-action="step" data-step="${clinic ? 4 : 3}">ตรวจสอบรายการ</button>
@@ -397,7 +466,7 @@ function bookingScreen() {
           <div class="summaryList">
             <div><span>บริการ</span><strong>${service.name}</strong></div>
             ${clinic ? `<div><span>คลินิก</span><strong>${clinic.name}</strong></div>` : ""}
-            <div><span>วันเวลา</span><strong>${state.date} · ${state.time}</strong></div>
+            <div><span>วันเวลา</span><strong>${displayDate()} · ${state.time}</strong></div>
             <div><span>สถานที่</span><strong>${clinic ? clinic.address : safeAddress}</strong></div>
             <div><span>${clinic ? "รอบคลินิก" : "ผู้ให้บริการ"}</span><strong>${clinic ? "รอยืนยันจากคลินิก" : "Mina · 18 นาที"}</strong></div>
             <div><span>ยอดชำระ</span><strong>${currency(service.price)}</strong></div>
@@ -416,7 +485,45 @@ function bookingScreen() {
           <button class="primaryButton" data-action="pay">${state.payment === "promptpay" ? "สร้าง QR ชำระเงิน" : "ชำระด้วยบัตร"}</button>
         </div>
       ` : ""}
+      ${locationPicker}
     </section>
+  `;
+}
+
+function locationPickerModal() {
+  const suggestions = filteredLocationSuggestions();
+  return `
+    <div class="modalScrim" role="dialog" aria-label="เลือกตำแหน่ง">
+      <div class="locationModal">
+        <div class="modalHandle"></div>
+        <div class="modalHeader">
+          <div>
+            <span>Google Places</span>
+            <h2>เลือกตำแหน่งในแอพ</h2>
+          </div>
+          <button data-action="close-location-picker" aria-label="Close">×</button>
+        </div>
+        <label class="fieldLabel">ค้นหาคอนโดหรือจุดนัดพบ
+          <input data-field="locationQuery" placeholder="เช่น The Line Sathorn" value="${escapeHtml(state.locationQuery)}" />
+        </label>
+        <div class="miniMapPanel">
+          <span class="mapRoad roadOne"></span>
+          <span class="mapRoad roadTwo"></span>
+          <span class="mapRoad roadThree"></span>
+          <span class="mapPin"></span>
+          <strong>${escapeHtml(state.address)}</strong>
+        </div>
+        <div class="locationResultList">
+          ${suggestions.map((place) => `
+            <button data-action="select-location" data-address="${escapeHtml(place.address)}">
+              <strong>${place.name}</strong>
+              <span>${place.address}</span>
+              <small>${place.distance} · ${place.source}</small>
+            </button>
+          `).join("") || `<p class="emptyLocation">ไม่พบตำแหน่ง ลองพิมพ์ชื่อคอนโดหรืออาคารอีกครั้ง</p>`}
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -566,9 +673,32 @@ function bindEvents() {
     state.placeConfirmed = true;
     render();
   });
-  document.querySelector("[data-action='open-maps']")?.addEventListener("click", () => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(state.address)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  document.querySelectorAll("[data-action='open-location-picker']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.locationPickerOpen = true;
+      state.locationQuery = "";
+      render();
+    });
+  });
+  document.querySelector("[data-action='close-location-picker']")?.addEventListener("click", () => {
+    state.locationPickerOpen = false;
+    render();
+  });
+  document.querySelectorAll("[data-action='select-location']").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.address = button.dataset.address;
+      state.placeConfirmed = true;
+      state.locationPickerOpen = false;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-date-part]").forEach((input) => {
+    input.addEventListener("input", (event) => {
+      const current = dateParts();
+      const next = { ...current, [input.dataset.datePart]: event.target.value };
+      state.date = `${next.year.padStart(4, "0")}-${next.month.padStart(2, "0")}-${next.day.padStart(2, "0")}`;
+      render();
+    });
   });
   document.querySelectorAll("[data-action='payment']").forEach((button) => {
     button.addEventListener("click", () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Linking, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { colors } from "../design/theme";
 import {
   checkProviderAvailability,
@@ -78,6 +78,39 @@ const fallbackPartnerClinics: PartnerClinicDto[] = [
   },
 ];
 
+const locationSuggestions = [
+  {
+    id: "place_line_sathorn",
+    condoName: "The Line Sathorn",
+    meetingPoint: "Lobby Tower A",
+    formattedAddress: "The Line Sathorn, Tower A, Sathorn, Bangkok",
+    googlePlaceId: "demo_google_place_line_sathorn",
+    lat: 13.7212,
+    lng: 100.5266,
+    distance: "450 m",
+  },
+  {
+    id: "place_river_residence",
+    condoName: "The River Residence",
+    meetingPoint: "Lobby A",
+    formattedAddress: "The River Residence, Charoen Nakhon Road, Bangkok",
+    googlePlaceId: "demo_google_place_river_residence",
+    lat: 13.7214,
+    lng: 100.5131,
+    distance: "2.1 km",
+  },
+  {
+    id: "place_empire_tower",
+    condoName: "Empire Tower",
+    meetingPoint: "Main lobby",
+    formattedAddress: "1 South Sathorn Road, Yan Nawa, Bangkok",
+    googlePlaceId: "demo_google_place_empire_tower",
+    lat: 13.7207,
+    lng: 100.5294,
+    distance: "1.3 km",
+  },
+];
+
 export function CustomerHomeScreen() {
   const [services, setServices] = useState<ServiceItemDto[]>([]);
   const [partnerClinics, setPartnerClinics] = useState<PartnerClinicDto[]>(fallbackPartnerClinics);
@@ -108,6 +141,8 @@ export function CustomerHomeScreen() {
   const [supportCases, setSupportCases] = useState<BookingSupportCaseDto[]>([]);
   const [bookingFlow, setBookingFlow] = useState<"home" | "service" | "clinic">("home");
   const [bookingStep, setBookingStep] = useState(1);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -210,6 +245,13 @@ export function CustomerHomeScreen() {
       paymentStatus !== "confirming",
   );
   const trackingBookingId = latestBooking?.id ?? "book_mqn1ex1f_05qxp01u";
+  const selectedScheduledAt = getSelectedScheduledAt();
+  const selectedScheduleParts = formatBookingScheduleParts(selectedScheduledAt);
+  const visibleLocationSuggestions = locationSuggestions.filter((place) => {
+    const query = locationQuery.trim().toLowerCase();
+    if (!query) return true;
+    return `${place.condoName} ${place.formattedAddress}`.toLowerCase().includes(query);
+  });
 
   function getSelectedScheduledAt() {
     if (selectedClinic && selectedClinicSlot?.scheduledAt) return selectedClinicSlot.scheduledAt;
@@ -231,6 +273,39 @@ export function CustomerHomeScreen() {
     setSupportRequestText("");
     setSupportStatus("idle");
     setSupportCases([]);
+  }
+
+  function handleSelectLocation(place: (typeof locationSuggestions)[number]) {
+    setCustomerProfile((profile) => {
+      const baseProfile =
+        profile ??
+        ({
+          id: "usr_customer_001",
+          name: "พี่ปลั๊ก",
+          phoneVerified: true,
+          tier: "Member",
+          coins: 0,
+          points: 0,
+        } satisfies CustomerProfileDto);
+
+      return {
+        ...baseProfile,
+        address: {
+          id: place.id,
+          condoName: place.condoName,
+          meetingPoint: place.meetingPoint,
+          googlePlaceId: place.googlePlaceId,
+          formattedAddress: place.formattedAddress,
+          lat: place.lat,
+          lng: place.lng,
+          addressSource: "google_places_demo",
+        },
+      };
+    });
+    setAddressConfirmed(true);
+    setLocationPickerOpen(false);
+    setLocationQuery("");
+    resetAvailability();
   }
 
   async function handleCheckAvailability() {
@@ -659,6 +734,10 @@ export function CustomerHomeScreen() {
         <View style={styles.slotList}>
           {visibleBookingSlots.map((slot) => {
             const active = slot.id === selectedSlotId;
+            const scheduledAt = "scheduledAt" in slot
+              ? slot.scheduledAt
+              : new Date(Date.now() + slot.offsetHours * 60 * 60 * 1000).toISOString();
+            const scheduleParts = formatBookingScheduleParts(scheduledAt);
 
             return (
               <Pressable
@@ -675,10 +754,22 @@ export function CustomerHomeScreen() {
                   pressed ? styles.buttonPressed : null,
                 ]}
               >
-              <Text style={[styles.slotText, active ? styles.slotTextActive : null]}>{slot.label}</Text>
+                <View style={styles.slotDateBlock}>
+                  <Text style={[styles.slotWeekday, active ? styles.slotTextActive : null]}>{scheduleParts.weekday}</Text>
+                  <Text style={[styles.slotDateText, active ? styles.slotTextActive : null]}>{scheduleParts.date}</Text>
+                </View>
+                <View style={styles.slotTimeBlock}>
+                  <Text style={styles.slotTimeLabel}>เวลา</Text>
+                  <Text style={[styles.slotTimeText, active ? styles.slotTextActive : null]}>{scheduleParts.time}</Text>
+                </View>
               </Pressable>
             );
           })}
+        </View>
+        <View style={styles.schedulePreview}>
+          <Text style={styles.schedulePreviewLabel}>รอบที่เลือก</Text>
+          <Text style={styles.schedulePreviewDate}>{selectedScheduleParts.date}</Text>
+          <Text style={styles.schedulePreviewTime}>{selectedScheduleParts.time}</Text>
         </View>
         <Pressable
           accessibilityRole="button"
@@ -727,6 +818,15 @@ export function CustomerHomeScreen() {
                   <Text style={styles.mapDetailLabel}>Coordinate</Text>
                   <Text style={styles.mapDetailValue}>{clinicCoordinateText}</Text>
                 </View>
+              </View>
+              <View style={styles.locationConfirmPanel}>
+                <View style={styles.locationConfirmCopy}>
+                  <Text style={styles.locationConfirmTitle}>ตำแหน่งคลินิกที่จะส่งไปกับ booking</Text>
+                  <Text style={styles.locationConfirmMeta}>{addressConfirmed ? "ยืนยันตำแหน่งนี้แล้ว" : "ตรวจหมุดบนแผนที่ แล้วกดยืนยันก่อนจอง"}</Text>
+                </View>
+                <Text style={[styles.locationConfirmBadge, addressConfirmed ? styles.locationConfirmBadgeReady : null]}>
+                  {addressConfirmed ? "พร้อมจอง" : "รอยืนยัน"}
+                </Text>
               </View>
               <Pressable
                 accessibilityRole="button"
@@ -785,6 +885,19 @@ export function CustomerHomeScreen() {
                   </Text>
                 </View>
               </View>
+              <View style={styles.locationConfirmPanel}>
+                <View style={styles.locationConfirmCopy}>
+                  <Text style={styles.locationConfirmTitle}>ตำแหน่งบริการสำหรับผู้ให้บริการ</Text>
+                  <Text style={styles.locationConfirmMeta}>
+                    {hasCustomerMapLocation
+                      ? addressConfirmed ? "ยืนยันตำแหน่งนี้แล้ว" : "ตรวจหมุดบนแผนที่ แล้วกดยืนยันก่อนจอง"
+                      : "ต้องบันทึกพิกัดจากหน้าโปรไฟล์ก่อน"}
+                  </Text>
+                </View>
+                <Text style={[styles.locationConfirmBadge, addressConfirmed ? styles.locationConfirmBadgeReady : null]}>
+                  {addressConfirmed ? "พร้อมจอง" : "รอยืนยัน"}
+                </Text>
+              </View>
               <View style={styles.mapActionRow}>
                 <Pressable
                   accessibilityRole="button"
@@ -797,6 +910,13 @@ export function CustomerHomeScreen() {
                   ]}
                 >
                   <Text style={styles.mapSearchButtonText}>ค้นหาใน Google Maps</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setLocationPickerOpen(true)}
+                  style={({ pressed }) => [styles.mapSearchButton, styles.mapSearchButtonSoft, pressed ? styles.buttonPressed : null]}
+                >
+                  <Text style={styles.mapSearchButtonText}>เลือกในแอพ</Text>
                 </Pressable>
               </View>
               {!hasCustomerMapLocation ? (
@@ -1202,6 +1322,56 @@ export function CustomerHomeScreen() {
       ) : null}
         </>
       ) : null}
+      <Modal animationType="slide" onRequestClose={() => setLocationPickerOpen(false)} transparent visible={locationPickerOpen}>
+        <View style={styles.locationModalScrim}>
+          <View style={styles.locationModal}>
+            <View style={styles.locationModalHandle} />
+            <View style={styles.locationModalHeader}>
+              <View>
+                <Text style={styles.locationModalLabel}>Google Places</Text>
+                <Text style={styles.locationModalTitle}>เลือกตำแหน่งในแอพ</Text>
+              </View>
+              <Pressable accessibilityRole="button" onPress={() => setLocationPickerOpen(false)} style={styles.locationModalClose}>
+                <Text style={styles.locationModalCloseText}>×</Text>
+              </Pressable>
+            </View>
+            <TextInput
+              autoCapitalize="none"
+              onChangeText={setLocationQuery}
+              placeholder="ค้นหาคอนโดหรือจุดนัดพบ"
+              placeholderTextColor={colors.textMuted}
+              style={styles.locationSearchInput}
+              value={locationQuery}
+            />
+            <View style={styles.locationMiniMap}>
+              <View style={[styles.mapRoad, styles.mapRoadPrimary]} />
+              <View style={[styles.mapRoad, styles.mapRoadSecondary]} />
+              <View style={[styles.mapRoad, styles.mapRoadTertiary]} />
+              <View style={styles.mapPinWrap}>
+                <Text style={styles.mapPin}>●</Text>
+              </View>
+              <Text style={styles.locationMiniMapBadge}>{customerAddress?.condoName ?? "Current location"}</Text>
+            </View>
+            <View style={styles.locationResultList}>
+              {visibleLocationSuggestions.map((place) => (
+                <Pressable
+                  accessibilityRole="button"
+                  key={place.id}
+                  onPress={() => handleSelectLocation(place)}
+                  style={({ pressed }) => [styles.locationResultItem, pressed ? styles.buttonPressed : null]}
+                >
+                  <View>
+                    <Text style={styles.locationResultTitle}>{place.condoName}</Text>
+                    <Text style={styles.locationResultAddress}>{place.formattedAddress}</Text>
+                  </View>
+                  <Text style={styles.locationResultMeta}>{place.distance} · Google Places</Text>
+                </Pressable>
+              ))}
+              {visibleLocationSuggestions.length === 0 ? <Text style={styles.warning}>ไม่พบตำแหน่ง ลองพิมพ์ชื่อคอนโดหรืออาคารอีกครั้ง</Text> : null}
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Text style={styles.note}>Wellnest จะใช้ข้อมูลนี้เพื่อจัดคิวบริการและดูแลความปลอดภัยของการจองเท่านั้น</Text>
     </View>
   );
@@ -1303,6 +1473,23 @@ function formatClinicSlot(startsAt: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(startsAt));
+}
+
+function formatBookingScheduleParts(startsAt: string) {
+  const date = new Date(startsAt);
+
+  return {
+    weekday: new Intl.DateTimeFormat("th-TH", { weekday: "short" }).format(date),
+    date: new Intl.DateTimeFormat("th-TH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(date),
+    time: new Intl.DateTimeFormat("th-TH", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date),
+  };
 }
 
 const styles = StyleSheet.create({
@@ -1944,6 +2131,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   slotChip: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
@@ -1961,6 +2153,61 @@ const styles = StyleSheet.create({
   },
   slotTextActive: {
     color: colors.primary,
+  },
+  slotDateBlock: {
+    flex: 1,
+    gap: 2,
+  },
+  slotWeekday: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  slotDateText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "900",
+  },
+  slotTimeBlock: {
+    minWidth: 86,
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  slotTimeLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  slotTimeText: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  schedulePreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+  },
+  schedulePreviewLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  schedulePreviewDate: {
+    flex: 1,
+    color: colors.text,
+    fontWeight: "900",
+  },
+  schedulePreviewTime: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: "900",
   },
   mapCard: {
     gap: 10,
@@ -2127,10 +2374,55 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingVertical: 10,
   },
+  mapSearchButtonSoft: {
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.surfaceSoft,
+  },
   mapSearchButtonText: {
     color: colors.primary,
     fontSize: 12,
     fontWeight: "900",
+  },
+  locationConfirmPanel: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+  },
+  locationConfirmCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  locationConfirmTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  locationConfirmMeta: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 16,
+  },
+  locationConfirmBadge: {
+    overflow: "hidden",
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: "900",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  locationConfirmBadgeReady: {
+    backgroundColor: colors.green,
+    color: "#fff",
   },
   addressText: {
     color: colors.textSoft,
@@ -2145,6 +2437,115 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontSize: 12,
     fontWeight: "800",
+  },
+  locationModalScrim: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(47,33,24,0.38)",
+    padding: 12,
+  },
+  locationModal: {
+    gap: 12,
+    maxHeight: "86%",
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceSoft,
+    padding: 14,
+  },
+  locationModalHandle: {
+    alignSelf: "center",
+    width: 42,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: colors.borderStrong,
+  },
+  locationModalHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  locationModalLabel: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  locationModalTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: "900",
+  },
+  locationModalClose: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 34,
+    height: 34,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+  },
+  locationModalCloseText: {
+    color: colors.primary,
+    fontSize: 24,
+    fontWeight: "800",
+    lineHeight: 28,
+  },
+  locationSearchInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    color: colors.text,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  locationMiniMap: {
+    minHeight: 116,
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    backgroundColor: colors.surface,
+    padding: 10,
+  },
+  locationMiniMapBadge: {
+    alignSelf: "flex-start",
+    overflow: "hidden",
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    color: colors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  locationResultList: {
+    gap: 8,
+  },
+  locationResultItem: {
+    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    padding: 11,
+  },
+  locationResultTitle: {
+    color: colors.text,
+    fontWeight: "900",
+  },
+  locationResultAddress: {
+    color: colors.textSoft,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  locationResultMeta: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900",
   },
   confirmButton: {
     alignItems: "center",
